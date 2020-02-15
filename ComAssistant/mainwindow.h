@@ -1,0 +1,82 @@
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
+
+#include <QMainWindow>
+#include <QString>
+#include <QDebug>
+#include <QtCore/QObject>
+#include <QtSerialPort/QSerialPort>
+#include <QtSerialPort/QSerialPortInfo>
+#include <QLabel>
+#include <QComboBox>
+#include <QMessageBox>
+#include <QTimer>
+#include <QDateTime>
+#include <QFileDialog>
+#include <QTextStream>
+#include <QFile>
+
+#include "myserialport.h"
+#include "baseconversion.h"
+
+#include "about_me_dialog.h"
+
+namespace Ui {
+class MainWindow;
+}
+
+class MainWindow : public QMainWindow
+{
+    Q_OBJECT
+
+public:
+    explicit MainWindow(QWidget *parent = nullptr);
+    ~MainWindow();
+
+private slots:
+    void on_refreshCom_clicked();
+
+    void on_clearRecvAreaButton_clicked();
+
+    void on_clearSendAreaButton_clicked();
+
+    void on_comSwitch_clicked(bool checked);
+
+    void on_sendButton_clicked();
+
+    void on_clearStatistic_clicked();
+
+    void readSerialPort();
+
+    void continuousWriteSlot();
+
+    void on_TimerSendCheck_stateChanged(int arg1);
+
+    void on_textEdit_textChanged();
+
+    void on_hexSend_stateChanged(int arg1);
+
+    void on_hexDisplay_stateChanged(int arg1);
+
+    void on_action_winLikeEnter_triggered(bool checked);
+
+    void on_action_unixLikeEnter_triggered(bool checked);
+
+    void on_actionUTF8_triggered(bool checked);
+
+    void on_actionSaveData_triggered();
+
+    void on_actionReadData_triggered();
+
+    void on_actionAbout_triggered();
+
+private:
+    Ui::MainWindow *ui;
+    mySerialPort serial;
+    QByteArray RxBuff, TxBuff;
+    QTimer continuousWriteTimer;
+
+    About_Me_Dialog aboutMe;
+};
+
+#endif // MAINWINDOW_H

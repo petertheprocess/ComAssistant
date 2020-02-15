@@ -1,0 +1,131 @@
+#include "myserialport.h"
+
+mySerialPort::mySerialPort():TxCnt(0),RxCnt(0)
+{
+    refreshSerialPort();
+}
+
+mySerialPort::~mySerialPort()
+{
+    if(mySerialPort::isOpen())
+        mySerialPort::close();
+}
+
+/*
+ * Function: reset tx/rx cnt statistics
+*/
+void mySerialPort::resetCnt()
+{
+    TxCnt = 0;
+    RxCnt = 0;
+}
+
+/*
+ * Function: reset tx cnt statistics
+*/
+void mySerialPort::resetTxCnt()
+{
+    TxCnt = 0;
+}
+
+/*
+ * Function: reset rx cnt statistics
+*/
+void mySerialPort::resetRxCnt()
+{
+    RxCnt = 0;
+}
+
+/*
+ * Function: refresh serial port
+ * Parameter: none
+ * Return: QList<QString>
+*/
+QList<QString> mySerialPort::refreshSerialPort()
+{
+    QList<QString> tmp;
+
+    //搜索串口
+    foreach (const QSerialPortInfo &info,QSerialPortInfo::availablePorts())
+    {
+        QSerialPort TmpSerial;
+        TmpSerial.setPort(info);
+        if(TmpSerial.open(QSerialPort::ReadWrite))
+        {
+            TmpSerial.close();
+            tmp.append(TmpSerial.portName()+"("+"空闲:"+info.description()+")");
+        }
+        else
+        {
+            TmpSerial.close();
+            tmp.append(TmpSerial.portName()+"("+"占用:"+info.description()+")");
+        }
+    }
+
+    return tmp;
+}
+
+/*
+ * Function: 获取发送统计
+*/
+unsigned int mySerialPort::getTxCnt()
+{
+    return TxCnt;
+}
+
+/*
+*/
+unsigned int mySerialPort::getRxCnt()
+{
+    return RxCnt;
+}
+
+/*
+*/
+QString mySerialPort::getTxRxString()
+{
+    return "Tx:"+QString::number(getTxCnt())+" Rx:"+QString::number(getRxCnt());
+}
+
+/*
+*/
+bool mySerialPort::open(QString PortName,int BaudRate)
+{
+    mySerialPort::setPortName(PortName);
+    mySerialPort::setBaudRate(BaudRate);
+    mySerialPort::setDataBits(mySerialPort::Data8);
+    mySerialPort::setParity(mySerialPort::NoParity);
+    mySerialPort::setStopBits(mySerialPort::OneStop);
+    mySerialPort::setFlowControl(mySerialPort::NoFlowControl);
+    mySerialPort::setReadBufferSize(1024);
+
+    return mySerialPort::open(mySerialPort::ReadWrite);
+}
+
+/*
+ *
+*/
+qint64 mySerialPort::write(QByteArray data)
+{
+    qint64 tmp;
+
+    tmp = QSerialPort::write(data);
+    if(tmp != -1)
+        TxCnt+=static_cast<uint32_t>(data.size());
+
+    return tmp;
+}
+
+/*
+ *
+*/
+QByteArray mySerialPort::readAll()
+{
+    QByteArray tmp;
+
+    tmp = QSerialPort::readAll();
+    if(!tmp.isEmpty())
+        RxCnt+=static_cast<uint32_t>(tmp.size());
+
+    return tmp;
+}
