@@ -30,19 +30,26 @@ SOURCES += \
         baseconversion.cpp \
         main.cpp \
         mainwindow.cpp \
-        myserialport.cpp
+        myserialport.cpp \
+        settings_dialog.cpp
 
 HEADERS += \
         about_me_dialog.h \
         baseconversion.h \
         mainwindow.h \
-        myserialport.h
+        myserialport.h \
+        settings_dialog.h
 
 FORMS += \
         about_me_dialog.ui \
-        mainwindow.ui
+        mainwindow.ui \
+        settings_dialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES +=
+
+RC_ICONS = image/favicon.ico

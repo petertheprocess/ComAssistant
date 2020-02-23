@@ -20,6 +20,7 @@
 #include "baseconversion.h"
 
 #include "about_me_dialog.h"
+#include "settings_dialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -70,13 +71,15 @@ private slots:
 
     void on_actionAbout_triggered();
 
+    void on_actionCOM_Config_triggered();
+
 private:
     Ui::MainWindow *ui;
     mySerialPort serial;
     QByteArray RxBuff, TxBuff;
     QTimer continuousWriteTimer;
-
-    About_Me_Dialog aboutMe;
+    About_Me_Dialog AboutMe;
+    settings_dialog settingsDialog;
 };
 
 #endif // MAINWINDOW_H

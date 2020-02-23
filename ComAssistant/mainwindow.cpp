@@ -40,6 +40,9 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+/*
+ * Function:刷新串口按下
+*/
 void MainWindow::on_refreshCom_clicked()
 {
     QList<QString> tmp;
@@ -57,6 +60,9 @@ void MainWindow::on_refreshCom_clicked()
         ui->comList->addItem("未找到可用串口!");
 }
 
+/*
+ * Function:清空接收区按钮按下，清空接收区
+*/
 void MainWindow::on_clearRecvAreaButton_clicked()
 {
     ui->textBrowser->clear();
@@ -67,6 +73,9 @@ void MainWindow::on_clearRecvAreaButton_clicked()
     ui->statusBar->showMessage(serial.getTxRxString());
 }
 
+/*
+ * Function:清空发送区按钮按下，清空发送区
+*/
 void MainWindow::on_clearSendAreaButton_clicked()
 {
     ui->textEdit->clear();
@@ -102,7 +111,7 @@ void MainWindow::on_comSwitch_clicked(bool checked)
 }
 
 /*
- * Function:读取数据
+ * Function:从串口读取数据
 */
 void MainWindow::readSerialPort()
 {
@@ -111,6 +120,7 @@ void MainWindow::readSerialPort()
     QByteArray readBuff;
     static QByteArray restBuff;
 
+    //读取数据并衔接到上次未处理完的数据后面
     readBuff = serial.readAll();
     readBuff = restBuff + readBuff;
     restBuff.clear();
@@ -140,7 +150,7 @@ void MainWindow::readSerialPort()
 
     //时间戳变量
     if(ui->timeStampDisplayCheckBox->isChecked())
-        timeString = QDateTime::currentDateTime().toString("hh:mm::ss.zzz "); //补空格美观
+        timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz "); //补空格美观
 
     if(!readBuff.isEmpty()){
         //移动光标
@@ -156,7 +166,7 @@ void MainWindow::readSerialPort()
 }
 
 /*
- * Function:连续发送定时器槽
+ * Function:连续发送定时器槽，自动发送数据
 */
 void MainWindow::continuousWriteSlot()
 {
@@ -226,6 +236,10 @@ void MainWindow::on_TimerSendCheck_stateChanged(int arg1)
     }
 }
 
+/*
+ * Event:发送区文本变化
+ * Function:检查十六进制发送模式下的发送区文本内容是否非法
+*/
 void MainWindow::on_textEdit_textChanged()
 {
     //十六进制发送下的输入格式检查
@@ -244,6 +258,10 @@ void MainWindow::on_textEdit_textChanged()
     }
 }
 
+/*
+ * Event:十六进制格式发送按钮状态变化
+ * Function:保存当前发送区的文本内容
+*/
 void MainWindow::on_hexSend_stateChanged(int arg1)
 {
     arg1 = 0;
@@ -260,43 +278,69 @@ void MainWindow::on_hexSend_stateChanged(int arg1)
     }
 }
 
+/*
+ * Event:十六进制显示按钮状态改变
+ * Function:将当前接收框的内容转换为十六进制格式重新显示
+*/
 void MainWindow::on_hexDisplay_stateChanged(int arg1)
 {
     if(ui->hexDisplay->isChecked())
         ui->textBrowser->setText(toHexDisplay(ui->textBrowser->toPlainText()));
 }
 
+/*
+ * Action:激活使用win风格回车（\r\n）
+ * Function:
+*/
 void MainWindow::on_action_winLikeEnter_triggered(bool checked)
 {
     if(checked)
         ui->action_unixLikeEnter->setChecked(false);
 }
 
+/*
+ * Action:激活使用unix风格回车（\n）
+ * Function:
+*/
 void MainWindow::on_action_unixLikeEnter_triggered(bool checked)
 {
     if(checked)
         ui->action_winLikeEnter->setChecked(false);
 }
 
+
+/*
+ * Action:激活使用UTF8编码
+ * Function:暂未支持其他格式编码
+*/
 void MainWindow::on_actionUTF8_triggered(bool checked)
 {
     if(!checked)
         ui->actionUTF8->setChecked(!checked);
 }
 
+/*
+ * Action:保存数据动作触发
+ * Function:
+*/
 void MainWindow::on_actionSaveData_triggered()
 {
+    //如果追加时间戳则提示时间戳不会被保存
+    if(ui->timeStampDisplayCheckBox->isChecked())
+        QMessageBox::information(this,"提示","时间戳数据不会被保存！只保存接收到的原始数据。");
 
+    //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
                                                     "保存数据-选择文件路径",
                                                     QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".txt",
                                                     "Text File(*.txt);;All File(*.*)");
-
+    //检查路径格式
     if(!savePath.endsWith("txt")){
         QMessageBox::information(this,"尚未支持的文件格式","请选择txt文本文件。");
         return;
     }
 
+    //保存数据
     QFile file(savePath);
     QTextStream stream(&file);
     //删除旧数据形式写文件
@@ -306,17 +350,24 @@ void MainWindow::on_actionSaveData_triggered()
     }
 }
 
+/*
+ * Action:读取数据动作触发
+ * Function:
+*/
 void MainWindow::on_actionReadData_triggered()
-{
+{   
+    //打开文件对话框
     QString readPath = QFileDialog::getOpenFileName(this,
                                                     "读取数据-选择文件路径",
-                                                    QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".txt",
+                                                    "",
                                                     "Text File(*.txt);;All File(*.*)");
+    //检查文件路径结尾
     if(!readPath.endsWith("txt")){
         QMessageBox::information(this,"尚未支持的文件格式","请选择txt文本文件。");
         return;
     }
 
+    //读取文件
     QFile file(readPath);
     QTextStream stream(&file);
     //读文件
@@ -329,7 +380,16 @@ void MainWindow::on_actionReadData_triggered()
     }
 }
 
+/*
+ * Action:触发“关于”按钮
+ * Function:弹出关于对话框
+*/
 void MainWindow::on_actionAbout_triggered()
 {
-    aboutMe.show();
+    AboutMe.show();
+}
+
+void MainWindow::on_actionCOM_Config_triggered()
+{
+    settingsDialog.show();
 }
