@@ -13,3 +13,5 @@
   - STM32一键下载
   - linux系统支持
   - Excel读写
+  - TCP/UDP
+  - 自动保存配置
