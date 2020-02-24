@@ -92,21 +92,27 @@ void MainWindow::on_comSwitch_clicked(bool checked)
 
     if(checked)
     {
-        if(serial.open(com,baud))
+        if(serial.open(com,baud)){
             ui->comSwitch->setText("关闭串口");
+            ui->refreshCom->setEnabled(false);
+        }
         else {
             ui->comSwitch->setChecked(false);
+            ui->refreshCom->setEnabled(true);
             QMessageBox::critical(this, "串口打开失败!", "该串口设备不存在或已被占用", QMessageBox::Ok);
         }
     }
     else
     {
         //关闭定时器
-        if(continuousWriteTimer.isActive())
+        if(continuousWriteTimer.isActive()){
             continuousWriteTimer.stop();
+            ui->TimerSendCheck->setChecked(false);
+        }
 
         serial.close();
         ui->comSwitch->setText("打开串口");
+        ui->refreshCom->setEnabled(true);
     }
 }
 
@@ -386,10 +392,47 @@ void MainWindow::on_actionReadData_triggered()
 */
 void MainWindow::on_actionAbout_triggered()
 {
-    AboutMe.show();
+    //创建关于我对话框资源
+    About_Me_Dialog* p = new About_Me_Dialog;
+    //设置close后自动销毁
+    p->setAttribute(Qt::WA_DeleteOnClose);
+    //非阻塞式显示
+    p->show();
 }
 
 void MainWindow::on_actionCOM_Config_triggered()
 {
-    settingsDialog.show();
+    //创建串口设置对话框
+    settings_dialog* p = new settings_dialog(this);
+    //对话框读取原配置
+    p->setStopBits(serial.stopBits());
+    p->setDataBits(serial.dataBits());
+    p->setParity(serial.parity());
+    p->setFlowControl(serial.flowControl());
+    p->exec();
+    //对话框返回新配置并设置
+    if(!serial.moreSetting(p->getStopBits(),p->getParity(),p->getFlowControl(),p->getDataBits()))
+        QMessageBox::information(this,"提示","串口设置失败");
+    delete p;
+}
+
+void MainWindow::on_baudrateList_currentTextChanged(const QString &arg1)
+{
+    bool ok;
+    qint32 baud = arg1.toInt(&ok);
+    if(ok)
+        serial.setBaudRate(baud);
+    else {
+        QMessageBox::information(this,"提示","请输入十进制数字");
+    }
+}
+
+void MainWindow::on_comList_currentTextChanged(const QString &arg1)
+{
+    QString unused = arg1;//屏蔽警告
+    //重新打开串口
+    if(serial.isOpen()){
+        on_comSwitch_clicked(false);
+        on_comSwitch_clicked(true);
+    }
 }

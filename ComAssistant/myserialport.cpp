@@ -2,6 +2,11 @@
 
 mySerialPort::mySerialPort():TxCnt(0),RxCnt(0)
 {
+    databits = Data8;
+    stopbits = OneStop;
+    flowcontrol = NoFlowControl;
+    paritybit = NoParity;
+
     refreshSerialPort();
 }
 
@@ -93,10 +98,10 @@ bool mySerialPort::open(QString PortName,int BaudRate)
 {
     mySerialPort::setPortName(PortName);
     mySerialPort::setBaudRate(BaudRate);
-    mySerialPort::setDataBits(mySerialPort::Data8);
-    mySerialPort::setParity(mySerialPort::NoParity);
-    mySerialPort::setStopBits(mySerialPort::OneStop);
-    mySerialPort::setFlowControl(mySerialPort::NoFlowControl);
+//    mySerialPort::setDataBits(mySerialPort::Data8);
+//    mySerialPort::setParity(mySerialPort::NoParity);
+//    mySerialPort::setStopBits(mySerialPort::OneStop);
+//    mySerialPort::setFlowControl(mySerialPort::NoFlowControl);
     mySerialPort::setReadBufferSize(1024);
 
     return mySerialPort::open(mySerialPort::ReadWrite);
@@ -128,4 +133,17 @@ QByteArray mySerialPort::readAll()
         RxCnt+=static_cast<uint32_t>(tmp.size());
 
     return tmp;
+}
+
+bool mySerialPort::moreSetting(StopBits sb, Parity pa, FlowControl fc, DataBits db)
+{
+    databits = db;
+    stopbits = sb;
+    flowcontrol = fc;
+    paritybit = pa;
+
+    return  mySerialPort::setDataBits(databits) &&
+            mySerialPort::setParity(paritybit) &&
+            mySerialPort::setStopBits(stopbits) &&
+            mySerialPort::setFlowControl(flowcontrol);
 }

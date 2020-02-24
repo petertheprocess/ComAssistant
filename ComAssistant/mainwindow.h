@@ -73,13 +73,15 @@ private slots:
 
     void on_actionCOM_Config_triggered();
 
+    void on_baudrateList_currentTextChanged(const QString &arg1);
+
+    void on_comList_currentTextChanged(const QString &arg1);
+
 private:
     Ui::MainWindow *ui;
     mySerialPort serial;
     QByteArray RxBuff, TxBuff;
     QTimer continuousWriteTimer;
-    About_Me_Dialog AboutMe;
-    settings_dialog settingsDialog;
 };
 
 #endif // MAINWINDOW_H
