@@ -77,7 +77,6 @@ void settings_dialog::setStopBits(QSerialPort::StopBits stopbits)
         ui->comboBox_stopBit->setCurrentIndex(2);
     else
         ui->comboBox_stopBit->setCurrentIndex(0);
-    qDebug()<<"stop"<<stopbits;
 }
 
 void settings_dialog::setDataBits(QSerialPort::DataBits databits)
@@ -92,7 +91,6 @@ void settings_dialog::setDataBits(QSerialPort::DataBits databits)
         ui->comboBox_dataBit->setCurrentIndex(3);
     else
         ui->comboBox_dataBit->setCurrentIndex(3);
-    qDebug()<<"data"<<databits;
 }
 
 void settings_dialog::setParity(QSerialPort::Parity parity)
