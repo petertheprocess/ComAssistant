@@ -17,3 +17,18 @@ void About_Me_Dialog::on_okButton_clicked()
 {
     this->close();
 }
+
+void About_Me_Dialog::on_label_2_linkActivated(const QString &link)
+{
+    QDesktopServices::openUrl(QUrl(link));
+}
+
+void About_Me_Dialog::on_label_3_linkActivated(const QString &link)
+{
+    QDesktopServices::openUrl(QUrl(link));
+}
+
+void About_Me_Dialog::on_label_7_linkActivated(const QString &link)
+{
+    QDesktopServices::openUrl(QUrl(link));
+}

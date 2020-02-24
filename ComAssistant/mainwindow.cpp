@@ -346,7 +346,6 @@ void MainWindow::on_hexDisplay_clicked(bool checked)
         if(ui->timeStampDisplayCheckBox->isChecked()){
             unconverted.replace(QRegExp("\\[.*\\]Tx->"), "");
             unconverted.replace(QRegExp("\\[.*\\]Rx<-"), "");
-
         }
         //转换且转换成功才显示
         converted = toStringDisplay(unconverted,ok);
