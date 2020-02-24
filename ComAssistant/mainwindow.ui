@@ -179,6 +179,11 @@ p, li { white-space: pre-wrap; }
        </item>
        <item>
         <property name="text">
+         <string>74880</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
          <string>115200</string>
         </property>
        </item>
