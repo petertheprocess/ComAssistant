@@ -8,16 +8,16 @@ bool hexFormatCheck(QString const &data)
 {
     int cnt = 0;
 
-    //空数据不做处理
-    if(data.size()==0)
-        return true;
-
     //大写化
     QString tmp = data.toUpper();
 
     //剔除0x前缀
     while(tmp.indexOf("0X") != -1)
         tmp.remove("0X");
+
+    //空数据不做处理
+    if(tmp.size()==0)
+        return true;
 
     //避免“x2 2x x3”这类数据格式
     if(tmp.indexOf("X ")!=-1 || tmp.indexOf(" X")!=-1 ||
@@ -51,13 +51,9 @@ bool hexFormatCheck(QString const &data)
  * Function:传入数据转换为十六进制格式
  * Output:每个数之间用空格表示
 */
-QString hexFormat(QString const &data)
+QString hexFormater(QString const &data)
 {
     int cnt = 0;
-
-    //空数据不做处理
-    if(data.size()==0)
-        return "";
 
     //大写化
     QString tmp = data.toUpper();
@@ -65,6 +61,10 @@ QString hexFormat(QString const &data)
     //剔除0x前缀
     while(tmp.indexOf("0X") != -1)
         tmp.remove("0X");
+
+    //空数据不做处理
+    if(tmp.size()==0)
+        return "";
 
     //避免“x2 2x x3”这类数据格式
     if(tmp.indexOf("X ")!=-1 || tmp.indexOf(" X")!=-1 ||
@@ -126,7 +126,11 @@ QString ByteArrayToHexString(QByteArray data)
     return ret;
 }
 
-QByteArray HexStringToByteArray(QString HexString)
+/*
+ * Function:hex格式字符串转ByteArray
+ * Note:必须传入规范的hex格式字符串，如"0x02 0x03 04 5 2f"，分隔符为空格
+*/
+QByteArray HexStringToByteArray(QString HexString, bool &isOK)
 {
     bool ok;
     QByteArray ret;
@@ -134,6 +138,14 @@ QByteArray HexStringToByteArray(QString HexString)
     HexString = HexString.simplified();
     QStringList sl = HexString.split(" ");
 
+    //大写化
+    HexString = HexString.toUpper();
+
+    //剔除0x前缀
+    while(HexString.indexOf("0X") != -1)
+        HexString.remove("0X");
+
+    //提取字符
     foreach (QString s, sl) {
         if(!s.isEmpty())
         {
@@ -143,9 +155,12 @@ QByteArray HexStringToByteArray(QString HexString)
             }else{
 //                qDebug()<<"非法的16进制字符："<<s;
                 QMessageBox::warning(nullptr,"警告",QString("非法的16进制字符: \"%1\"").arg(s));
+                isOK = false;
+                return "";
             }
         }
     }
+    isOK = true;
     return ret;
 }
 
@@ -170,7 +185,7 @@ QString toHexDisplay(bool needConvert, QString const &data)
         return data;
 }
 
-QString toStringDisplay(QString &hexString)
+QString toStringDisplay(QString &hexString, bool &isOK)
 {
-    return HexStringToByteArray(hexString);
+    return HexStringToByteArray(hexString,isOK);
 }

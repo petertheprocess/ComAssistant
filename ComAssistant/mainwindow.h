@@ -15,6 +15,7 @@
 #include <QFileDialog>
 #include <QTextStream>
 #include <QFile>
+#include <QRegExp>
 
 #include "myserialport.h"
 #include "baseconversion.h"
@@ -57,7 +58,7 @@ private slots:
 
     void on_hexSend_stateChanged(int arg1);
 
-    void on_hexDisplay_stateChanged(int arg1);
+    void on_hexDisplay_clicked(bool checked);
 
     void on_action_winLikeEnter_triggered(bool checked);
 

@@ -225,15 +225,27 @@ void MainWindow::on_sendButton_clicked()
             }
             //若添加了时间戳则把发送的数据也显示在接收区
             if(!timeString.isEmpty()){
+                //如果hex发送则把显示在接收区的发送数据转为hex模式
+                if(ui->hexDisplay->isChecked())
+                    tmp = toHexDisplay(tmp).toUtf8();
                 ui->textBrowser->moveCursor(QTextCursor::End);
                 ui->textBrowser->insertPlainText(timeString + tmp + "\r\n");
             }
         }
         else {
-            QMessageBox::information(this,"提示","此功能尚未完成。");
+            //以hex发送数据
+            //HexStringToByteArray函数必须传入格式化后的字符串，如"02 31"
+            QByteArray tmp;
+            bool ok;
+            tmp = HexStringToByteArray(ui->textEdit->toPlainText(),ok);
+            if(ok)
+                serial.write(tmp);
+//            QMessageBox::information(this,"提示","此功能尚未完成。");
         }
         //更新收发统计
         ui->statusBar->showMessage(serial.getTxRxString());
+    }else {
+        QMessageBox::information(this,"提示","串口未打开");
     }
 }
 
@@ -249,6 +261,11 @@ void MainWindow::on_TimerSendCheck_stateChanged(int arg1)
 {
     //屏蔽警告
     arg1 = 0;
+    if(!serial.isOpen()){
+        QMessageBox::information(this,"提示","串口未打开");
+        ui->TimerSendCheck->setChecked(false);
+        return;
+    }
 
     if(ui->TimerSendCheck->isChecked()){
         ui->sendInterval->setEnabled(false);
@@ -305,19 +322,42 @@ void MainWindow::on_hexSend_stateChanged(int arg1)
  * Event:十六进制显示按钮状态改变
  * Function:将当前接收框的内容转换为十六进制格式重新显示
 */
-void MainWindow::on_hexDisplay_stateChanged(int arg1)
+void MainWindow::on_hexDisplay_clicked(bool checked)
 {
-    arg1 = 0;
+    QMessageBox::StandardButton res;
+    //如果启用时间戳则在hex转string时要求删除时间戳信息。
+    if(ui->timeStampDisplayCheckBox->isChecked() && checked == false){
+        res = QMessageBox::question(this, "询问", "该操作可能会删除时间戳信息");
+        if(QMessageBox::No == res){
+            ui->hexDisplay->setChecked(true);
+            return;
+        }
+    }
 
-    if(ui->hexDisplay->isChecked()){
+    if(checked){
         QString tmp = ui->textBrowser->toPlainText();
         ui->textBrowser->clear();
         ui->textBrowser->setText(toHexDisplay(tmp));
     }else {
-        QString tmp = ui->textBrowser->toPlainText();
+        QString unconverted = ui->textBrowser->toPlainText();
+        bool ok;
+        QString converted;
+        //删除时间戳信息。
+        if(ui->timeStampDisplayCheckBox->isChecked()){
+            unconverted.replace(QRegExp("\\[.*\\]Tx->"), "");
+            unconverted.replace(QRegExp("\\[.*\\]Rx<-"), "");
+
+        }
+        //转换且转换成功才显示
+        converted = toStringDisplay(unconverted,ok);
         ui->textBrowser->clear();
-        ui->textBrowser->setText(toStringDisplay(tmp));
+        if(ok)
+            ui->textBrowser->setText(converted);
+        else {
+            ui->textBrowser->setText(unconverted);
+        }
     }
+    ui->textBrowser->moveCursor(QTextCursor::End);
 }
 
 /*
