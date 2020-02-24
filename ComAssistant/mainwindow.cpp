@@ -155,12 +155,19 @@ void MainWindow::readSerialPort()
     }
 
     //时间戳变量
-    if(ui->timeStampDisplayCheckBox->isChecked())
-        timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz "); //补空格美观
+    if(ui->timeStampDisplayCheckBox->isChecked()){
+        timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
+        timeString = "["+timeString+"]Rx<- ";
+    }
 
+    //打印数据
     if(!readBuff.isEmpty()){
         //移动光标
         ui->textBrowser->moveCursor(QTextCursor::End);
+        //进制转换
+        if(ui->hexDisplay->isChecked()){
+            readBuff = toHexDisplay(readBuff).toUtf8();
+        }
         //追加数据
         ui->textBrowser->insertPlainText(timeString + readBuff);
         if(!timeString.isEmpty())
@@ -188,7 +195,7 @@ void MainWindow::on_sendButton_clicked()
         //十六进制检查
         if(!ui->hexSend->isChecked()){
 
-            //回车风格转换
+            //回车风格转换，win风格补上'\r'，默认unix风格
             QByteArray tmp = ui->textEdit->toPlainText().toUtf8();
             if(ui->action_winLikeEnter->isChecked()){
                 //win风格
@@ -209,7 +216,18 @@ void MainWindow::on_sendButton_clicked()
 
             //utf8编码
             serial.write(tmp);
-//            qDebug()<<"T:" + (tmp);
+
+            //更新在显示区域
+            QString timeString;
+            if(ui->timeStampDisplayCheckBox->isChecked()){
+                timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
+                timeString = "["+timeString+"]Tx-> ";
+            }
+            //若添加了时间戳则把发送的数据也显示在接收区
+            if(!timeString.isEmpty()){
+                ui->textBrowser->moveCursor(QTextCursor::End);
+                ui->textBrowser->insertPlainText(timeString + tmp + "\r\n");
+            }
         }
         else {
             QMessageBox::information(this,"提示","此功能尚未完成。");
@@ -260,7 +278,6 @@ void MainWindow::on_textEdit_textChanged()
         //不能记录非空数据，因为clear操作也会触发本事件
         if(!ui->textEdit->toPlainText().isEmpty())
             lastText = ui->textEdit->toPlainText();
-        ui->textBrowser->append(hexFormat(ui->textEdit->toPlainText()));
     }
 }
 
@@ -290,8 +307,17 @@ void MainWindow::on_hexSend_stateChanged(int arg1)
 */
 void MainWindow::on_hexDisplay_stateChanged(int arg1)
 {
-    if(ui->hexDisplay->isChecked())
-        ui->textBrowser->setText(toHexDisplay(ui->textBrowser->toPlainText()));
+    arg1 = 0;
+
+    if(ui->hexDisplay->isChecked()){
+        QString tmp = ui->textBrowser->toPlainText();
+        ui->textBrowser->clear();
+        ui->textBrowser->setText(toHexDisplay(tmp));
+    }else {
+        QString tmp = ui->textBrowser->toPlainText();
+        ui->textBrowser->clear();
+        ui->textBrowser->setText(toStringDisplay(tmp));
+    }
 }
 
 /*

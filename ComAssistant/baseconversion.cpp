@@ -114,18 +114,63 @@ bool hexFormatCheck(char &data)
     }
 }
 
+QString ByteArrayToHexString(QByteArray data)
+{
+    QString ret(data.toHex().toUpper());//转为16进制大写
+    int originLen = ret.length()/2;
+    for(int i = 1; i < originLen; i++)
+    {
+       ret.insert(2*i+i-1," ");//编写格式
+    }
+    ret.append(' ');
+    return ret;
+}
+
+QByteArray HexStringToByteArray(QString HexString)
+{
+    bool ok;
+    QByteArray ret;
+    HexString = HexString.trimmed();
+    HexString = HexString.simplified();
+    QStringList sl = HexString.split(" ");
+
+    foreach (QString s, sl) {
+        if(!s.isEmpty())
+        {
+            char c = static_cast<char>(s.toInt(&ok,16)&0xFF);
+            if(ok){
+                ret.append(c);
+            }else{
+//                qDebug()<<"非法的16进制字符："<<s;
+                QMessageBox::warning(nullptr,"警告",QString("非法的16进制字符: \"%1\"").arg(s));
+            }
+        }
+    }
+    return ret;
+}
+
 /*
  * Function:将数据转换为十六进制显示
 */
 QString toHexDisplay(QString const &data)
 {
-    QString res, tmp;
-    bool ok;
-    qDebug()<<"t"<<*(data.data()+3);
-    for (int i = 0; i < data.size(); i++) {
-        tmp = data[i];
-        res = res + QString::number(tmp.toLatin1().at(0)).toUpper()+" ";
-    }
-//    qDebug()<<res<<endl;
+    QString res;
+    res = ByteArrayToHexString(data.toUtf8());
     return res;
+}
+
+/*
+ * Function:带开关的十六进制转换
+*/
+QString toHexDisplay(bool needConvert, QString const &data)
+{
+    if(needConvert)
+        return toHexDisplay(data);
+    else
+        return data;
+}
+
+QString toStringDisplay(QString &hexString)
+{
+    return HexStringToByteArray(hexString);
 }
