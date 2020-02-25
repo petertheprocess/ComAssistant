@@ -8,6 +8,8 @@
 #include <QString>
 #include <QByteArray>
 
+#include <config.h>
+
 class mySerialPort : public QSerialPort
 {
 public:

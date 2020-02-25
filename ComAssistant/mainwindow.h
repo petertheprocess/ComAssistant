@@ -19,6 +19,7 @@
 
 #include "myserialport.h"
 #include "baseconversion.h"
+#include "config.h"
 
 #include "about_me_dialog.h"
 #include "settings_dialog.h"
@@ -52,7 +53,7 @@ private slots:
 
     void continuousWriteSlot();
 
-    void on_TimerSendCheck_stateChanged(int arg1);
+    void on_TimerSendCheck_clicked(bool checked);
 
     void on_textEdit_textChanged();
 
@@ -79,6 +80,7 @@ private slots:
     void on_comList_currentTextChanged(const QString &arg1);
 
 private:
+    void readConfig();
     Ui::MainWindow *ui;
     mySerialPort serial;
     QByteArray RxBuff, TxBuff;

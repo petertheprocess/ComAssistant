@@ -28,6 +28,7 @@ CONFIG += c++11
 SOURCES += \
         about_me_dialog.cpp \
         baseconversion.cpp \
+        config.cpp \
         main.cpp \
         mainwindow.cpp \
         myserialport.cpp \
@@ -36,6 +37,7 @@ SOURCES += \
 HEADERS += \
         about_me_dialog.h \
         baseconversion.h \
+        config.h \
         mainwindow.h \
         myserialport.h \
         settings_dialog.h

@@ -2,12 +2,7 @@
 
 mySerialPort::mySerialPort():TxCnt(0),RxCnt(0)
 {
-    databits = Data8;
-    stopbits = OneStop;
-    flowcontrol = NoFlowControl;
-    paritybit = NoParity;
-
-    refreshSerialPort();
+    moreSetting(Config::getStopBits(),Config::getParity(),Config::getFlowControl(),Config::getDataBits());
 }
 
 mySerialPort::~mySerialPort()

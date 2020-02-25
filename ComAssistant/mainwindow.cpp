@@ -1,15 +1,54 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+/*
+ * Function:读取配置
+*/
+void MainWindow::readConfig()
+{
+    //回车风格
+    if(Config::getEnterStyle() == EnterStyle_e::WinStyle){
+        ui->action_winLikeEnter->setChecked(true);
+        ui->action_unixLikeEnter->setChecked(false);
+    }else if (Config::getEnterStyle() == EnterStyle_e::UnixStyle) {
+        ui->action_winLikeEnter->setChecked(false);
+        ui->action_unixLikeEnter->setChecked(true);
+    }else {
+        ui->action_winLikeEnter->setChecked(true);
+        ui->action_unixLikeEnter->setChecked(false);
+        QMessageBox::warning(this, "警告", "未知的回车风格");
+    }
+
+    //编码规则
+    if(Config::getCodeRule() == CodeRule_e::UTF8){
+        ui->actionUTF8->setChecked(true);
+    }else {
+        ui->actionUTF8->setChecked(true);
+        QMessageBox::warning(this, "警告", "未支持的编码格式");
+    }
+    //时间戳
+    ui->timeStampDisplayCheckBox->setChecked(Config::getTimeStampState());
+    //发送间隔
+    ui->sendInterval->setText(QString::number(Config::getSendInterval()));
+    //hex发送
+    ui->hexSend->setChecked(Config::getHexSendState());
+    //hex显示
+    ui->hexDisplay->setChecked(Config::getHexShowState());
+    //波特率
+    ui->baudrateList->setCurrentText(QString::number(Config::getBaudrate()));
+}
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    serial()    //初始化串口对象
+    ui(new Ui::MainWindow)
+
 {
     ui->setupUi(this);
 
     connect(&continuousWriteTimer, SIGNAL(timeout()), this, SLOT(continuousWriteSlot()));
     connect(&serial, SIGNAL(readyRead()), this, SLOT(readSerialPort()));
+
+    readConfig();
 
     //搜寻可用串口
     on_refreshCom_clicked();
@@ -18,14 +57,9 @@ MainWindow::MainWindow(QWidget *parent) :
     serial.resetCnt();
     ui->statusBar->showMessage(serial.getTxRxString());
 
-    //设置回车风格
-    ui->action_winLikeEnter->setChecked(true);
-
-    //设置编码格式
-    ui->actionUTF8->setChecked(true);
-
-    //设置默认波特率
-    ui->baudrateList->setCurrentText("115200");
+    //设置波特率框和发送间隔框的合法输入范围
+    ui->baudrateList->setValidator(new QIntValidator(0,9999999,this));
+    ui->sendInterval->setValidator(new QIntValidator(0,99999,this));
 
     //只存在一个串口时自动打开
     if(ui->comList->count()==1){
@@ -37,6 +71,26 @@ MainWindow::MainWindow(QWidget *parent) :
 
 MainWindow::~MainWindow()
 {
+    Config::setBaudrate(serial.baudRate());
+    Config::setDataBits(serial.dataBits());
+    Config::setStopBits(serial.stopBits());
+    Config::setParity(serial.parity());
+    Config::setFlowControl(serial.flowControl());
+
+    if(ui->actionUTF8->isChecked()){
+        Config::setCodeRule(CodeRule_e::UTF8);
+    }
+    if(ui->action_winLikeEnter->isChecked()){
+        Config::setEnterStyle(EnterStyle_e::WinStyle);
+    }else if(ui->action_unixLikeEnter->isChecked()){
+        Config::setEnterStyle(EnterStyle_e::UnixStyle);
+    }
+
+    Config::setHexSendState(ui->hexSend->isChecked());
+    Config::setHexShowState(ui->hexDisplay->isChecked());
+    Config::setSendInterval(ui->sendInterval->text().toInt());
+    Config::setTimeStampState(ui->timeStampDisplayCheckBox->isChecked());
+
     delete ui;
 }
 
@@ -179,7 +233,7 @@ void MainWindow::readSerialPort()
 }
 
 /*
- * Function:连续发送定时器槽，自动发送数据
+ * Function:连续发送定时器槽，执行数据发送
 */
 void MainWindow::continuousWriteSlot()
 {
@@ -257,17 +311,20 @@ void MainWindow::on_clearStatistic_clicked()
     ui->statusBar->showMessage(serial.getTxRxString());
 }
 
-void MainWindow::on_TimerSendCheck_stateChanged(int arg1)
+void MainWindow::on_TimerSendCheck_clicked(bool checked)
 {
-    //屏蔽警告
-    arg1 = 0;
+    if(ui->sendInterval->text().toInt() < 15 && checked){
+        QMessageBox::warning(this,"警告","发送间隔较小可能不够准确");
+    }
+
     if(!serial.isOpen()){
         QMessageBox::information(this,"提示","串口未打开");
         ui->TimerSendCheck->setChecked(false);
         return;
     }
 
-    if(ui->TimerSendCheck->isChecked()){
+    //启停定时器
+    if(checked){
         ui->sendInterval->setEnabled(false);
         continuousWriteTimer.start(ui->sendInterval->text().toInt());
     }
@@ -333,7 +390,6 @@ void MainWindow::on_hexDisplay_clicked(bool checked)
             return;
         }
     }
-
     if(checked){
         QString tmp = ui->textBrowser->toPlainText();
         ui->textBrowser->clear();
@@ -365,8 +421,12 @@ void MainWindow::on_hexDisplay_clicked(bool checked)
 */
 void MainWindow::on_action_winLikeEnter_triggered(bool checked)
 {
-    if(checked)
+    if(checked){
         ui->action_unixLikeEnter->setChecked(false);
+
+    }else {
+        ui->action_winLikeEnter->setChecked(false);
+    }
 }
 
 /*
@@ -375,8 +435,11 @@ void MainWindow::on_action_winLikeEnter_triggered(bool checked)
 */
 void MainWindow::on_action_unixLikeEnter_triggered(bool checked)
 {
-    if(checked)
+    if(checked){
         ui->action_winLikeEnter->setChecked(false);
+    }else {
+        ui->action_unixLikeEnter->setChecked(false);
+    }
 }
 
 
@@ -386,8 +449,9 @@ void MainWindow::on_action_unixLikeEnter_triggered(bool checked)
 */
 void MainWindow::on_actionUTF8_triggered(bool checked)
 {
-    if(!checked)
+    if(!checked){
         ui->actionUTF8->setChecked(!checked);
+    }
 }
 
 /*
@@ -481,17 +545,24 @@ void MainWindow::on_actionCOM_Config_triggered()
     delete p;
 }
 
+/*
+ * Function:波特率框文本变化，检查输入合法性并重置波特率
+*/
 void MainWindow::on_baudrateList_currentTextChanged(const QString &arg1)
 {
     bool ok;
-    qint32 baud = arg1.toInt(&ok);
-    if(ok)
+    int baud = arg1.toInt(&ok);
+    if(ok){
         serial.setBaudRate(baud);
+    }
     else {
-        QMessageBox::information(this,"提示","请输入十进制数字");
+        QMessageBox::information(this,"提示","请输入合法波特率");
     }
 }
 
+/*
+ * Function:端口号文本变化，重新打开串口
+*/
 void MainWindow::on_comList_currentTextChanged(const QString &arg1)
 {
     QString unused = arg1;//屏蔽警告
@@ -501,3 +572,4 @@ void MainWindow::on_comList_currentTextChanged(const QString &arg1)
         on_comSwitch_clicked(true);
     }
 }
+
