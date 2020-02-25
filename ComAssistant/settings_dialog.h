@@ -26,7 +26,9 @@ public:
     void setDataBits(QSerialPort::DataBits databits);
     void setParity(QSerialPort::Parity parity);
     void setFlowControl(QSerialPort::FlowControl flowcontrol);
-
+    bool clickedOK(){
+        return ok;
+    }
 private slots:
     void on_buttonBox_accepted();
 
@@ -34,6 +36,7 @@ private slots:
 
 private:
     Ui::settings_dialog *ui;
+    bool ok = false;
 };
 
 #endif // SETTINGS_DIALOG_H

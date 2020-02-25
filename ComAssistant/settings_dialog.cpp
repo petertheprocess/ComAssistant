@@ -59,9 +59,9 @@ QSerialPort::FlowControl settings_dialog::getFlowControl()
 {
     if("None" == ui->comboBox_flowControl->currentText())
         return QSerialPort::NoFlowControl;
-    else if("Odd" == ui->comboBox_flowControl->currentText())
+    else if("Hardware" == ui->comboBox_flowControl->currentText())
         return QSerialPort::HardwareControl;
-    else if("Even" == ui->comboBox_flowControl->currentText())
+    else if("Software" == ui->comboBox_flowControl->currentText())
         return QSerialPort::SoftwareControl;
     else
         return QSerialPort::NoFlowControl;
@@ -123,6 +123,7 @@ void settings_dialog::setFlowControl(QSerialPort::FlowControl flowcontrol)
 
 void settings_dialog::on_buttonBox_accepted()
 {
+    ok = true;
     this->close();
 }
 

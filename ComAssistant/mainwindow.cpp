@@ -540,8 +540,11 @@ void MainWindow::on_actionCOM_Config_triggered()
     p->setFlowControl(serial.flowControl());
     p->exec();
     //对话框返回新配置并设置
-    if(!serial.moreSetting(p->getStopBits(),p->getParity(),p->getFlowControl(),p->getDataBits()))
-        QMessageBox::information(this,"提示","串口设置失败");
+    if(p->clickedOK()){
+        if(!serial.moreSetting(p->getStopBits(),p->getParity(),p->getFlowControl(),p->getDataBits()))
+            QMessageBox::information(this,"提示","串口设置失败，请关闭串口重试");
+    }
+
     delete p;
 }
 
