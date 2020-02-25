@@ -270,8 +270,8 @@ p, li { white-space: pre-wrap; }
     <property name="title">
      <string>文件</string>
     </property>
-    <addaction name="actionSaveData"/>
-    <addaction name="actionReadData"/>
+    <addaction name="actionSaveOriginData"/>
+    <addaction name="actionReadOriginData"/>
     <addaction name="actionSaveShowedData"/>
    </widget>
    <widget class="QMenu" name="menu_5">
@@ -323,14 +323,20 @@ p, li { white-space: pre-wrap; }
     <string>绘图帮助</string>
    </property>
   </action>
-  <action name="actionSaveData">
+  <action name="actionSaveOriginData">
    <property name="text">
-    <string>保存数据</string>
+    <string>保存原始数据</string>
+   </property>
+   <property name="toolTip">
+    <string>保存所有字符</string>
    </property>
   </action>
-  <action name="actionReadData">
+  <action name="actionReadOriginData">
    <property name="text">
-    <string>读取数据</string>
+    <string>读取原始数据</string>
+   </property>
+   <property name="toolTip">
+    <string>读取原始数据</string>
    </property>
   </action>
   <action name="actionYTMode">
@@ -376,6 +382,9 @@ p, li { white-space: pre-wrap; }
   <action name="actionSaveShowedData">
    <property name="text">
     <string>保存显示的数据</string>
+   </property>
+   <property name="toolTip">
+    <string>保存可见字符</string>
    </property>
   </action>
  </widget>

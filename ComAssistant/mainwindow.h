@@ -67,9 +67,9 @@ private slots:
 
     void on_actionUTF8_triggered(bool checked);
 
-    void on_actionSaveData_triggered();
+    void on_actionSaveOriginData_triggered();
 
-    void on_actionReadData_triggered();
+    void on_actionReadOriginData_triggered();
 
     void on_actionAbout_triggered();
 
@@ -80,6 +80,8 @@ private slots:
     void on_comList_currentTextChanged(const QString &arg1);
 
     void on_actionSaveShowedData_triggered();
+
+    void on_actionUpdate_triggered();
 
 private:
     void readConfig();

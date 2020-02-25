@@ -458,7 +458,7 @@ void MainWindow::on_actionUTF8_triggered(bool checked)
  * Action:保存数据动作触发
  * Function:
 */
-void MainWindow::on_actionSaveData_triggered()
+void MainWindow::on_actionSaveOriginData_triggered()
 {
     //如果追加时间戳则提示时间戳不会被保存
     if(ui->timeStampDisplayCheckBox->isChecked())
@@ -489,7 +489,7 @@ void MainWindow::on_actionSaveData_triggered()
  * Action:读取数据动作触发
  * Function:
 */
-void MainWindow::on_actionReadData_triggered()
+void MainWindow::on_actionReadOriginData_triggered()
 {   
     //打开文件对话框
     QString readPath = QFileDialog::getOpenFileName(this,
@@ -595,4 +595,9 @@ void MainWindow::on_actionSaveShowedData_triggered()
         stream<<ui->textBrowser->toPlainText();
         file.close();
     }
+}
+
+void MainWindow::on_actionUpdate_triggered()
+{
+    QMessageBox::information(this,"提示","当前版本号："+Config::getVersion()+"\n"+"暂时无法检查更新");
 }
