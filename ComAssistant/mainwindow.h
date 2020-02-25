@@ -79,6 +79,8 @@ private slots:
 
     void on_comList_currentTextChanged(const QString &arg1);
 
+    void on_actionSaveShowedData_triggered();
+
 private:
     void readConfig();
     Ui::MainWindow *ui;

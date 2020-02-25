@@ -480,7 +480,7 @@ void MainWindow::on_actionSaveData_triggered()
     QTextStream stream(&file);
     //删除旧数据形式写文件
     if(file.open(QFile::WriteOnly|QFile::Text|QFile::Truncate)){
-        stream<<ui->textBrowser->toPlainText();
+        stream<<RxBuff;
         file.close();
     }
 }
@@ -573,3 +573,26 @@ void MainWindow::on_comList_currentTextChanged(const QString &arg1)
     }
 }
 
+
+void MainWindow::on_actionSaveShowedData_triggered()
+{
+    //打开保存文件对话框
+    QString savePath = QFileDialog::getSaveFileName(this,
+                                                    "保存数据-选择文件路径",
+                                                    QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".txt",
+                                                    "Text File(*.txt);;All File(*.*)");
+    //检查路径格式
+    if(!savePath.endsWith("txt")){
+        QMessageBox::information(this,"尚未支持的文件格式","请选择txt文本文件。");
+        return;
+    }
+
+    //保存数据
+    QFile file(savePath);
+    QTextStream stream(&file);
+    //删除旧数据形式写文件
+    if(file.open(QFile::WriteOnly|QFile::Text|QFile::Truncate)){
+        stream<<ui->textBrowser->toPlainText();
+        file.close();
+    }
+}

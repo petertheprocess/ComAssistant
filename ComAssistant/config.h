@@ -9,25 +9,36 @@
 #include <QFile>
 #include <QTextCodec>
 
+//版本
+#define VERSION_STRING  "0.0.1"
+//保存路径
 #define SAVE_PATH   "config.ini"
+//默认发送间隔
 #define DEFAULT_SEND_INTERVAL   100
 //节
 #define SECTION_SERIAL   QString("Serial/")
 #define SECTION_GLOBAL   QString("Global/")
-//键
+#define SECTION_ABOUT    QString("About/")
+//serial键
 #define KEY_BAUDRATE        QString("Baudrate")
 #define KEY_STOPBIT         QString("StopBit")
 #define KEY_DATABIT         QString("DataBit")
 #define KEY_PARITY          QString("Parity")
 #define KEY_FLOWCONTROL     QString("FlowControl")
-//键
+//global键
 #define KEY_CODERULE        QString("CodeRule")
 #define KEY_ENTERSTYLE      QString("EnterStyle")
 #define KEY_TIMESTAMPSTATE  QString("TimeStampState")
 #define KEY_SENDINTERVAL    QString("SendInterval")
 #define KEY_HEXSENDSTATE    QString("HexSendState")
 #define KEY_HEXSHOWSTATE    QString("HexShowState")
+//about键
+#define KEY_VERSION     QString("Version")
+#define KEY_SOURCE_CODE QString("SourceCode")
+#define KEY_AUTHER      QString("Auther")
+#define KEY_EMAIL       QString("Email")
 
+//
 //值
 enum CodeRule_e{
     UTF8 = 0,
@@ -59,6 +70,11 @@ public:
         iniFile->setValue(SECTION_GLOBAL+KEY_HEXSENDSTATE, false);
         iniFile->setValue(SECTION_GLOBAL+KEY_HEXSHOWSTATE, false);
 
+        iniFile->setValue(SECTION_ABOUT+KEY_VERSION, VERSION_STRING);
+        iniFile->setValue(SECTION_ABOUT+KEY_SOURCE_CODE, "www.github.com/inhowe/ComAssistant");
+        iniFile->setValue(SECTION_ABOUT+KEY_AUTHER, "INHOWE");
+        iniFile->setValue(SECTION_ABOUT+KEY_EMAIL, "inhowe@qq.com");
+
         delete iniFile;
     }
     static void createDefaultIfNotExist()
@@ -81,7 +97,12 @@ public:
         }
         return false;
     }
-
+    static QString getVersion(){
+        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+        QString value = iniFile->value(SECTION_ABOUT+KEY_VERSION, VERSION_STRING).toString();
+        delete iniFile;
+        return value;
+    }
     //serial
     static void setBaudrate(int baud){
         createDefaultIfNotExist();

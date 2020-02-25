@@ -272,6 +272,7 @@ p, li { white-space: pre-wrap; }
     </property>
     <addaction name="actionSaveData"/>
     <addaction name="actionReadData"/>
+    <addaction name="actionSaveShowedData"/>
    </widget>
    <widget class="QMenu" name="menu_5">
     <property name="title">
@@ -370,6 +371,11 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>\n</string>
+   </property>
+  </action>
+  <action name="actionSaveShowedData">
+   <property name="text">
+    <string>保存显示的数据</string>
    </property>
   </action>
  </widget>
