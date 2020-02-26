@@ -45,7 +45,9 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    //定时器和串口的槽
     connect(&continuousWriteTimer, SIGNAL(timeout()), this, SLOT(continuousWriteSlot()));
+    connect(&autoSubcontractTimer, SIGNAL(timeout()), this, SLOT(autoSubcontractTimerSlot()));
     connect(&serial, SIGNAL(readyRead()), this, SLOT(readSerialPort()));
 
     readConfig();
@@ -123,6 +125,11 @@ void MainWindow::on_clearRecvAreaButton_clicked()
     RxBuff.clear();
     serial.resetRxCnt();
 
+    if(serial.isOpen())
+        serial.flush();
+
+    unshowedRxBuff.clear();
+
     //更新收发统计
     ui->statusBar->showMessage(serial.getTxRxString());
 }
@@ -175,57 +182,67 @@ void MainWindow::on_comSwitch_clicked(bool checked)
 */
 void MainWindow::readSerialPort()
 {
-    QString timeString("");
-
-    QByteArray readBuff;
-    static QByteArray restBuff;
+    QByteArray tmpReadBuff;
 
     //读取数据并衔接到上次未处理完的数据后面
-    readBuff = serial.readAll();
-    readBuff = restBuff + readBuff;
-    restBuff.clear();
-    RxBuff.append(readBuff);
+    tmpReadBuff = serial.readAll();
+    tmpReadBuff = unshowedRxBuff + tmpReadBuff;
+    unshowedRxBuff.clear();
+    RxBuff.append(tmpReadBuff);
 
-    //'\r'不允许单独出现
-    if(readBuff.at(readBuff.size()-1) == '\r'){
-        restBuff.append(readBuff.at(readBuff.size()-1));
-        readBuff.remove(readBuff.size()-1,1);
-    }
-    //寻找中文等拓展字符,主要是数据要成组（3个char对应一个中文），因此对不是3的倍数的readBuff的末尾数据进行处理
-    if(readBuff.size()%3!=0){
-        //余1和余2
-        if(readBuff.size()%3==1){
-            if(readBuff.at(readBuff.size()-1)&0x80){
-                restBuff.append(readBuff.at(readBuff.size()-1));
-                readBuff.remove(readBuff.size()-1,1);
-            }
-        }
-        if(readBuff.size()%3==2){
-            if(readBuff.at(readBuff.size()-2)&0x80){
-                restBuff.append(readBuff.mid(readBuff.size()-2));
-                readBuff.remove(readBuff.size()-2,2);
-            }
-        }
+    //'\r'若单独结尾则可能被误切断，放到下一批数据中
+    if(tmpReadBuff.endsWith('\r')){
+        unshowedRxBuff.append(tmpReadBuff.at(tmpReadBuff.size()-1));
+        tmpReadBuff.remove(tmpReadBuff.size()-1,1);
     }
 
-    //时间戳变量
-    if(ui->timeStampDisplayCheckBox->isChecked()){
-        timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
-        timeString = "["+timeString+"]Rx<- ";
+    //是否进制转换，不转换则考虑中文处理
+    if(ui->hexDisplay->isChecked()){
+        tmpReadBuff = toHexDisplay(tmpReadBuff).toUtf8();
+    }else if(ui->actionUTF8->isChecked()){
+        //UTF8中文字符处理
+        //最后一个字符不是ascii字符才处理，否则直接上屏
+        if(tmpReadBuff.back() & 0x80){
+            //中文一定有连续3个字符高位为1
+            int continuesCnt = 0;
+            int lastUTFpos = -1;
+            for(int i = 0; i < tmpReadBuff.size(); i++){
+                if(tmpReadBuff.at(i)&0x80){
+                    continuesCnt++;
+                }else {
+                    continuesCnt=0;
+                }
+                if(continuesCnt == 3){
+                    continuesCnt = 0;
+                    lastUTFpos = i;
+                }
+            }
+            unshowedRxBuff = tmpReadBuff.mid(lastUTFpos+1);
+            tmpReadBuff = tmpReadBuff.mid(0,lastUTFpos+1);
+        }
+//        qDebug()<<unshowedRxBuff<<tmpReadBuff;
     }
 
     //打印数据
-    if(!readBuff.isEmpty()){
+    if(!tmpReadBuff.isEmpty()){
         //移动光标
         ui->textBrowser->moveCursor(QTextCursor::End);
-        //进制转换
-        if(ui->hexDisplay->isChecked()){
-            readBuff = toHexDisplay(readBuff).toUtf8();
-        }
         //追加数据
-        ui->textBrowser->insertPlainText(timeString + readBuff);
-        if(!timeString.isEmpty())
-            ui->textBrowser->insertPlainText("\r\n");
+        if(ui->timeStampDisplayCheckBox->isChecked()){
+            //需要添加时间戳
+            QString timeString;
+            if(!autoSubcontractTimer.isActive()){
+                timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
+                timeString = "["+timeString+"]Rx<- ";
+            }
+            ui->textBrowser->insertPlainText(timeString + tmpReadBuff);
+            //分包定时器
+            autoSubcontractTimer.start(10);
+            autoSubcontractTimer.setSingleShot(true);
+        }else{
+            //不需要时间戳
+            ui->textBrowser->insertPlainText(tmpReadBuff);
+        }
 
         //更新收发统计
         ui->statusBar->showMessage(serial.getTxRxString());
@@ -238,6 +255,13 @@ void MainWindow::readSerialPort()
 void MainWindow::continuousWriteSlot()
 {
     on_sendButton_clicked();
+}
+
+/*
+ * Function:自动分包定时器槽
+*/
+void MainWindow::autoSubcontractTimerSlot()
+{
 }
 
 /*
@@ -271,19 +295,16 @@ void MainWindow::on_sendButton_clicked()
             //utf8编码
             serial.write(tmp);
 
-            //更新在显示区域
-            QString timeString;
+            //若添加了时间戳则把发送的数据也显示在接收区
             if(ui->timeStampDisplayCheckBox->isChecked()){
+                QString timeString;
                 timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
                 timeString = "["+timeString+"]Tx-> ";
-            }
-            //若添加了时间戳则把发送的数据也显示在接收区
-            if(!timeString.isEmpty()){
                 //如果hex发送则把显示在接收区的发送数据转为hex模式
                 if(ui->hexDisplay->isChecked())
                     tmp = toHexDisplay(tmp).toUtf8();
                 ui->textBrowser->moveCursor(QTextCursor::End);
-                ui->textBrowser->insertPlainText(timeString + tmp + "\r\n");
+                ui->textBrowser->insertPlainText("\r\n" + timeString + tmp + "\r\n");
             }
         }
         else {
@@ -294,7 +315,6 @@ void MainWindow::on_sendButton_clicked()
             tmp = HexStringToByteArray(ui->textEdit->toPlainText(),ok);
             if(ok)
                 serial.write(tmp);
-//            QMessageBox::information(this,"提示","此功能尚未完成。");
         }
         //更新收发统计
         ui->statusBar->showMessage(serial.getTxRxString());
@@ -325,12 +345,12 @@ void MainWindow::on_TimerSendCheck_clicked(bool checked)
 
     //启停定时器
     if(checked){
-        ui->sendInterval->setEnabled(false);
+//        ui->sendInterval->setEnabled(false);
         continuousWriteTimer.start(ui->sendInterval->text().toInt());
     }
     else {
         continuousWriteTimer.stop();
-        ui->sendInterval->setEnabled(true);
+//        ui->sendInterval->setEnabled(true);
     }
 }
 
@@ -361,7 +381,7 @@ void MainWindow::on_textEdit_textChanged()
 */
 void MainWindow::on_hexSend_stateChanged(int arg1)
 {
-    arg1 = 0;
+    arg1++;
     static QString lastAsciiText, lastHexText;
     if(ui->hexSend->isChecked()){
         lastAsciiText = ui->textEdit->toPlainText();
@@ -606,4 +626,10 @@ void MainWindow::on_actionSaveShowedData_triggered()
 void MainWindow::on_actionUpdate_triggered()
 {
     QMessageBox::information(this,"提示","当前版本号："+Config::getVersion()+"\n"+"暂时无法检查更新");
+}
+
+void MainWindow::on_sendInterval_textChanged(const QString &arg1)
+{
+    if(continuousWriteTimer.isActive())
+        continuousWriteTimer.setInterval(arg1.toInt());
 }

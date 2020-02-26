@@ -53,6 +53,8 @@ private slots:
 
     void continuousWriteSlot();
 
+    void autoSubcontractTimerSlot();
+
     void on_TimerSendCheck_clicked(bool checked);
 
     void on_textEdit_textChanged();
@@ -83,12 +85,16 @@ private slots:
 
     void on_actionUpdate_triggered();
 
+    void on_sendInterval_textChanged(const QString &arg1);
+
 private:
     void readConfig();
     Ui::MainWindow *ui;
     mySerialPort serial;
-    QByteArray RxBuff, TxBuff;
-    QTimer continuousWriteTimer;
+    QByteArray RxBuff, TxBuff; //原始数据的收发缓冲
+    QByteArray unshowedRxBuff;    //未上屏的接收缓冲
+    QTimer continuousWriteTimer; //自动发送定时器
+    QTimer autoSubcontractTimer; //自动分包定时器
 };
 
 #endif // MAINWINDOW_H
