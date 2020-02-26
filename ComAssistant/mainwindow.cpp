@@ -471,7 +471,8 @@ void MainWindow::on_actionSaveOriginData_triggered()
                                                     "Text File(*.txt);;All File(*.*)");
     //检查路径格式
     if(!savePath.endsWith("txt")){
-        QMessageBox::information(this,"尚未支持的文件格式","请选择txt文本文件。");
+        if(!savePath.isEmpty())
+            QMessageBox::information(this,"尚未支持的文件格式","请选择txt文本文件。");
         return;
     }
 
@@ -498,7 +499,8 @@ void MainWindow::on_actionReadOriginData_triggered()
                                                     "Text File(*.txt);;All File(*.*)");
     //检查文件路径结尾
     if(!readPath.endsWith("txt")){
-        QMessageBox::information(this,"尚未支持的文件格式","请选择txt文本文件。");
+        if(!readPath.isEmpty())
+            QMessageBox::information(this,"尚未支持的文件格式","请选择txt文本文件。");
         return;
     }
 
@@ -584,9 +586,10 @@ void MainWindow::on_actionSaveShowedData_triggered()
                                                     "保存数据-选择文件路径",
                                                     QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".txt",
                                                     "Text File(*.txt);;All File(*.*)");
-    //检查路径格式
+    //检查路径
     if(!savePath.endsWith("txt")){
-        QMessageBox::information(this,"尚未支持的文件格式","请选择txt文本文件。");
+        if(!savePath.isEmpty())
+            QMessageBox::information(this,"尚未支持的文件格式","请选择txt文本文件。");
         return;
     }
 
