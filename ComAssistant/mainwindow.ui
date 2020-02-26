@@ -45,6 +45,16 @@
         </item>
         <item>
          <property name="text">
+          <string>14400</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>19200</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
           <string>38400</string>
          </property>
         </item>
@@ -65,6 +75,21 @@
         </item>
         <item>
          <property name="text">
+          <string>128000</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>230400</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>256000</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
           <string>460800</string>
          </property>
         </item>
@@ -75,7 +100,32 @@
         </item>
         <item>
          <property name="text">
+          <string>512000</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>600000</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>921600</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>1500000</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
           <string>1000000</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>2000000</string>
          </property>
         </item>
        </widget>

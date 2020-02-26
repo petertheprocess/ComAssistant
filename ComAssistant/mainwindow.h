@@ -23,6 +23,7 @@
 
 #include "about_me_dialog.h"
 #include "settings_dialog.h"
+#include "highlighter.h"
 
 namespace Ui {
 class MainWindow;
@@ -95,6 +96,7 @@ private:
     QByteArray unshowedRxBuff;    //未上屏的接收缓冲
     QTimer continuousWriteTimer; //自动发送定时器
     QTimer autoSubcontractTimer; //自动分包定时器
+    Highlighter *highlighter;
 };
 
 #endif // MAINWINDOW_H

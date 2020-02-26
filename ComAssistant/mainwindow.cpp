@@ -69,6 +69,8 @@ MainWindow::MainWindow(QWidget *parent) :
         on_comSwitch_clicked(true);
     }
 
+    //加载高亮规则
+    highlighter = new Highlighter(ui->textBrowser->document());
 }
 
 MainWindow::~MainWindow()
@@ -242,8 +244,9 @@ void MainWindow::readSerialPort()
         }else{
             //不需要时间戳
             ui->textBrowser->insertPlainText(tmpReadBuff);
-        }
 
+        }
+//        ui->textBrowser->append("<font color=\"red\">This is some text!</font>");
         //更新收发统计
         ui->statusBar->showMessage(serial.getTxRxString());
     }
