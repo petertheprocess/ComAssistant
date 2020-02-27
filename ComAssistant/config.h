@@ -32,6 +32,7 @@
 #define KEY_SENDINTERVAL    QString("SendInterval")
 #define KEY_HEXSENDSTATE    QString("HexSendState")
 #define KEY_HEXSHOWSTATE    QString("HexShowState")
+#define KEY_MULTISTRINGSTATE    QString("MultiStringState")
 //about键
 #define KEY_VERSION     QString("Version")
 #define KEY_SOURCE_CODE QString("SourceCode")
@@ -69,6 +70,7 @@ public:
         iniFile->setValue(SECTION_GLOBAL+KEY_SENDINTERVAL, DEFAULT_SEND_INTERVAL);
         iniFile->setValue(SECTION_GLOBAL+KEY_HEXSENDSTATE, false);
         iniFile->setValue(SECTION_GLOBAL+KEY_HEXSHOWSTATE, false);
+        iniFile->setValue(SECTION_GLOBAL+KEY_MULTISTRINGSTATE, false);
 
         iniFile->setValue(SECTION_ABOUT+KEY_VERSION, VERSION_STRING);
         iniFile->setValue(SECTION_ABOUT+KEY_SOURCE_CODE, "www.github.com/inhowe/ComAssistant");
@@ -203,6 +205,13 @@ public:
         iniFile->setValue(SECTION_GLOBAL+KEY_HEXSHOWSTATE, checked);
         delete iniFile;
     }
+    static void setMultiStringState(bool checked){
+        createDefaultIfNotExist();
+        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+        iniFile->setValue(SECTION_GLOBAL+KEY_MULTISTRINGSTATE, checked);
+        delete iniFile;
+    }
+
 
     static CodeRule_e getCodeRule(){
         QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
@@ -241,6 +250,12 @@ public:
         return value;
     }
 
+    static bool getMultiString(){
+        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+        bool value = iniFile->value(SECTION_GLOBAL+KEY_MULTISTRINGSTATE, false).toBool();
+        delete iniFile;
+        return value;
+    }
 };
 
 #endif // CONFIG_H

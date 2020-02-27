@@ -26,6 +26,16 @@ void MainWindow::readConfig()
         ui->actionUTF8->setChecked(true);
         QMessageBox::warning(this, "警告", "未支持的编码格式");
     }
+
+    //多字符串
+    if(Config::getMultiString() == true){
+        ui->actionMultiString->setChecked(true);
+        on_actionMultiString_triggered(true);
+    }else {
+        ui->actionMultiString->setChecked(false);
+        on_actionMultiString_triggered(false);
+    }
+
     //时间戳
     ui->timeStampDisplayCheckBox->setChecked(Config::getTimeStampState());
     //发送间隔
@@ -71,7 +81,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //加载高亮规则
     highlighter = new Highlighter(ui->textBrowser->document());
-
 }
 
 MainWindow::~MainWindow()
@@ -95,7 +104,7 @@ MainWindow::~MainWindow()
     Config::setHexShowState(ui->hexDisplay->isChecked());
     Config::setSendInterval(ui->sendInterval->text().toInt());
     Config::setTimeStampState(ui->timeStampDisplayCheckBox->isChecked());
-
+    Config::setMultiStringState(ui->actionMultiString->isChecked());
     delete ui;
 }
 
@@ -323,6 +332,16 @@ void MainWindow::on_sendButton_clicked()
             if(ok)
                 serial.write(tmp);
         }
+        //给多字符串控件添加条目
+        if(ui->actionMultiString->isChecked()){
+            bool hasItem=false;
+            for(int i = 0; i < ui->multiString->count(); i++){
+                if(ui->multiString->item(i)->text()==ui->textEdit->toPlainText())
+                    hasItem = true;
+            }
+            if(!hasItem)
+                ui->multiString->addItem(ui->textEdit->toPlainText());
+        }
         //更新收发统计
         ui->statusBar->showMessage(serial.getTxRxString());
     }else {
@@ -352,12 +371,10 @@ void MainWindow::on_TimerSendCheck_clicked(bool checked)
 
     //启停定时器
     if(checked){
-//        ui->sendInterval->setEnabled(false);
         continuousWriteTimer.start(ui->sendInterval->text().toInt());
     }
     else {
         continuousWriteTimer.stop();
-//        ui->sendInterval->setEnabled(true);
     }
 }
 
@@ -648,4 +665,78 @@ void MainWindow::on_actionSTM32_ISP_triggered()
     p->exec();
     delete p;
     on_comSwitch_clicked(true);
+}
+
+/*
+ * Event: 多字符串条目双击
+*/
+void MainWindow::on_multiString_itemDoubleClicked(QListWidgetItem *item)
+{
+    ui->textEdit->clear();
+    ui->textEdit->setText(item->text());
+    on_sendButton_clicked();
+}
+
+/*
+ * Action:multiString开关
+*/
+void MainWindow::on_actionMultiString_triggered(bool checked)
+{
+    if(checked){
+        ui->multiString->show();
+        ui->multiString->setAlternatingRowColors(true);
+    }else {
+        ui->multiString->close();
+    }
+}
+
+/*
+ * Function:多字符串右键菜单
+*/
+void MainWindow::on_multiString_customContextMenuRequested(const QPoint &pos)
+{
+    QListWidgetItem* curItem = ui->multiString->itemAt( pos );
+    QAction *clearSeeds = nullptr;
+    QAction *deleteSeed = nullptr;
+    QMenu *popMenu = new QMenu( this );
+    //添加右键菜单
+    if( curItem != nullptr ){
+        deleteSeed = new QAction(tr("删除"), this);
+        popMenu->addAction( deleteSeed );
+        connect( deleteSeed, SIGNAL(triggered() ), this, SLOT( deleteSeedSlot()) );
+    }
+    clearSeeds = new QAction(tr("清除"), this);
+
+    popMenu->addAction( clearSeeds );
+    connect( clearSeeds, SIGNAL(triggered() ), this, SLOT( clearSeedsSlot()) );
+    popMenu->exec( QCursor::pos() );
+    delete popMenu;
+    delete clearSeeds;
+    delete deleteSeed;
+}
+
+/*
+ * Function:删除multiString条目
+*/
+void MainWindow::deleteSeedSlot()
+{
+    QListWidgetItem * item = ui->multiString->currentItem();
+    if( item == nullptr )
+        return;
+
+    int curIndex = ui->multiString->row(item);
+    ui->multiString->takeItem(curIndex);
+    delete item;
+}
+
+/*
+ * Function:清除multiString条目
+*/
+void MainWindow::clearSeedsSlot()
+{
+    QListWidgetItem * item = ui->multiString->currentItem();
+    if( item == nullptr )
+        return;
+
+    ui->multiString->clear();
 }

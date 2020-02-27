@@ -16,6 +16,8 @@
 #include <QTextStream>
 #include <QFile>
 #include <QRegExp>
+#include <QListWidgetItem>
+#include <QKeyEvent>
 
 #include "highlighter.h"
 #include "myserialport.h"
@@ -91,6 +93,16 @@ private slots:
     void on_sendInterval_textChanged(const QString &arg1);
 
     void on_actionSTM32_ISP_triggered();
+
+    void on_multiString_itemDoubleClicked(QListWidgetItem *item);
+
+    void on_actionMultiString_triggered(bool checked);
+
+    void on_multiString_customContextMenuRequested(const QPoint &pos);
+
+    void deleteSeedSlot();
+
+    void clearSeedsSlot();
 
 private:
     void readConfig();
