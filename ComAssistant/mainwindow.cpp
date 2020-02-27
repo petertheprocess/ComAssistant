@@ -71,6 +71,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //加载高亮规则
     highlighter = new Highlighter(ui->textBrowser->document());
+
 }
 
 MainWindow::~MainWindow()
@@ -157,9 +158,11 @@ void MainWindow::on_comSwitch_clicked(bool checked)
     {
         if(serial.open(com,baud)){
             ui->comSwitch->setText("关闭串口");
+            ui->comSwitch->setChecked(true);
             ui->refreshCom->setEnabled(false);
         }
         else {
+            ui->comSwitch->setText("打开串口");
             ui->comSwitch->setChecked(false);
             ui->refreshCom->setEnabled(true);
             QMessageBox::critical(this, "串口打开失败!", "该串口设备不存在或已被占用", QMessageBox::Ok);
@@ -175,6 +178,7 @@ void MainWindow::on_comSwitch_clicked(bool checked)
 
         serial.close();
         ui->comSwitch->setText("打开串口");
+        ui->comSwitch->setChecked(false);
         ui->refreshCom->setEnabled(true);
     }
 }
@@ -635,4 +639,13 @@ void MainWindow::on_sendInterval_textChanged(const QString &arg1)
 {
     if(continuousWriteTimer.isActive())
         continuousWriteTimer.setInterval(arg1.toInt());
+}
+
+void MainWindow::on_actionSTM32_ISP_triggered()
+{
+    on_comSwitch_clicked(false);
+    STM32ISP_Dialog *p = new STM32ISP_Dialog(this);
+    p->exec();
+    delete p;
+    on_comSwitch_clicked(true);
 }

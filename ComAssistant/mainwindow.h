@@ -17,13 +17,15 @@
 #include <QFile>
 #include <QRegExp>
 
+#include "highlighter.h"
 #include "myserialport.h"
 #include "baseconversion.h"
 #include "config.h"
-
+//界面类
+#include "stm32isp_dialog.h"
 #include "about_me_dialog.h"
 #include "settings_dialog.h"
-#include "highlighter.h"
+
 
 namespace Ui {
 class MainWindow;
@@ -87,6 +89,8 @@ private slots:
     void on_actionUpdate_triggered();
 
     void on_sendInterval_textChanged(const QString &arg1);
+
+    void on_actionSTM32_ISP_triggered();
 
 private:
     void readConfig();

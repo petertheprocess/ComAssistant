@@ -33,7 +33,8 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
         myserialport.cpp \
-        settings_dialog.cpp
+        settings_dialog.cpp \
+        stm32isp_dialog.cpp
 
 HEADERS += \
         about_me_dialog.h \
@@ -42,12 +43,14 @@ HEADERS += \
         highlighter.h \
         mainwindow.h \
         myserialport.h \
-        settings_dialog.h
+        settings_dialog.h \
+        stm32isp_dialog.h
 
 FORMS += \
         about_me_dialog.ui \
         mainwindow.ui \
-        settings_dialog.ui
+        settings_dialog.ui \
+        stm32isp_dialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

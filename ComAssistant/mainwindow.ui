@@ -328,8 +328,7 @@ p, li { white-space: pre-wrap; }
     <property name="title">
      <string>功能</string>
     </property>
-    <addaction name="actionYTMode"/>
-    <addaction name="actionXYMode"/>
+    <addaction name="actionSTM32_ISP"/>
    </widget>
    <addaction name="menu_4"/>
    <addaction name="menu_5"/>
@@ -378,22 +377,6 @@ p, li { white-space: pre-wrap; }
     <string>读取原始数据</string>
    </property>
   </action>
-  <action name="actionYTMode">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>YT图模式</string>
-   </property>
-  </action>
-  <action name="actionXYMode">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>XY图模式</string>
-   </property>
-  </action>
   <action name="actionUTF8">
    <property name="checkable">
     <bool>true</bool>
@@ -424,6 +407,11 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="toolTip">
     <string>保存可见字符</string>
+   </property>
+  </action>
+  <action name="actionSTM32_ISP">
+   <property name="text">
+    <string>STM32-ISP</string>
    </property>
   </action>
  </widget>
