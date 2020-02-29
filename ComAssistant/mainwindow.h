@@ -17,8 +17,9 @@
 #include <QFile>
 #include <QRegExp>
 #include <QListWidgetItem>
-#include <QKeyEvent>
+#include <QDesktopWidget>
 
+#include "../../qcustomplot/qcustomplot.h"
 #include "dataprotocol.h"
 #include "highlighter.h"
 #include "myserialport.h"
@@ -45,15 +46,11 @@ public:
 private slots:
     void on_refreshCom_clicked();
 
-    void on_clearRecvAreaButton_clicked();
-
-    void on_clearSendAreaButton_clicked();
-
     void on_comSwitch_clicked(bool checked);
 
     void on_sendButton_clicked();
 
-    void on_clearStatistic_clicked();
+    void on_clearWindows_clicked();
 
     void readSerialPort();
 
@@ -104,6 +101,8 @@ private slots:
     void deleteSeedSlot();
 
     void clearSeedsSlot();
+
+    void on_actionPlotter_triggered(bool checked);
 
 private:
     void readConfig();

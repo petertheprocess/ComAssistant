@@ -16,8 +16,9 @@
 //默认发送间隔
 #define DEFAULT_SEND_INTERVAL   100
 //节
-#define SECTION_SERIAL   QString("Serial/")
 #define SECTION_GLOBAL   QString("Global/")
+#define SECTION_SERIAL   QString("Serial/")
+//#define SECTION_PLOTTER   QString("Plotter/")
 #define SECTION_ABOUT    QString("About/")
 //serial键
 #define KEY_BAUDRATE        QString("Baudrate")
@@ -26,13 +27,14 @@
 #define KEY_PARITY          QString("Parity")
 #define KEY_FLOWCONTROL     QString("FlowControl")
 //global键
-#define KEY_CODERULE        QString("CodeRule")
-#define KEY_ENTERSTYLE      QString("EnterStyle")
-#define KEY_TIMESTAMPSTATE  QString("TimeStampState")
-#define KEY_SENDINTERVAL    QString("SendInterval")
-#define KEY_HEXSENDSTATE    QString("HexSendState")
-#define KEY_HEXSHOWSTATE    QString("HexShowState")
+#define KEY_CODERULE            QString("CodeRule")
+#define KEY_ENTERSTYLE          QString("EnterStyle")
+#define KEY_TIMESTAMPSTATE      QString("TimeStampState")
+#define KEY_SENDINTERVAL        QString("SendInterval")
+#define KEY_HEXSENDSTATE        QString("HexSendState")
+#define KEY_HEXSHOWSTATE        QString("HexShowState")
 #define KEY_MULTISTRINGSTATE    QString("MultiStringState")
+#define KEY_PLOTTERSTATE        QString("PlotterState")
 //about键
 #define KEY_VERSION     QString("Version")
 #define KEY_SOURCE_CODE QString("SourceCode")
@@ -58,12 +60,6 @@ public:
     static void writeDefault(){
         QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
 
-        iniFile->setValue(SECTION_SERIAL+KEY_BAUDRATE, QSerialPort::Baud115200);
-        iniFile->setValue(SECTION_SERIAL+KEY_PARITY, QSerialPort::NoParity);
-        iniFile->setValue(SECTION_SERIAL+KEY_DATABIT, QSerialPort::Data8);
-        iniFile->setValue(SECTION_SERIAL+KEY_STOPBIT, QSerialPort::OneStop);
-        iniFile->setValue(SECTION_SERIAL+KEY_FLOWCONTROL, QSerialPort::NoFlowControl);
-
         iniFile->setValue(SECTION_GLOBAL+KEY_CODERULE, CodeRule_e::UTF8);
         iniFile->setValue(SECTION_GLOBAL+KEY_ENTERSTYLE , EnterStyle_e::WinStyle);
         iniFile->setValue(SECTION_GLOBAL+KEY_TIMESTAMPSTATE, false);
@@ -71,6 +67,13 @@ public:
         iniFile->setValue(SECTION_GLOBAL+KEY_HEXSENDSTATE, false);
         iniFile->setValue(SECTION_GLOBAL+KEY_HEXSHOWSTATE, false);
         iniFile->setValue(SECTION_GLOBAL+KEY_MULTISTRINGSTATE, false);
+        iniFile->setValue(SECTION_GLOBAL+KEY_PLOTTERSTATE, false);
+
+        iniFile->setValue(SECTION_SERIAL+KEY_BAUDRATE, QSerialPort::Baud115200);
+        iniFile->setValue(SECTION_SERIAL+KEY_PARITY, QSerialPort::NoParity);
+        iniFile->setValue(SECTION_SERIAL+KEY_DATABIT, QSerialPort::Data8);
+        iniFile->setValue(SECTION_SERIAL+KEY_STOPBIT, QSerialPort::OneStop);
+        iniFile->setValue(SECTION_SERIAL+KEY_FLOWCONTROL, QSerialPort::NoFlowControl);
 
         iniFile->setValue(SECTION_ABOUT+KEY_VERSION, VERSION_STRING);
         iniFile->setValue(SECTION_ABOUT+KEY_SOURCE_CODE, "www.github.com/inhowe/ComAssistant");
@@ -175,49 +178,18 @@ public:
         iniFile->setValue(SECTION_GLOBAL+KEY_CODERULE, rule);
         delete iniFile;
     }
-    static void setEnterStyle(EnterStyle_e style){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_GLOBAL+KEY_ENTERSTYLE , style);
-        delete iniFile;
-    }
-    static void setTimeStampState(bool checked){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_GLOBAL+KEY_TIMESTAMPSTATE, checked);
-        delete iniFile;
-    }
-    static void setSendInterval(const int interval){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_GLOBAL+KEY_SENDINTERVAL, interval);
-        delete iniFile;
-    }
-    static void setHexSendState(bool checked){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_GLOBAL+KEY_HEXSENDSTATE, checked);
-        delete iniFile;
-    }
-    static void setHexShowState(bool checked){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_GLOBAL+KEY_HEXSHOWSTATE, checked);
-        delete iniFile;
-    }
-    static void setMultiStringState(bool checked){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_GLOBAL+KEY_MULTISTRINGSTATE, checked);
-        delete iniFile;
-    }
-
-
     static CodeRule_e getCodeRule(){
         QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
         int value = iniFile->value(SECTION_GLOBAL+KEY_CODERULE, CodeRule_e::UTF8).toInt();
         delete iniFile;
         return static_cast<CodeRule_e>(value);
+    }
+
+    static void setEnterStyle(EnterStyle_e style){
+        createDefaultIfNotExist();
+        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+        iniFile->setValue(SECTION_GLOBAL+KEY_ENTERSTYLE , style);
+        delete iniFile;
     }
     static EnterStyle_e getEnterStyle(){
         QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
@@ -225,11 +197,25 @@ public:
         delete iniFile;
         return static_cast<EnterStyle_e>(value);
     }
+
+    static void setTimeStampState(bool checked){
+        createDefaultIfNotExist();
+        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+        iniFile->setValue(SECTION_GLOBAL+KEY_TIMESTAMPSTATE, checked);
+        delete iniFile;
+    }
     static bool getTimeStampState(){
         QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
         bool value = iniFile->value(SECTION_GLOBAL+KEY_TIMESTAMPSTATE, false).toBool();
         delete iniFile;
         return value;
+    }
+
+    static void setSendInterval(const int interval){
+        createDefaultIfNotExist();
+        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+        iniFile->setValue(SECTION_GLOBAL+KEY_SENDINTERVAL, interval);
+        delete iniFile;
     }
     static int getSendInterval(){
         QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
@@ -237,11 +223,25 @@ public:
         delete iniFile;
         return value;
     }
+
+    static void setHexSendState(bool checked){
+        createDefaultIfNotExist();
+        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+        iniFile->setValue(SECTION_GLOBAL+KEY_HEXSENDSTATE, checked);
+        delete iniFile;
+    }
     static bool getHexSendState(){
         QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
         bool value = iniFile->value(SECTION_GLOBAL+KEY_HEXSENDSTATE, false).toBool();
         delete iniFile;
         return value;
+    }
+
+    static void setHexShowState(bool checked){
+        createDefaultIfNotExist();
+        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+        iniFile->setValue(SECTION_GLOBAL+KEY_HEXSHOWSTATE, checked);
+        delete iniFile;
     }
     static bool getHexShowState(){
         QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
@@ -250,9 +250,28 @@ public:
         return value;
     }
 
-    static bool getMultiString(){
+    static void setMultiStringState(bool checked){
+        createDefaultIfNotExist();
+        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+        iniFile->setValue(SECTION_GLOBAL+KEY_MULTISTRINGSTATE, checked);
+        delete iniFile;
+    }
+    static bool getMultiStringState(){
         QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
         bool value = iniFile->value(SECTION_GLOBAL+KEY_MULTISTRINGSTATE, false).toBool();
+        delete iniFile;
+        return value;
+    }
+
+    static void setPlotterState(bool checked){
+        createDefaultIfNotExist();
+        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+        iniFile->setValue(SECTION_GLOBAL+KEY_PLOTTERSTATE, checked);
+        delete iniFile;
+    }
+    static bool getPlotterState(){
+        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+        bool value = iniFile->value(SECTION_GLOBAL+KEY_PLOTTERSTATE, false).toBool();
         delete iniFile;
         return value;
     }

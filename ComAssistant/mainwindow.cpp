@@ -28,7 +28,7 @@ void MainWindow::readConfig()
     }
 
     //多字符串
-    if(Config::getMultiString() == true){
+    if(Config::getMultiStringState() == true){
         ui->actionMultiString->setChecked(true);
         on_actionMultiString_triggered(true);
     }else {
@@ -46,6 +46,13 @@ void MainWindow::readConfig()
     ui->hexDisplay->setChecked(Config::getHexShowState());
     //波特率
     ui->baudrateList->setCurrentText(QString::number(Config::getBaudrate()));
+
+    //绘图器
+    ui->actionPlotter->setChecked(Config::getPlotterState());
+    if(ui->actionPlotter->isChecked())
+        ui->customPlot->show();
+    else
+        ui->customPlot->close();
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -112,19 +119,13 @@ MainWindow::MainWindow(QWidget *parent) :
     test.append(static_cast<char>(0x00));
     test.append(static_cast<char>(0x80));
     test.append(0x7F);
-    qDebug()<<"test"<<test.toHex();
     protocol->parase(test,test2);
-    qDebug()<<"test2"<<test2.toHex();
     protocol->printBuff();
 }
 
 MainWindow::~MainWindow()
 {
-    Config::setBaudrate(serial.baudRate());
-    Config::setDataBits(serial.dataBits());
-    Config::setStopBits(serial.stopBits());
-    Config::setParity(serial.parity());
-    Config::setFlowControl(serial.flowControl());
+
 
     if(ui->actionUTF8->isChecked()){
         Config::setCodeRule(CodeRule_e::UTF8);
@@ -140,6 +141,13 @@ MainWindow::~MainWindow()
     Config::setSendInterval(ui->sendInterval->text().toInt());
     Config::setTimeStampState(ui->timeStampDisplayCheckBox->isChecked());
     Config::setMultiStringState(ui->actionMultiString->isChecked());
+    Config::setPlotterState(ui->actionPlotter->isChecked());
+
+    Config::setBaudrate(serial.baudRate());
+    Config::setDataBits(serial.dataBits());
+    Config::setStopBits(serial.stopBits());
+    Config::setParity(serial.parity());
+    Config::setFlowControl(serial.flowControl());
 
     delete protocol;
     delete highlighter;
@@ -164,35 +172,6 @@ void MainWindow::on_refreshCom_clicked()
 
     if(ui->comList->count() == 0)
         ui->comList->addItem("未找到可用串口!");
-}
-
-/*
- * Function:清空接收区按钮按下，清空接收区
-*/
-void MainWindow::on_clearRecvAreaButton_clicked()
-{
-    ui->textBrowser->clear();
-    RxBuff.clear();
-    serial.resetRxCnt();
-
-    if(serial.isOpen())
-        serial.flush();
-
-    unshowedRxBuff.clear();
-
-    //更新收发统计
-    ui->statusBar->showMessage(serial.getTxRxString());
-}
-
-/*
- * Function:清空发送区按钮按下，清空发送区
-*/
-void MainWindow::on_clearSendAreaButton_clicked()
-{
-    ui->textEdit->clear();
-    serial.resetTxCnt();
-    //更新收发统计
-    ui->statusBar->showMessage(serial.getTxRxString());
 }
 
 //串口开关
@@ -387,9 +366,21 @@ void MainWindow::on_sendButton_clicked()
     }
 }
 
-void MainWindow::on_clearStatistic_clicked()
+void MainWindow::on_clearWindows_clicked()
 {
+    //串口
     serial.resetCnt();
+    if(serial.isOpen())
+        serial.flush();
+
+    //接收区
+    ui->textBrowser->clear();
+    RxBuff.clear();
+
+    //发送区
+    ui->textEdit->clear();
+
+    unshowedRxBuff.clear();
 
     //更新收发统计
     ui->statusBar->showMessage(serial.getTxRxString());
@@ -779,4 +770,13 @@ void MainWindow::clearSeedsSlot()
         return;
 
     ui->multiString->clear();
+}
+
+void MainWindow::on_actionPlotter_triggered(bool checked)
+{
+    if(checked){
+        ui->customPlot->show();
+    }else{
+        ui->customPlot->close();
+    }
 }

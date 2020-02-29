@@ -34,6 +34,7 @@ SOURCES += \
         main.cpp \
         mainwindow.cpp \
         myserialport.cpp \
+        qcustomplot.cpp \
         settings_dialog.cpp \
         stm32isp_dialog.cpp
 
@@ -45,6 +46,7 @@ HEADERS += \
         highlighter.h \
         mainwindow.h \
         myserialport.h \
+        qcustomplot.h \
         settings_dialog.h \
         stm32isp_dialog.h
 
@@ -59,6 +61,11 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-RESOURCES +=
-
 RC_ICONS = logo.ico
+
+# Use Precompiled headers (PCH)
+#CONFIG += cmdline precompile_header
+#PRECOMPILED_HEADER = stable.h
+
+# 支持QCustomPlot
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
