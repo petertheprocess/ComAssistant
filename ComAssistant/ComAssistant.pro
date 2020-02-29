@@ -29,6 +29,7 @@ SOURCES += \
         about_me_dialog.cpp \
         baseconversion.cpp \
         config.cpp \
+        dataprotocol.cpp \
         highlighter.cpp \
         main.cpp \
         mainwindow.cpp \
@@ -40,6 +41,7 @@ HEADERS += \
         about_me_dialog.h \
         baseconversion.h \
         config.h \
+        dataprotocol.h \
         highlighter.h \
         mainwindow.h \
         myserialport.h \
@@ -59,4 +61,4 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RESOURCES +=
 
-RC_ICONS = image/favicon.ico
+RC_ICONS = logo.ico

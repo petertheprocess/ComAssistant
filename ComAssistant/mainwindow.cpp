@@ -81,6 +81,41 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //加载高亮规则
     highlighter = new Highlighter(ui->textBrowser->document());
+
+    //初始化协议栈
+    protocol = new DataProtocol;
+
+    qDebug()<<"test begin";
+    protocol->setProtocolType(DataProtocol::Float);
+    QByteArray test,test2;
+    test.append(static_cast<char>(0xA3));
+    test.append(0x70);
+    test.append(0x45);
+    test.append(0x41);
+    test.append(static_cast<char>(0xB8));
+    test.append(0x1E);
+    test.append(0x63);
+    test.append(0x42);
+    test.append(static_cast<char>(0x00));
+    test.append(static_cast<char>(0x00));
+    test.append(static_cast<char>(0x80));
+    test.append(0x7F);
+    test.append(static_cast<char>(0xB8));
+    test.append(0x1E);
+    test.append(0x63);
+    test.append(0x42);
+    test.append(static_cast<char>(0xB8));
+    test.append(0x1E);
+    test.append(0x63);
+    test.append(0x42);
+    test.append(static_cast<char>(0x00));
+    test.append(static_cast<char>(0x00));
+    test.append(static_cast<char>(0x80));
+    test.append(0x7F);
+    qDebug()<<"test"<<test.toHex();
+    protocol->parase(test,test2);
+    qDebug()<<"test2"<<test2.toHex();
+    protocol->printBuff();
 }
 
 MainWindow::~MainWindow()
@@ -105,6 +140,9 @@ MainWindow::~MainWindow()
     Config::setSendInterval(ui->sendInterval->text().toInt());
     Config::setTimeStampState(ui->timeStampDisplayCheckBox->isChecked());
     Config::setMultiStringState(ui->actionMultiString->isChecked());
+
+    delete protocol;
+    delete highlighter;
     delete ui;
 }
 
@@ -259,7 +297,7 @@ void MainWindow::readSerialPort()
             ui->textBrowser->insertPlainText(tmpReadBuff);
 
         }
-//        ui->textBrowser->append("<font color=\"red\">This is some text!</font>");
+
         //更新收发统计
         ui->statusBar->showMessage(serial.getTxRxString());
     }
@@ -649,7 +687,9 @@ void MainWindow::on_actionSaveShowedData_triggered()
 
 void MainWindow::on_actionUpdate_triggered()
 {
-    QMessageBox::information(this,"提示","当前版本号："+Config::getVersion()+"\n"+"暂时无法检查更新");
+    QMessageBox::information(this,"提示","当前版本号："+Config::getVersion()+
+                                        "\n编译时间：" + QString(__DATE__) + " " + QString(__TIME__) +
+                                        "\n暂时无法检查更新");
 }
 
 void MainWindow::on_sendInterval_textChanged(const QString &arg1)

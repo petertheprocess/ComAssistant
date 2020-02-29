@@ -22,7 +22,7 @@
      <height>341</height>
     </rect>
    </property>
-   <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" columnstretch="1,0,0,0">
+   <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0" columnstretch="2,1,1,1">
     <item row="0" column="0" colspan="3">
      <widget class="QComboBox" name="com">
       <property name="sizePolicy">

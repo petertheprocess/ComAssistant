@@ -19,6 +19,7 @@
 #include <QListWidgetItem>
 #include <QKeyEvent>
 
+#include "dataprotocol.h"
 #include "highlighter.h"
 #include "myserialport.h"
 #include "baseconversion.h"
@@ -113,6 +114,7 @@ private:
     QTimer continuousWriteTimer; //自动发送定时器
     QTimer autoSubcontractTimer; //自动分包定时器
     Highlighter *highlighter;
+    DataProtocol* protocol;
 };
 
 #endif // MAINWINDOW_H
