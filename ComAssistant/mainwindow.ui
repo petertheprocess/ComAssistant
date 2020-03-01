@@ -458,9 +458,9 @@ p, li { white-space: pre-wrap; }
      <property name="title">
       <string>线型</string>
      </property>
-     <addaction name="action_4"/>
-     <addaction name="action_5"/>
-     <addaction name="action_6"/>
+     <addaction name="actionLinePlot"/>
+     <addaction name="actionScatterLinePlot"/>
+     <addaction name="actionScatterPlot"/>
     </widget>
     <addaction name="actionPlotter_2"/>
     <addaction name="menu_3"/>
@@ -592,17 +592,29 @@ p, li { white-space: pre-wrap; }
     <string>Float</string>
    </property>
   </action>
-  <action name="action_4">
+  <action name="actionLinePlot">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>线图</string>
    </property>
   </action>
-  <action name="action_5">
+  <action name="actionScatterLinePlot">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>点线图</string>
    </property>
   </action>
-  <action name="action_6">
+  <action name="actionScatterPlot">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>散点图</string>
    </property>

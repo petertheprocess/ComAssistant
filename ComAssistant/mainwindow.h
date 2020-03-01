@@ -19,6 +19,8 @@
 #include <QListWidgetItem>
 #include <QDesktopWidget>
 #include <QVector>
+#include <QMenu>
+#include <QInputDialog>
 
 #include "qcustomplot.h"
 #include "dataprotocol.h"
@@ -113,6 +115,24 @@ private slots:
     void on_actionFloat_triggered(bool checked);
 
     void on_actiondebug_triggered(bool checked);
+
+    //绘图器交互
+    void axisLabelDoubleClick(QCPAxis* axis, QCPAxis::SelectablePart part);
+    void legendDoubleClick(QCPLegend* legend, QCPAbstractLegendItem* item);
+    void selectionChanged();
+    void mousePress();
+    void mouseWheel();
+    void removeSelectedGraph();
+    void removeAllGraphs();
+    void contextMenuRequest(QPoint pos);
+    void moveLegend();
+    void graphClicked(QCPAbstractPlottable *plottable, int dataIndex);
+
+    void on_actionLinePlot_triggered();
+
+    void on_actionScatterLinePlot_triggered();
+
+    void on_actionScatterPlot_triggered();
 
 private:
     void readConfig();
