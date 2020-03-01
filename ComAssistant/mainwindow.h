@@ -18,9 +18,11 @@
 #include <QRegExp>
 #include <QListWidgetItem>
 #include <QDesktopWidget>
+#include <QVector>
 
-#include "../../qcustomplot/qcustomplot.h"
+#include "qcustomplot.h"
 #include "dataprotocol.h"
+#include "qcustomplotcontrol.h"
 #include "highlighter.h"
 #include "myserialport.h"
 #include "baseconversion.h"
@@ -102,18 +104,29 @@ private slots:
 
     void clearSeedsSlot();
 
-    void on_actionPlotter_triggered(bool checked);
+    void on_actionPlotter_2_triggered(bool checked);
+
+    void debugTimerSlot();
+
+    void on_actionAscii_triggered(bool checked);
+
+    void on_actionFloat_triggered(bool checked);
+
+    void on_actiondebug_triggered(bool checked);
 
 private:
     void readConfig();
     Ui::MainWindow *ui;
     mySerialPort serial;
+    QLabel *statusLabel1, *statusLabel2;
     QByteArray RxBuff, TxBuff; //原始数据的收发缓冲
     QByteArray unshowedRxBuff;    //未上屏的接收缓冲
     QTimer continuousWriteTimer; //自动发送定时器
     QTimer autoSubcontractTimer; //自动分包定时器
+    QTimer debugTimer; //调试定时器
     Highlighter *highlighter;
     DataProtocol* protocol;
+    QCustomPlotControl plotControl;
 };
 
 #endif // MAINWINDOW_H

@@ -36,7 +36,8 @@ public:
     ~DataProtocol();
     void printBuff();
     void clearBuff();
-    void parase(QByteArray inputArray, QByteArray &restArray);
+    QVector<double> popOneRowData();//弹出一行数据，没有数据则为空
+    void parase(QByteArray inputArray);
     void setProtocolType(ProtocolType_e type, bool clearbuff=true);
     ProtocolType_e getProtocolType();
 
@@ -52,6 +53,7 @@ private:
     //pack缓存、数据池
     PackStream_t packsBuff;
     DataPool_t dataPool;
+    QByteArray unparasedBuff;
     //协议类型
     ProtocolType_e protocolType = Ascii;
     //最大常数

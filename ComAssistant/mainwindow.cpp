@@ -48,11 +48,18 @@ void MainWindow::readConfig()
     ui->baudrateList->setCurrentText(QString::number(Config::getBaudrate()));
 
     //绘图器
-    ui->actionPlotter->setChecked(Config::getPlotterState());
-    if(ui->actionPlotter->isChecked())
+    ui->actionPlotter_2->setChecked(Config::getPlotterState());
+    if(ui->actionPlotter_2->isChecked())
         ui->customPlot->show();
     else
         ui->customPlot->close();
+    if(Config::getPlotterType()==ProtocolType_e::Ascii){
+        ui->actionAscii->setChecked(true);
+        ui->actionFloat->setChecked(false);
+    }else{
+        ui->actionAscii->setChecked(false);
+        ui->actionFloat->setChecked(true);
+    }
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -92,41 +99,73 @@ MainWindow::MainWindow(QWidget *parent) :
     //初始化协议栈
     protocol = new DataProtocol;
 
+    //初始化绘图器
+    plotControl.setupPlotter(ui->customPlot);
+
+    //状态栏标签
+    statusLabel1 = new QLabel(this);
+    statusLabel2 = new QLabel(this);
+    ui->statusBar->addPermanentWidget(statusLabel1);//显示永久信息
+    ui->statusBar->addPermanentWidget(statusLabel2);
+//    statusLabel1->setText("<font style=\"color:rgb(255,0,0)\">淘宝店铺</font>");
+//    statusLabel2->setText("dddd");
+
+
     qDebug()<<"test begin";
-    protocol->setProtocolType(DataProtocol::Float);
-    QByteArray test,test2;
-    test.append(static_cast<char>(0xA3));
-    test.append(0x70);
-    test.append(0x45);
-    test.append(0x41);
-    test.append(static_cast<char>(0xB8));
-    test.append(0x1E);
-    test.append(0x63);
-    test.append(0x42);
-    test.append(static_cast<char>(0x00));
-    test.append(static_cast<char>(0x00));
-    test.append(static_cast<char>(0x80));
-    test.append(0x7F);
-    test.append(static_cast<char>(0xB8));
-    test.append(0x1E);
-    test.append(0x63);
-    test.append(0x42);
-    test.append(static_cast<char>(0xB8));
-    test.append(0x1E);
-    test.append(0x63);
-    test.append(0x42);
-    test.append(static_cast<char>(0x00));
-    test.append(static_cast<char>(0x00));
-    test.append(static_cast<char>(0x80));
-    test.append(0x7F);
-    protocol->parase(test,test2);
-    protocol->printBuff();
+    protocol->setProtocolType(DataProtocol::Ascii);
+//    QString testStr = "{:1,-1}{:+2,-2}{:+3.1,-3.2}{:4.1,-4.2}";
+//    protocol->parase(testStr.toUtf8());
+//    protocol->printBuff();
+//    QByteArray test;
+//    test.append(static_cast<char>(0xA3));
+//    test.append(0x70);
+//    test.append(0x45);
+//    test.append(0x41);
+//    test.append(static_cast<char>(0xB8));
+//    test.append(0x1E);
+//    test.append(0x63);
+//    test.append(0x42);
+//    test.append(static_cast<char>(0x00));
+//    test.append(static_cast<char>(0x00));
+//    test.append(static_cast<char>(0x80));
+//    test.append(0x7F);
+//    test.append(static_cast<char>(0xB8));
+//    test.append(0x1E);
+//    test.append(0x63);
+//    test.append(0x42);
+//    test.append(static_cast<char>(0xB8));
+//    test.append(0x1E);
+//    test.append(0x63);
+//    test.append(0x42);
+//    test.append(static_cast<char>(0x00));
+//    test.append(static_cast<char>(0x00));
+//    test.append(static_cast<char>(0x80));
+//    test.append(0x7F);
+//    protocol->parase(test);
+//    protocol->printBuff();
+}
+
+void MainWindow::debugTimerSlot()
+{
+    QString tmp;
+    static double count;
+    double num1, num2;
+    num1 = qSin(count)+qrand()/(double)RAND_MAX*1*qSin(count/0.3843);
+    num2 = qCos(count)+qSin(count/0.4364);
+
+    if(ui->actionAscii->isChecked()){
+//        tmp = "{:" + QString::number(num1,'f') + "," + QString::number(num2,'f') + "}\r\n";
+        tmp = "{:" + QString::number(num1) + "," + QString::number(num2) + "}\r\n";
+    }
+
+    if(serial.isOpen()){
+        serial.write(tmp.toUtf8());
+    }
+    count = count + 0.1;
 }
 
 MainWindow::~MainWindow()
 {
-
-
     if(ui->actionUTF8->isChecked()){
         Config::setCodeRule(CodeRule_e::UTF8);
     }
@@ -141,13 +180,18 @@ MainWindow::~MainWindow()
     Config::setSendInterval(ui->sendInterval->text().toInt());
     Config::setTimeStampState(ui->timeStampDisplayCheckBox->isChecked());
     Config::setMultiStringState(ui->actionMultiString->isChecked());
-    Config::setPlotterState(ui->actionPlotter->isChecked());
 
     Config::setBaudrate(serial.baudRate());
     Config::setDataBits(serial.dataBits());
     Config::setStopBits(serial.stopBits());
     Config::setParity(serial.parity());
     Config::setFlowControl(serial.flowControl());
+
+    Config::setPlotterState(ui->actionPlotter_2->isChecked());
+    if(ui->actionAscii->isChecked())
+        Config::setPlotterType(ProtocolType_e::Ascii);
+    else
+        Config::setPlotterType(ProtocolType_e::Float);
 
     delete protocol;
     delete highlighter;
@@ -222,6 +266,10 @@ void MainWindow::readSerialPort()
     unshowedRxBuff.clear();
     RxBuff.append(tmpReadBuff);
 
+    //绘图器解析
+    protocol->parase(tmpReadBuff);
+    plotControl.displayToPlotter(ui->customPlot, protocol->popOneRowData());
+
     //'\r'若单独结尾则可能被误切断，放到下一批数据中
     if(tmpReadBuff.endsWith('\r')){
         unshowedRxBuff.append(tmpReadBuff.at(tmpReadBuff.size()-1));
@@ -274,7 +322,6 @@ void MainWindow::readSerialPort()
         }else{
             //不需要时间戳
             ui->textBrowser->insertPlainText(tmpReadBuff);
-
         }
 
         //更新收发统计
@@ -322,7 +369,6 @@ void MainWindow::on_sendButton_clicked()
                 while (tmp.indexOf('\r') != -1) {
                     tmp = tmp.remove(tmp.indexOf('\r'),1);
                 }
-
             }
 
             //utf8编码
@@ -380,8 +426,10 @@ void MainWindow::on_clearWindows_clicked()
     //发送区
     ui->textEdit->clear();
 
+    //对象缓存
     unshowedRxBuff.clear();
-
+    protocol->clearBuff();
+    plotControl.clearPlotter(ui->customPlot, -1);
     //更新收发统计
     ui->statusBar->showMessage(serial.getTxRxString());
 }
@@ -496,7 +544,6 @@ void MainWindow::on_action_winLikeEnter_triggered(bool checked)
 {
     if(checked){
         ui->action_unixLikeEnter->setChecked(false);
-
     }else {
         ui->action_winLikeEnter->setChecked(false);
     }
@@ -772,11 +819,34 @@ void MainWindow::clearSeedsSlot()
     ui->multiString->clear();
 }
 
-void MainWindow::on_actionPlotter_triggered(bool checked)
+/*
+ * Function:绘图器开关
+*/
+void MainWindow::on_actionPlotter_2_triggered(bool checked)
 {
     if(checked){
         ui->customPlot->show();
     }else{
         ui->customPlot->close();
+    }
+}
+
+void MainWindow::on_actionAscii_triggered(bool checked)
+{
+    ui->actionFloat->setChecked(!checked);
+}
+
+void MainWindow::on_actionFloat_triggered(bool checked)
+{
+    ui->actionAscii->setChecked(!checked);
+}
+
+void MainWindow::on_actiondebug_triggered(bool checked)
+{
+    if(checked){
+        debugTimer.start(100);
+        connect(&debugTimer, SIGNAL(timeout()), this, SLOT(debugTimerSlot()));
+    }else{
+        debugTimer.stop();
     }
 }

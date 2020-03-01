@@ -33,6 +33,7 @@ void DataProtocol::clearBuff()
 {
     packsBuff.clear();
     dataPool.clear();
+    unparasedBuff.clear();
 }
 
 void DataProtocol::printBuff()
@@ -48,11 +49,24 @@ void DataProtocol::printBuff()
     }
 }
 
-void DataProtocol::parase(QByteArray inputArray, QByteArray &restArray)
+QVector<double> DataProtocol::popOneRowData()
+{
+    QVector<double> tmp;
+    if(dataPool.size()>0){
+        tmp = dataPool.at(0);
+        dataPool.pop_front();
+    }
+    return tmp;
+}
+
+void DataProtocol::parase(QByteArray inputArray)
 {
     RowData_t rowData;
     Pack_t pack;
-    extractPacks(inputArray, restArray);
+    QByteArray restArray;
+    unparasedBuff += inputArray;
+    extractPacks(unparasedBuff, restArray);
+    unparasedBuff = restArray;
     while (packsBuff.size()>0) {
         pack = popOnePack();
         rowData = extractRowData(pack);
@@ -118,7 +132,7 @@ DataProtocol::RowData_t DataProtocol::extractRowData(const Pack_t &pack)
         QRegularExpression reg;
         QRegularExpressionMatch match;
         int index = 0;
-        reg.setPattern("\\d+\\.*\\d+");//匹配实数
+        reg.setPattern("[\\+-]?\\d+\\.?\\d*");//匹配实数 符号出现0、1次，数字至少1次，小数点0、1次，小数不出现或出现多次
         do {
                 match = reg.match(pack, index);
                 if(match.hasMatch()) {

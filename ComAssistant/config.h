@@ -18,14 +18,9 @@
 //节
 #define SECTION_GLOBAL   QString("Global/")
 #define SECTION_SERIAL   QString("Serial/")
-//#define SECTION_PLOTTER   QString("Plotter/")
+#define SECTION_PLOTTER   QString("Plotter/")
 #define SECTION_ABOUT    QString("About/")
-//serial键
-#define KEY_BAUDRATE        QString("Baudrate")
-#define KEY_STOPBIT         QString("StopBit")
-#define KEY_DATABIT         QString("DataBit")
-#define KEY_PARITY          QString("Parity")
-#define KEY_FLOWCONTROL     QString("FlowControl")
+
 //global键
 #define KEY_CODERULE            QString("CodeRule")
 #define KEY_ENTERSTYLE          QString("EnterStyle")
@@ -34,7 +29,18 @@
 #define KEY_HEXSENDSTATE        QString("HexSendState")
 #define KEY_HEXSHOWSTATE        QString("HexShowState")
 #define KEY_MULTISTRINGSTATE    QString("MultiStringState")
+
+//serial键
+#define KEY_BAUDRATE        QString("Baudrate")
+#define KEY_STOPBIT         QString("StopBit")
+#define KEY_DATABIT         QString("DataBit")
+#define KEY_PARITY          QString("Parity")
+#define KEY_FLOWCONTROL     QString("FlowControl")
+
+//plotter键
 #define KEY_PLOTTERSTATE        QString("PlotterState")
+#define KEY_PROTOCOLTYPE        QString("ProtocolType")
+
 //about键
 #define KEY_VERSION     QString("Version")
 #define KEY_SOURCE_CODE QString("SourceCode")
@@ -53,6 +59,11 @@ enum EnterStyle_e{
     UnixStyle = 1
 };
 
+enum ProtocolType_e{
+    Ascii = 0,
+    Float = 1
+};
+
 class Config
 {
 public:
@@ -67,13 +78,15 @@ public:
         iniFile->setValue(SECTION_GLOBAL+KEY_HEXSENDSTATE, false);
         iniFile->setValue(SECTION_GLOBAL+KEY_HEXSHOWSTATE, false);
         iniFile->setValue(SECTION_GLOBAL+KEY_MULTISTRINGSTATE, false);
-        iniFile->setValue(SECTION_GLOBAL+KEY_PLOTTERSTATE, false);
 
         iniFile->setValue(SECTION_SERIAL+KEY_BAUDRATE, QSerialPort::Baud115200);
         iniFile->setValue(SECTION_SERIAL+KEY_PARITY, QSerialPort::NoParity);
         iniFile->setValue(SECTION_SERIAL+KEY_DATABIT, QSerialPort::Data8);
         iniFile->setValue(SECTION_SERIAL+KEY_STOPBIT, QSerialPort::OneStop);
         iniFile->setValue(SECTION_SERIAL+KEY_FLOWCONTROL, QSerialPort::NoFlowControl);
+
+        iniFile->setValue(SECTION_PLOTTER+KEY_PLOTTERSTATE, false);
+        iniFile->setValue(SECTION_PLOTTER+KEY_PROTOCOLTYPE, ProtocolType_e::Ascii);
 
         iniFile->setValue(SECTION_ABOUT+KEY_VERSION, VERSION_STRING);
         iniFile->setValue(SECTION_ABOUT+KEY_SOURCE_CODE, "www.github.com/inhowe/ComAssistant");
@@ -266,14 +279,26 @@ public:
     static void setPlotterState(bool checked){
         createDefaultIfNotExist();
         QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_GLOBAL+KEY_PLOTTERSTATE, checked);
+        iniFile->setValue(SECTION_PLOTTER+KEY_PLOTTERSTATE, checked);
         delete iniFile;
     }
     static bool getPlotterState(){
         QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        bool value = iniFile->value(SECTION_GLOBAL+KEY_PLOTTERSTATE, false).toBool();
+        bool value = iniFile->value(SECTION_PLOTTER +KEY_PLOTTERSTATE, false).toBool();
         delete iniFile;
         return value;
+    }
+    static void setPlotterType(ProtocolType_e type){
+        createDefaultIfNotExist();
+        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+        iniFile->setValue(SECTION_PLOTTER+KEY_PROTOCOLTYPE, type);
+        delete iniFile;
+    }
+    static ProtocolType_e getPlotterType(){
+        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+        int value = iniFile->value(SECTION_PLOTTER+KEY_PROTOCOLTYPE, ProtocolType_e::Ascii).toInt();
+        delete iniFile;
+        return static_cast<ProtocolType_e>(value);
     }
 };
 

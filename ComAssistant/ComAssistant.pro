@@ -35,6 +35,7 @@ SOURCES += \
         mainwindow.cpp \
         myserialport.cpp \
         qcustomplot.cpp \
+        qcustomplotcontrol.cpp \
         settings_dialog.cpp \
         stm32isp_dialog.cpp
 
@@ -47,6 +48,7 @@ HEADERS += \
         mainwindow.h \
         myserialport.h \
         qcustomplot.h \
+        qcustomplotcontrol.h \
         settings_dialog.h \
         stm32isp_dialog.h
 
