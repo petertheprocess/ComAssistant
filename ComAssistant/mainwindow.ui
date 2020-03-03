@@ -542,7 +542,7 @@ p, li { white-space: pre-wrap; }
   </action>
   <action name="actionSaveShowedData">
    <property name="text">
-    <string>保存显示的数据</string>
+    <string>保存显示区数据</string>
    </property>
    <property name="toolTip">
     <string>保存可见字符</string>

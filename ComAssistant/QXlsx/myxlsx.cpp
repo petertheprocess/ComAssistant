@@ -52,7 +52,7 @@ bool MyXlsx::write(QCustomPlot *customPlot, QString path)
 
     if (!xlsx.saveAs(path))
     {
-        qDebug() << "[WriteExcel1] failed to save excel file";
+        qDebug() << "Failed to save excel file";
         return false;
     }
     return true;
