@@ -142,7 +142,12 @@ private slots:
 
     void on_actionScatterPlot_triggered();
 
+    void on_actionResetDefaultConfig_triggered(bool checked);
+
+    void on_actionManual_triggered();
+
 private:
+    bool needSaveConfig = true;
     void readConfig();
     Ui::MainWindow *ui;
     mySerialPort serial;

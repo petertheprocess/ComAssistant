@@ -40,6 +40,9 @@
 //plotter键
 #define KEY_PLOTTERSTATE        QString("PlotterState")
 #define KEY_PROTOCOLTYPE        QString("ProtocolType")
+#define KEY_GRAPHNAME           QString("GraphName")
+//#define KEY_LINETYPE            QString("LineType")
+//#define KEY_XRANGELENGH         QString("xRangeLength")
 
 //about键
 #define KEY_VERSION     QString("Version")
@@ -67,239 +70,42 @@ enum ProtocolType_e{
 class Config
 {
 public:
+    #define defualtGraphName  "Graph 1;Graph 2;Graph 3;Graph 4;Graph 5;Graph 6;Graph 7;Graph 8;Graph 9;Graph 10;Graph 11;Graph 12;Graph 13;Graph 14;Graph 15;"
     Config();
-    static void writeDefault(){
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-
-        iniFile->setValue(SECTION_GLOBAL+KEY_CODERULE, CodeRule_e::UTF8);
-        iniFile->setValue(SECTION_GLOBAL+KEY_ENTERSTYLE , EnterStyle_e::WinStyle);
-        iniFile->setValue(SECTION_GLOBAL+KEY_TIMESTAMPSTATE, false);
-        iniFile->setValue(SECTION_GLOBAL+KEY_SENDINTERVAL, DEFAULT_SEND_INTERVAL);
-        iniFile->setValue(SECTION_GLOBAL+KEY_HEXSENDSTATE, false);
-        iniFile->setValue(SECTION_GLOBAL+KEY_HEXSHOWSTATE, false);
-        iniFile->setValue(SECTION_GLOBAL+KEY_MULTISTRINGSTATE, false);
-
-        iniFile->setValue(SECTION_SERIAL+KEY_BAUDRATE, QSerialPort::Baud115200);
-        iniFile->setValue(SECTION_SERIAL+KEY_PARITY, QSerialPort::NoParity);
-        iniFile->setValue(SECTION_SERIAL+KEY_DATABIT, QSerialPort::Data8);
-        iniFile->setValue(SECTION_SERIAL+KEY_STOPBIT, QSerialPort::OneStop);
-        iniFile->setValue(SECTION_SERIAL+KEY_FLOWCONTROL, QSerialPort::NoFlowControl);
-
-        iniFile->setValue(SECTION_PLOTTER+KEY_PLOTTERSTATE, false);
-        iniFile->setValue(SECTION_PLOTTER+KEY_PROTOCOLTYPE, ProtocolType_e::Ascii);
-
-        iniFile->setValue(SECTION_ABOUT+KEY_VERSION, VERSION_STRING);
-        iniFile->setValue(SECTION_ABOUT+KEY_SOURCE_CODE, "www.github.com/inhowe/ComAssistant");
-        iniFile->setValue(SECTION_ABOUT+KEY_AUTHER, "INHOWE");
-        iniFile->setValue(SECTION_ABOUT+KEY_EMAIL, "inhowe@qq.com");
-
-        delete iniFile;
-    }
-    static void createDefaultIfNotExist()
-    {
-        //文件不存在或者为空时都重建ini文件
-        if(!isFileExist(SAVE_PATH)){
-            writeDefault();
-        }else {
-            QFile file(SAVE_PATH);
-            if(file.size()==0){
-                writeDefault();
-            }
-        }
-    }
-    static bool isFileExist(QString path)
-    {
-        QFileInfo fileInfo(path);
-        if(fileInfo.isFile()){
-            return true;
-        }
-        return false;
-    }
-    static QString getVersion(){
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        QString value = iniFile->value(SECTION_ABOUT+KEY_VERSION, VERSION_STRING).toString();
-        delete iniFile;
-        return value;
-    }
-    //serial
-    static void setBaudrate(int baud){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_SERIAL+KEY_BAUDRATE, baud);
-        delete iniFile;
-    }
-    static void setParity(QSerialPort::Parity parity){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_SERIAL+KEY_PARITY, parity);
-        delete iniFile;
-    }
-    static void setDataBits(QSerialPort::DataBits databits){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_SERIAL+KEY_DATABIT, databits);
-        delete iniFile;
-    }
-    static void setStopBits(QSerialPort::StopBits stopbits){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_SERIAL+KEY_STOPBIT, stopbits);
-        delete iniFile;
-    }
-    static void setFlowControl(QSerialPort::FlowControl flowControl){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_SERIAL+KEY_FLOWCONTROL, flowControl);
-        delete iniFile;
-    }
-
-    static int getBaudrate(){
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        int value = iniFile->value(SECTION_SERIAL+KEY_BAUDRATE, QSerialPort::Baud115200).toInt();
-        delete iniFile;
-        return value;
-    }
-    static QSerialPort::Parity getParity(){
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        int value = iniFile->value(SECTION_SERIAL+KEY_PARITY, QSerialPort::NoParity).toInt();
-        delete iniFile;
-        return static_cast<QSerialPort::Parity>(value);
-    }
-    static QSerialPort::DataBits getDataBits(){
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        int value = iniFile->value(SECTION_SERIAL+KEY_DATABIT, QSerialPort::Data8).toInt();
-        delete iniFile;
-        return static_cast<QSerialPort::DataBits>(value);
-    }
-    static QSerialPort::StopBits getStopBits(){
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        int value = iniFile->value(SECTION_SERIAL+KEY_STOPBIT, QSerialPort::OneStop).toInt();
-        delete iniFile;
-        return static_cast<QSerialPort::StopBits>(value);
-    }
-    static QSerialPort::FlowControl getFlowControl(){
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        int value = iniFile->value(SECTION_SERIAL+KEY_FLOWCONTROL, QSerialPort::NoFlowControl).toInt();
-        delete iniFile;
-        return static_cast<QSerialPort::FlowControl>(value);
-    }
-
-    //general
-    static void setCodeRule(CodeRule_e rule){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_GLOBAL+KEY_CODERULE, rule);
-        delete iniFile;
-    }
-    static CodeRule_e getCodeRule(){
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        int value = iniFile->value(SECTION_GLOBAL+KEY_CODERULE, CodeRule_e::UTF8).toInt();
-        delete iniFile;
-        return static_cast<CodeRule_e>(value);
-    }
-
-    static void setEnterStyle(EnterStyle_e style){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_GLOBAL+KEY_ENTERSTYLE , style);
-        delete iniFile;
-    }
-    static EnterStyle_e getEnterStyle(){
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        int value = iniFile->value(SECTION_GLOBAL+KEY_CODERULE, EnterStyle_e::WinStyle).toInt();
-        delete iniFile;
-        return static_cast<EnterStyle_e>(value);
-    }
-
-    static void setTimeStampState(bool checked){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_GLOBAL+KEY_TIMESTAMPSTATE, checked);
-        delete iniFile;
-    }
-    static bool getTimeStampState(){
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        bool value = iniFile->value(SECTION_GLOBAL+KEY_TIMESTAMPSTATE, false).toBool();
-        delete iniFile;
-        return value;
-    }
-
-    static void setSendInterval(const int interval){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_GLOBAL+KEY_SENDINTERVAL, interval);
-        delete iniFile;
-    }
-    static int getSendInterval(){
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        int value = iniFile->value(SECTION_GLOBAL+KEY_SENDINTERVAL, DEFAULT_SEND_INTERVAL).toInt();
-        delete iniFile;
-        return value;
-    }
-
-    static void setHexSendState(bool checked){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_GLOBAL+KEY_HEXSENDSTATE, checked);
-        delete iniFile;
-    }
-    static bool getHexSendState(){
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        bool value = iniFile->value(SECTION_GLOBAL+KEY_HEXSENDSTATE, false).toBool();
-        delete iniFile;
-        return value;
-    }
-
-    static void setHexShowState(bool checked){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_GLOBAL+KEY_HEXSHOWSTATE, checked);
-        delete iniFile;
-    }
-    static bool getHexShowState(){
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        bool value = iniFile->value(SECTION_GLOBAL+KEY_HEXSHOWSTATE, false).toBool();
-        delete iniFile;
-        return value;
-    }
-
-    static void setMultiStringState(bool checked){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_GLOBAL+KEY_MULTISTRINGSTATE, checked);
-        delete iniFile;
-    }
-    static bool getMultiStringState(){
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        bool value = iniFile->value(SECTION_GLOBAL+KEY_MULTISTRINGSTATE, false).toBool();
-        delete iniFile;
-        return value;
-    }
-
-    static void setPlotterState(bool checked){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_PLOTTER+KEY_PLOTTERSTATE, checked);
-        delete iniFile;
-    }
-    static bool getPlotterState(){
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        bool value = iniFile->value(SECTION_PLOTTER +KEY_PLOTTERSTATE, false).toBool();
-        delete iniFile;
-        return value;
-    }
-    static void setPlotterType(ProtocolType_e type){
-        createDefaultIfNotExist();
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        iniFile->setValue(SECTION_PLOTTER+KEY_PROTOCOLTYPE, type);
-        delete iniFile;
-    }
-    static ProtocolType_e getPlotterType(){
-        QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-        int value = iniFile->value(SECTION_PLOTTER+KEY_PROTOCOLTYPE, ProtocolType_e::Ascii).toInt();
-        delete iniFile;
-        return static_cast<ProtocolType_e>(value);
-    }
+    static void writeDefault();
+    static void createDefaultIfNotExist();
+    static bool isFileExist(QString path);
+    static QString getVersion();
+    static void setBaudrate(int baud);
+    static void setParity(QSerialPort::Parity parity);
+    static void setDataBits(QSerialPort::DataBits databits);
+    static void setStopBits(QSerialPort::StopBits stopbits);
+    static void setFlowControl(QSerialPort::FlowControl flowControl);
+    static int getBaudrate();
+    static QSerialPort::Parity getParity();
+    static QSerialPort::DataBits getDataBits();
+    static QSerialPort::StopBits getStopBits();
+    static QSerialPort::FlowControl getFlowControl();
+    static void setCodeRule(CodeRule_e rule);
+    static CodeRule_e getCodeRule();
+    static void setEnterStyle(EnterStyle_e style);
+    static EnterStyle_e getEnterStyle();
+    static void setTimeStampState(bool checked);
+    static bool getTimeStampState();
+    static void setSendInterval(const int interval);
+    static int getSendInterval();
+    static void setHexSendState(bool checked);
+    static bool getHexSendState();
+    static void setHexShowState(bool checked);
+    static bool getHexShowState();
+    static void setMultiStringState(bool checked);
+    static bool getMultiStringState();
+    static void setPlotterState(bool checked);
+    static bool getPlotterState();
+    static void setPlotterType(ProtocolType_e type);
+    static ProtocolType_e getPlotterType();
+    static void setPlotterGraphNames(QVector<QString> names);
+    static QVector<QString> getPlotterGraphNames(int maxValidGraphNumber);
 };
 
 #endif // CONFIG_H

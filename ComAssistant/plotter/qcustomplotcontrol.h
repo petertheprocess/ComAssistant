@@ -53,15 +53,21 @@ public:
     void setupAxesBox(QCustomPlot* customPlot, bool connectRanges=false);
     //设置绘图器（总设置）
     void setupPlotter(QCustomPlot* customPlot);
+    //读写名字集
+    QVector<QString> getNameSet();
+    void setNameSet(QCustomPlot* customPlot, QVector<QString> names);
+    //最大图像数量
+    int getMaxValidGraphNumber();
 
 private:
     QCustomPlot* customPlot;
     QVector<QColor> colorSet;
+    QVector<QString> nameSet;
     QCPRange xRange; //xRange的下限为xAxisCnt，上限为xRangeLengh
     int xRangeLengh = 200;
     const double zoomScale = 0.2;
     QVector<QCPScatterStyle::ScatterShape> scatterShapeSet;
-    AxisTag *mTag1;
+//    AxisTag *mTag1;   //动态标签
     long int xAxisCnt = 0;
     LineType_e lineType = Line; //线型种类
 

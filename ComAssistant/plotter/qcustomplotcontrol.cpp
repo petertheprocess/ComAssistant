@@ -2,8 +2,26 @@
 
 QCustomPlotControl::QCustomPlotControl()
 {
+
     xRange.lower = -200;
     xRange.upper = 0;
+    //名字集合
+    nameSet << "Graph 1"
+            << "Graph 2"
+            << "Graph 3"
+            << "Graph 4"
+            << "Graph 5"
+            << "Graph 6"
+            << "Graph 7"
+            << "Graph 8"
+            << "Graph 9"
+            << "Graph 10"
+            << "Graph 11"
+            << "Graph 12"
+            << "Graph 13"
+            << "Graph 14"
+            << "Graph 15";
+
     //填充颜色，Candy色集
     colorSet << QColor(0xEF, 0x00, 0x00)
              << QColor(0x33, 0x66, 0x99)
@@ -51,6 +69,43 @@ QCustomPlotControl::~QCustomPlotControl()
 
 }
 
+int QCustomPlotControl::getMaxValidGraphNumber()
+{
+    return colorSet.size();
+}
+
+QVector<QString> QCustomPlotControl::getNameSet()
+{
+    nameSet.clear();
+    //从plot控件中读取名字
+    for(int i = 0; i < customPlot->graphCount(); i++){
+        nameSet << customPlot->graph(i)->name();
+    }
+    //名字集合应等于颜色集合
+    if(nameSet.size() < colorSet.size()){
+        for(int i = nameSet.size(); i < colorSet.size(); i++){
+            nameSet << "Graph " + QString::number(i+1);
+        }
+    }
+    if(nameSet.size() > colorSet.size()){
+        while(nameSet.size() > colorSet.size()){
+            nameSet.pop_back();
+        }
+    }
+    return nameSet;
+}
+
+void QCustomPlotControl::setNameSet(QCustomPlot* customPlot, QVector<QString> names)
+{
+    int min = (names.size() - colorSet.size()) > 0 ? colorSet.size() : names.size();
+    for (int i = 0; i<min ; i++) {
+        nameSet[i] = names.at(i);
+    }
+    for (int i = 0; i < customPlot->graphCount(); i++) {
+         customPlot->graph(i)->setName(nameSet[i]);
+    }
+}
+
 bool QCustomPlotControl::addGraph(QCustomPlot* customPlot, int num)
 {
     if(num<1 || num > colorSet.size())
@@ -69,7 +124,7 @@ bool QCustomPlotControl::addGraph(QCustomPlot* customPlot, int num)
 
     //设置线型
     setupLineType(customPlot, lineType);
-
+    setNameSet(customPlot, nameSet);
     customPlot->replot();
 
     return true;
@@ -114,9 +169,10 @@ bool QCustomPlotControl::displayToPlotter(QCustomPlot* customPlot, QVector<doubl
     //重算Y轴范围
     customPlot->rescaleAxes(true);
 
-    double graph1Value = customPlot->graph(0)->dataMainValue(customPlot->graph(0)->dataCount()-1);
-    mTag1->updatePosition(graph1Value);
-    mTag1->setText(QString::number(graph1Value, 'f', 2));
+    //Graph1的动态标签
+//    double graph1Value = customPlot->graph(0)->dataMainValue(customPlot->graph(0)->dataCount()-1);
+//    mTag1->updatePosition(graph1Value);
+//    mTag1->setText(QString::number(graph1Value, 'f', 2));
 
     // make key axis range scroll with the data (at a constant range size of 200):
 //    customPlot->xAxis->setRange(xAxisCnt, 200, Qt::AlignRight);
@@ -352,9 +408,10 @@ void QCustomPlotControl::setupPlotter(QCustomPlot* customPlot)
     if(customPlot->graphCount()==0){
         customPlot->addGraph();
         customPlot->graph(0)->setPen(QPen(colorSet.at(0)));
-        mTag1 = new AxisTag(customPlot->graph(customPlot->graphCount()-1)->valueAxis());
-        mTag1->setPen(customPlot->graph(customPlot->graphCount()-1)->pen());
-        mTag1->setText("0");
+        // 动态标签
+//        mTag1 = new AxisTag(customPlot->graph(customPlot->graphCount()-1)->valueAxis());
+//        mTag1->setPen(customPlot->graph(customPlot->graphCount()-1)->pen());
+//        mTag1->setText("0");
     }
 
     //设置自适应采样，提高大数据性能
@@ -383,7 +440,8 @@ void QCustomPlotControl::setupPlotter(QCustomPlot* customPlot)
     setupAxesBox(customPlot);
     //设置X轴范围
     customPlot->xAxis->setRange(xRange);
-
+    //设置曲线名称
+    setNameSet(customPlot, nameSet);
     //设置间隔给tag留出显示位置
     customPlot->axisRect()->axis(QCPAxis::atRight, 0)->setPadding(40);
 

@@ -418,6 +418,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionCOM_Config"/>
     <addaction name="textCode"/>
     <addaction name="enterStyle"/>
+    <addaction name="actionResetDefaultConfig"/>
    </widget>
    <widget class="QMenu" name="help">
     <property name="title">
@@ -625,6 +626,14 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>debug</string>
+   </property>
+  </action>
+  <action name="actionResetDefaultConfig">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>恢复默认设置</string>
    </property>
   </action>
  </widget>

@@ -60,6 +60,8 @@ void MainWindow::readConfig()
         ui->actionAscii->setChecked(false);
         ui->actionFloat->setChecked(true);
     }
+    //图像名字集
+    plotControl.setNameSet(ui->customPlot, Config::getPlotterGraphNames(plotControl.getMaxValidGraphNumber()));
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -97,9 +99,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->customPlot, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextMenuRequest(QPoint)));
     // 坐标跟随
     connect(ui->customPlot, SIGNAL(mouseMove(QMouseEvent*)), this,SLOT(showTracer(QMouseEvent*)));
-
-    //读取配置
-    readConfig();
 
     //搜寻可用串口
     on_refreshCom_clicked();
@@ -139,6 +138,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //初始化秒定时器
     secTimer.start(1000);
+
+    //读取配置（所有资源加载完成后读取）
+    readConfig();
 
     qDebug()<<"test begin";
 //    QString testStr = "{:1,-1}{:+2,-2}{:+3.1,-3.2}{:4.1,-4.2}";
@@ -208,32 +210,35 @@ void MainWindow::debugTimerSlot()
 
 MainWindow::~MainWindow()
 {
-    if(ui->actionUTF8->isChecked()){
-        Config::setCodeRule(CodeRule_e::UTF8);
+    if(needSaveConfig){
+        if(ui->actionUTF8->isChecked()){
+            Config::setCodeRule(CodeRule_e::UTF8);
+        }
+        if(ui->action_winLikeEnter->isChecked()){
+            Config::setEnterStyle(EnterStyle_e::WinStyle);
+        }else if(ui->action_unixLikeEnter->isChecked()){
+            Config::setEnterStyle(EnterStyle_e::UnixStyle);
+        }
+        //general
+        Config::setHexSendState(ui->hexSend->isChecked());
+        Config::setHexShowState(ui->hexDisplay->isChecked());
+        Config::setSendInterval(ui->sendInterval->text().toInt());
+        Config::setTimeStampState(ui->timeStampDisplayCheckBox->isChecked());
+        Config::setMultiStringState(ui->actionMultiString->isChecked());
+        //serial
+        Config::setBaudrate(serial.baudRate());
+        Config::setDataBits(serial.dataBits());
+        Config::setStopBits(serial.stopBits());
+        Config::setParity(serial.parity());
+        Config::setFlowControl(serial.flowControl());
+        //plotter
+        Config::setPlotterState(ui->actionPlotter_2->isChecked());
+        if(ui->actionAscii->isChecked())
+            Config::setPlotterType(ProtocolType_e::Ascii);
+        else
+            Config::setPlotterType(ProtocolType_e::Float);
+        Config::setPlotterGraphNames(plotControl.getNameSet());
     }
-    if(ui->action_winLikeEnter->isChecked()){
-        Config::setEnterStyle(EnterStyle_e::WinStyle);
-    }else if(ui->action_unixLikeEnter->isChecked()){
-        Config::setEnterStyle(EnterStyle_e::UnixStyle);
-    }
-
-    Config::setHexSendState(ui->hexSend->isChecked());
-    Config::setHexShowState(ui->hexDisplay->isChecked());
-    Config::setSendInterval(ui->sendInterval->text().toInt());
-    Config::setTimeStampState(ui->timeStampDisplayCheckBox->isChecked());
-    Config::setMultiStringState(ui->actionMultiString->isChecked());
-
-    Config::setBaudrate(serial.baudRate());
-    Config::setDataBits(serial.dataBits());
-    Config::setStopBits(serial.stopBits());
-    Config::setParity(serial.parity());
-    Config::setFlowControl(serial.flowControl());
-
-    Config::setPlotterState(ui->actionPlotter_2->isChecked());
-    if(ui->actionAscii->isChecked())
-        Config::setPlotterType(ProtocolType_e::Ascii);
-    else
-        Config::setPlotterType(ProtocolType_e::Float);
 
     delete protocol;
     delete highlighter;
@@ -1203,4 +1208,43 @@ void MainWindow::showTracer(QMouseEvent *event)
     m_Tracer->setText(text);
 
     ui->customPlot->replot();
+}
+
+void MainWindow::on_actionResetDefaultConfig_triggered(bool checked)
+{
+    if(checked)
+    {
+        QFile file(SAVE_PATH);
+        if(file.exists()){
+            if(file.remove()){
+                needSaveConfig = false;
+                QMessageBox::information(this, "提示", "重置成功。请重启程序。");
+            }else{
+                QMessageBox::information(this, "提示", "操作失败。请自行删除程序目录下的" + QString(SAVE_PATH) + "文件。");
+            }
+            return;
+        }
+        needSaveConfig = false;
+        QMessageBox::information(this, "提示", "重置成功。请重启程序。");
+    }else{
+        needSaveConfig = true;
+    }
+}
+
+void MainWindow::on_actionManual_triggered()
+{
+    QFile file("manual.html");
+    QString html;
+    if(file.exists()){
+        if(file.open(QFile::ReadOnly)){
+            html = file.readAll();
+            file.close();
+            ui->textBrowser->clear();
+            ui->textBrowser->setHtml(html);
+        }else{
+            QMessageBox::information(this, "提示", "帮助文件被占用。");
+        }
+    }else{
+        QMessageBox::information(this, "提示", "帮助文件丢失。");
+    }
 }
