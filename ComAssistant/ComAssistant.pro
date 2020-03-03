@@ -26,31 +26,35 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
-        about_me_dialog.cpp \
         baseconversion.cpp \
         config.cpp \
-        dataprotocol.cpp \
+        dialog/about_me_dialog.cpp \
+        dialog/settings_dialog.cpp \
+        dialog/stm32isp_dialog.cpp \
         highlighter.cpp \
         main.cpp \
         mainwindow.cpp \
         myserialport.cpp \
-        qcustomplot.cpp \
-        qcustomplotcontrol.cpp \
-        settings_dialog.cpp \
-        stm32isp_dialog.cpp
+        plotter/axistag.cpp \
+        plotter/dataprotocol.cpp \
+    plotter/mytracer.cpp \
+        plotter/qcustomplot.cpp \
+        plotter/qcustomplotcontrol.cpp \
 
 HEADERS += \
-        about_me_dialog.h \
         baseconversion.h \
         config.h \
-        dataprotocol.h \
+        dialog/about_me_dialog.h \
+        dialog/settings_dialog.h \
+        dialog/stm32isp_dialog.h \
         highlighter.h \
         mainwindow.h \
         myserialport.h \
-        qcustomplot.h \
-        qcustomplotcontrol.h \
-        settings_dialog.h \
-        stm32isp_dialog.h
+        plotter/axistag.h \
+        plotter/dataprotocol.h \
+    plotter/mytracer.h \
+        plotter/qcustomplot.h \
+        plotter/qcustomplotcontrol.h \
 
 FORMS += \
         about_me_dialog.ui \
@@ -64,6 +68,10 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 RC_ICONS = logo.ico
+
+#头文件搜索路径
+INCLUDEPATH += $$PWD/plotter/
+INCLUDEPATH += $$PWD/dialog/
 
 # Use Precompiled headers (PCH)
 #CONFIG += cmdline precompile_header

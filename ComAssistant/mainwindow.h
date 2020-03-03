@@ -22,9 +22,14 @@
 #include <QMenu>
 #include <QInputDialog>
 
+//绘图器
 #include "qcustomplot.h"
 #include "dataprotocol.h"
 #include "qcustomplotcontrol.h"
+#include "axistag.h"
+#include "mytracer.h"
+
+//
 #include "highlighter.h"
 #include "myserialport.h"
 #include "baseconversion.h"
@@ -108,6 +113,7 @@ private slots:
 
     void on_actionPlotter_2_triggered(bool checked);
 
+    void secTimerSlot();
     void debugTimerSlot();
 
     void on_actionAscii_triggered(bool checked);
@@ -124,9 +130,11 @@ private slots:
     void mouseWheel();
     void removeSelectedGraph();
     void removeAllGraphs();
+    void hideSelectedGraph();
     void contextMenuRequest(QPoint pos);
     void moveLegend();
     void graphClicked(QCPAbstractPlottable *plottable, int dataIndex);
+    void showTracer(QMouseEvent *event);
 
     void on_actionLinePlot_triggered();
 
@@ -144,9 +152,15 @@ private:
     QTimer continuousWriteTimer; //自动发送定时器
     QTimer autoSubcontractTimer; //自动分包定时器
     QTimer debugTimer; //调试定时器
+    QTimer secTimer;  //秒定时器
+    double rxSpeedKB = 0;
+    double txSpeedKB = 0;
+    int statisticRxByteCnt = 0;
+    int statisticTxByteCnt = 0;
     Highlighter *highlighter;
     DataProtocol* protocol;
     QCustomPlotControl plotControl;
+    MyTracer *m_Tracer; //坐标跟随鼠标
 };
 
 #endif // MAINWINDOW_H

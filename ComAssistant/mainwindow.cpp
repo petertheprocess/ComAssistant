@@ -72,9 +72,9 @@ MainWindow::MainWindow(QWidget *parent) :
     //定时器和串口的槽
     connect(&continuousWriteTimer, SIGNAL(timeout()), this, SLOT(continuousWriteSlot()));
     connect(&autoSubcontractTimer, SIGNAL(timeout()), this, SLOT(autoSubcontractTimerSlot()));
+    connect(&secTimer, SIGNAL(timeout()), this, SLOT(secTimerSlot()));
     connect(&serial, SIGNAL(readyRead()), this, SLOT(readSerialPort()));
 
-    //
     // connect slot that ties some axis selections together (especially opposite axes):
     connect(ui->customPlot, SIGNAL(selectionChangedByUser()), this, SLOT(selectionChanged()));
     // connect slots that takes care that when an axis is selected, only that direction can be dragged and zoomed:
@@ -95,7 +95,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // setup policy and connect slot for context menu popup:
     ui->customPlot->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(ui->customPlot, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextMenuRequest(QPoint)));
-    //
+    // 坐标跟随
+    connect(ui->customPlot, SIGNAL(mouseMove(QMouseEvent*)), this,SLOT(showTracer(QMouseEvent*)));
 
     //读取配置
     readConfig();
@@ -122,9 +123,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //初始化协议栈
     protocol = new DataProtocol;
+    protocol->setProtocolType(DataProtocol::Ascii);
 
     //初始化绘图器
     plotControl.setupPlotter(ui->customPlot);
+    m_Tracer = new MyTracer(ui->customPlot, ui->customPlot->graph(), TracerType::DataTracer);
 
     //状态栏标签
     statusLabel1 = new QLabel(this);
@@ -134,9 +137,10 @@ MainWindow::MainWindow(QWidget *parent) :
 //    statusLabel1->setText("<font style=\"color:rgb(255,0,0)\">淘宝店铺</font>");
 //    statusLabel2->setText("dddd");
 
+    //初始化秒定时器
+    secTimer.start(1000);
 
     qDebug()<<"test begin";
-    protocol->setProtocolType(DataProtocol::Ascii);
 //    QString testStr = "{:1,-1}{:+2,-2}{:+3.1,-3.2}{:4.1,-4.2}";
 //    protocol->parase(testStr.toUtf8());
 //    protocol->printBuff();
@@ -169,17 +173,31 @@ MainWindow::MainWindow(QWidget *parent) :
 //    protocol->printBuff();
 }
 
+void MainWindow::secTimerSlot()
+{
+    static int64_t secCnt = 0;
+    if(secCnt){
+        rxSpeedKB = static_cast<double>(statisticRxByteCnt) / 1024.0;
+        statisticRxByteCnt = 0;
+        txSpeedKB = static_cast<double>(statisticTxByteCnt) / 1024.0;
+        statisticTxByteCnt = 0;
+    }
+    statusLabel1->setText("Speed Tx:" + QString::number(txSpeedKB, 'f', 2) + "KB/s " + "Rx:" + QString::number(rxSpeedKB, 'f', 2) + "KB/s");
+    secCnt++;
+}
+
 void MainWindow::debugTimerSlot()
 {
     QString tmp;
     static double count;
-    double num1, num2;
-    num1 = qCos(count)+qSin(count/0.4364);
+    double num1, num2, num3;
+    num1 = qCos(count)+qSin(count/0.4364)*2.5;
     num2 = qSin(count)+qrand()/static_cast<double>(RAND_MAX)*1*qSin(count/0.3843);
+    num3 = qCos(count)*1.5-qSin(count/0.4364)*0.5;
 
     if(ui->actionAscii->isChecked()){
-//        tmp = "{:" + QString::number(num1,'f') + "," + QString::number(num2,'f') + "}\r\n";
-        tmp = "{:" + QString::number(num1) + "," + QString::number(num2) + "}\r\n";//这样可以生成一些错误数据
+//        tmp = "{:" + QString::number(num1,'f') + "," + QString::number(num2,'f') + "," + QString::number(num3,'f') + "}\r\n";
+        tmp = "{:" + QString::number(num1) + "," + QString::number(num2) + "," + QString::number(num3) + "}\r\n";//这样可以生成一些错误数据
     }
 
     if(serial.isOpen()){
@@ -284,11 +302,14 @@ void MainWindow::readSerialPort()
 {
     QByteArray tmpReadBuff;
 
-    //读取数据并衔接到上次未处理完的数据后面
     tmpReadBuff = serial.readAll();
+    //读取数据并衔接到上次未处理完的数据后面
     tmpReadBuff = unshowedRxBuff + tmpReadBuff;
     unshowedRxBuff.clear();
     RxBuff.append(tmpReadBuff);
+
+    //速度统计
+    statisticRxByteCnt += tmpReadBuff.size();
 
     //绘图器解析
     protocol->parase(tmpReadBuff);
@@ -298,6 +319,8 @@ void MainWindow::readSerialPort()
     if(tmpReadBuff.endsWith('\r')){
         unshowedRxBuff.append(tmpReadBuff.at(tmpReadBuff.size()-1));
         tmpReadBuff.remove(tmpReadBuff.size()-1,1);
+        if(tmpReadBuff.size()==0)
+            return;
     }
 
     //是否进制转换，不转换则考虑中文处理
@@ -305,7 +328,7 @@ void MainWindow::readSerialPort()
         tmpReadBuff = toHexDisplay(tmpReadBuff).toUtf8();
     }else if(ui->actionUTF8->isChecked()){
         //UTF8中文字符处理
-        //最后一个字符不是ascii字符才处理，否则直接上屏
+        //最后一个字符不是ascii字符才处理，否则直接上屏       
         if(tmpReadBuff.back() & 0x80){
             //中文一定有连续3个字符高位为1
             int continuesCnt = 0;
@@ -376,7 +399,6 @@ void MainWindow::on_sendButton_clicked()
     if(serial.isOpen()){
         //十六进制检查
         if(!ui->hexSend->isChecked()){
-
             //回车风格转换，win风格补上'\r'，默认unix风格
             QByteArray tmp = ui->textEdit->toPlainText().toUtf8();
             if(ui->action_winLikeEnter->isChecked()){
@@ -397,6 +419,8 @@ void MainWindow::on_sendButton_clicked()
 
             //utf8编码
             serial.write(tmp);
+            //速度统计
+            statisticTxByteCnt += tmp.size();
 
             //若添加了时间戳则把发送的数据也显示在接收区
             if(ui->timeStampDisplayCheckBox->isChecked()){
@@ -416,8 +440,11 @@ void MainWindow::on_sendButton_clicked()
             QByteArray tmp;
             bool ok;
             tmp = HexStringToByteArray(ui->textEdit->toPlainText(),ok);
-            if(ok)
+            if(ok){
                 serial.write(tmp);
+                //速度统计
+                statisticTxByteCnt += tmp.size();
+            }
         }
         //给多字符串控件添加条目
         if(ui->actionMultiString->isChecked()){
@@ -588,7 +615,6 @@ void MainWindow::on_action_unixLikeEnter_triggered(bool checked)
     }
 }
 
-
 /*
  * Action:激活使用UTF8编码
  * Function:暂未支持其他格式编码
@@ -670,7 +696,7 @@ void MainWindow::on_actionReadOriginData_triggered()
 void MainWindow::on_actionAbout_triggered()
 {
     //创建关于我对话框资源
-    About_Me_Dialog* p = new About_Me_Dialog;
+    About_Me_Dialog* p = new About_Me_Dialog(this);
     //设置close后自动销毁
     p->setAttribute(Qt::WA_DeleteOnClose);
     //非阻塞式显示
@@ -704,7 +730,12 @@ void MainWindow::on_baudrateList_currentTextChanged(const QString &arg1)
     bool ok;
     int baud = arg1.toInt(&ok);
     if(ok){
-        serial.setBaudRate(baud);
+        if(serial.isOpen()){
+            on_comSwitch_clicked(false);
+            on_comSwitch_clicked(true);
+        }else{
+            serial.setBaudRate(baud);
+        }
     }
     else {
         QMessageBox::information(this,"提示","请输入合法波特率");
@@ -870,10 +901,11 @@ void MainWindow::on_actionFloat_triggered(bool checked)
 void MainWindow::on_actiondebug_triggered(bool checked)
 {
     if(checked){
-        debugTimer.start(100);
+        debugTimer.start(50);
         connect(&debugTimer, SIGNAL(timeout()), this, SLOT(debugTimerSlot()));
     }else{
         debugTimer.stop();
+        disconnect(&debugTimer, SIGNAL(timeout()), this, SLOT(debugTimerSlot()));
     }
 }
 
@@ -972,12 +1004,20 @@ void MainWindow::mouseWheel()
   // if an axis is selected, only allow the direction of that axis to be zoomed
   // if no axis is selected, both directions may be zoomed
 
-  if (ui->customPlot->xAxis->selectedParts().testFlag(QCPAxis::spAxis))
+  if (ui->customPlot->xAxis->selectedParts().testFlag(QCPAxis::spAxis)){
     ui->customPlot->axisRect()->setRangeZoom(ui->customPlot->xAxis->orientation());
-  else if (ui->customPlot->yAxis->selectedParts().testFlag(QCPAxis::spAxis))
+    QCPRange range = ui->customPlot->axisRect()->axis(QCPAxis::atBottom, 0)->range();
+    plotControl.adjustXRange(ui->customPlot, range);
+  }
+  else if (ui->customPlot->yAxis->selectedParts().testFlag(QCPAxis::spAxis)){
     ui->customPlot->axisRect()->setRangeZoom(ui->customPlot->yAxis->orientation());
-  else
-    ui->customPlot->axisRect()->setRangeZoom(Qt::Horizontal|Qt::Vertical);
+  }
+  else{
+    //只调X轴
+    ui->customPlot->axisRect()->setRangeZoom(Qt::Horizontal);
+    QCPRange range = ui->customPlot->axisRect()->axis(QCPAxis::atBottom, 0)->range();
+    plotControl.adjustXRange(ui->customPlot, range);
+  }
 }
 
 void MainWindow::removeSelectedGraph()
@@ -991,8 +1031,34 @@ void MainWindow::removeSelectedGraph()
 
 void MainWindow::removeAllGraphs()
 {
-  ui->customPlot->clearGraphs();
-  ui->customPlot->replot();
+    //使用给对象赋值空数据的方法清空，而不是删除对象。
+    plotControl.clearPlotter(ui->customPlot,-1);
+//  ui->customPlot->clearGraphs();
+//  ui->customPlot->replot();
+}
+
+void MainWindow::hideSelectedGraph()
+{
+    if (ui->customPlot->selectedGraphs().size() > 0)
+    {
+        //获取图像编号
+        int index = 0;
+        for(;index < ui->customPlot->graphCount(); index++){
+            if(ui->customPlot->graph(index)->name() == ui->customPlot->selectedGraphs().first()->name()){
+                break;
+            }
+        }
+        //可见性控制
+        if(ui->customPlot->selectedGraphs().first()->visible()){
+            ui->customPlot->selectedGraphs().first()->setVisible(false);
+            ui->customPlot->legend->item(index)->setTextColor(Qt::gray);
+        }
+        else{
+            ui->customPlot->selectedGraphs().first()->setVisible(true);
+            ui->customPlot->legend->item(index)->setTextColor(Qt::black);
+        }
+      ui->customPlot->replot();
+    }
 }
 
 void MainWindow::contextMenuRequest(QPoint pos)
@@ -1007,14 +1073,18 @@ void MainWindow::contextMenuRequest(QPoint pos)
     menu->addAction("Move to top right", this, SLOT(moveLegend()))->setData((int)(Qt::AlignTop|Qt::AlignRight));
     menu->addAction("Move to bottom right", this, SLOT(moveLegend()))->setData((int)(Qt::AlignBottom|Qt::AlignRight));
     menu->addAction("Move to bottom left", this, SLOT(moveLegend()))->setData((int)(Qt::AlignBottom|Qt::AlignLeft));
-    if (ui->customPlot->selectedGraphs().size() > 0)
-      menu->addAction("Remove selected graph", this, SLOT(removeSelectedGraph()));
   } else  // general context menu on graphs requested
   {
-    if (ui->customPlot->selectedGraphs().size() > 0)
-      menu->addAction("Remove selected graph", this, SLOT(removeSelectedGraph()));
     if (ui->customPlot->graphCount() > 0)
       menu->addAction("Remove all graphs", this, SLOT(removeAllGraphs()));
+  }
+  if (ui->customPlot->selectedGraphs().size() > 0){
+    menu->addAction("Remove selected graph", this, SLOT(removeSelectedGraph()));
+    if(ui->customPlot->selectedGraphs().first()->visible()){
+        menu->addAction("Hide selected graph", this, SLOT(hideSelectedGraph()));
+    }else{
+        menu->addAction("Show selected graph", this, SLOT(hideSelectedGraph()));
+    }
   }
 
   menu->popup(ui->customPlot->mapToGlobal(pos));
@@ -1049,8 +1119,7 @@ void MainWindow::on_actionLinePlot_triggered()
     ui->actionLinePlot->setChecked(true);
     ui->actionScatterLinePlot->setChecked(false);
     ui->actionScatterPlot->setChecked(false);
-    plotControl.setupLineStyle(ui->customPlot, QCPGraph::lsLine);
-    plotControl.setupScatterStyle(ui->customPlot, QCPScatterStyle::ssNone);
+    plotControl.setupLineType(ui->customPlot, QCustomPlotControl::Line);
 }
 
 void MainWindow::on_actionScatterLinePlot_triggered()
@@ -1058,8 +1127,7 @@ void MainWindow::on_actionScatterLinePlot_triggered()
     ui->actionLinePlot->setChecked(false);
     ui->actionScatterLinePlot->setChecked(true);
     ui->actionScatterPlot->setChecked(false);
-    plotControl.setupLineStyle(ui->customPlot, QCPGraph::lsLine);
-    plotControl.setupScatterStyle(ui->customPlot, QCPScatterStyle::ssCircle);
+    plotControl.setupLineType(ui->customPlot, QCustomPlotControl::ScatterLine);
 }
 
 void MainWindow::on_actionScatterPlot_triggered()
@@ -1067,6 +1135,72 @@ void MainWindow::on_actionScatterPlot_triggered()
     ui->actionLinePlot->setChecked(false);
     ui->actionScatterLinePlot->setChecked(false);
     ui->actionScatterPlot->setChecked(true);
-    plotControl.setupLineStyle(ui->customPlot, QCPGraph::lsNone);
-    plotControl.setupScatterStyle(ui->customPlot, QCPScatterStyle::ssCircle);
+    plotControl.setupLineType(ui->customPlot, QCustomPlotControl::Scatter);
+}
+
+void MainWindow::showTracer(QMouseEvent *event)
+{
+    if(ui->customPlot->selectedGraphs().size() <= 0){
+        m_Tracer->setVisible(false);
+        ui->customPlot->replot();
+        return;
+    }
+    m_Tracer->setVisible(true);
+
+    //获取x轴
+    double x = ui->customPlot->xAxis->pixelToCoord(event->pos().x());
+
+    //寻找Y轴
+    double y = 0;
+    QSharedPointer<QCPGraphDataContainer> tmpContainer;
+    tmpContainer = ui->customPlot->selectedGraphs().first()->data();
+    //使用二分法快速查找所在点数据！！！敲黑板，下边这段是重点
+    int low = 0, high = tmpContainer->size();
+    while(high > low)
+    {
+        int middle = (low + high) / 2;
+        if(x < tmpContainer->constBegin()->mainKey() ||
+           x > (tmpContainer->constEnd()-1)->mainKey())
+            break;
+
+        if(x == (tmpContainer->constBegin() + middle)->mainKey())
+        {
+            y = (tmpContainer->constBegin() + middle)->mainValue();
+            break;
+        }
+        if(x > (tmpContainer->constBegin() + middle)->mainKey())
+        {
+            low = middle;
+        }
+        else if(x < (tmpContainer->constBegin() + middle)->mainKey())
+        {
+            high = middle;
+        }
+        if(high - low <= 1)
+        {   //差值计算所在位置数据
+            y = (tmpContainer->constBegin()+low)->mainValue() + ( (x - (tmpContainer->constBegin() + low)->mainKey()) *
+                ((tmpContainer->constBegin()+high)->mainValue() - (tmpContainer->constBegin()+low)->mainValue()) ) /
+                ((tmpContainer->constBegin()+high)->mainKey() - (tmpContainer->constBegin()+low)->mainKey());
+            break;
+        }
+    }
+
+    //范围约束
+    QCPRange xRange = ui->customPlot->axisRect()->axis(QCPAxis::atBottom, 0)->range();
+    QCPRange yRange = ui->customPlot->axisRect()->axis(QCPAxis::atLeft, 0)->range();
+    if(x > xRange.upper)
+        x = xRange.upper;
+    if(x < xRange.lower)
+        x = xRange.lower;
+    if(y > yRange.upper)
+        y = yRange.upper;
+    if(y < yRange.lower)
+        y = yRange.lower;
+
+    //更新Tracer
+    QString text = "X:" + QString::number(x, 'f', 2) + " Y:" + QString::number(y, 'f', 2);
+    m_Tracer->updatePosition(x, y);
+    m_Tracer->setText(text);
+
+    ui->customPlot->replot();
 }
