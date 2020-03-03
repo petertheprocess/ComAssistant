@@ -71,7 +71,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    //定时器和串口的槽
+    //槽
     connect(&continuousWriteTimer, SIGNAL(timeout()), this, SLOT(continuousWriteSlot()));
     connect(&autoSubcontractTimer, SIGNAL(timeout()), this, SLOT(autoSubcontractTimerSlot()));
     connect(&secTimer, SIGNAL(timeout()), this, SLOT(secTimerSlot()));
@@ -100,22 +100,15 @@ MainWindow::MainWindow(QWidget *parent) :
     // 坐标跟随
     connect(ui->customPlot, SIGNAL(mouseMove(QMouseEvent*)), this,SLOT(showTracer(QMouseEvent*)));
 
-    //搜寻可用串口
-    on_refreshCom_clicked();
-
-    //显示收发统计
-    serial.resetCnt();
-    ui->statusBar->showMessage(serial.getTxRxString());
+    //状态栏标签
+    statusSpeedLabel = new QLabel(this);
+    statusStatisticLabel = new QLabel(this);
+    ui->statusBar->addPermanentWidget(statusStatisticLabel);//显示永久信息
+    ui->statusBar->addPermanentWidget(statusSpeedLabel);
 
     //设置波特率框和发送间隔框的合法输入范围
     ui->baudrateList->setValidator(new QIntValidator(0,9999999,this));
     ui->sendInterval->setValidator(new QIntValidator(0,99999,this));
-
-    //只存在一个串口时自动打开
-    if(ui->comList->count()==1){
-        ui->comSwitch->setChecked(true);
-        on_comSwitch_clicked(true);
-    }
 
     //加载高亮规则
     highlighter = new Highlighter(ui->textBrowser->document());
@@ -128,51 +121,24 @@ MainWindow::MainWindow(QWidget *parent) :
     plotControl.setupPlotter(ui->customPlot);
     m_Tracer = new MyTracer(ui->customPlot, ui->customPlot->graph(), TracerType::DataTracer);
 
-    //状态栏标签
-    statusLabel1 = new QLabel(this);
-    statusLabel2 = new QLabel(this);
-    ui->statusBar->addPermanentWidget(statusLabel1);//显示永久信息
-    ui->statusBar->addPermanentWidget(statusLabel2);
-//    statusLabel1->setText("<font style=\"color:rgb(255,0,0)\">淘宝店铺</font>");
-//    statusLabel2->setText("dddd");
+    //搜寻可用串口
+    on_refreshCom_clicked();
+
+    //显示收发统计
+    serial.resetCnt();
+    statusStatisticLabel->setText(serial.getTxRxString());
+
+    //只存在一个串口时自动打开
+    if(ui->comList->count()==1){
+        ui->comSwitch->setChecked(true);
+        on_comSwitch_clicked(true);
+    }
 
     //初始化秒定时器
     secTimer.start(1000);
 
     //读取配置（所有资源加载完成后读取）
     readConfig();
-
-    qDebug()<<"test begin";
-//    QString testStr = "{:1,-1}{:+2,-2}{:+3.1,-3.2}{:4.1,-4.2}";
-//    protocol->parase(testStr.toUtf8());
-//    protocol->printBuff();
-//    QByteArray test;
-//    test.append(static_cast<char>(0xA3));
-//    test.append(0x70);
-//    test.append(0x45);
-//    test.append(0x41);
-//    test.append(static_cast<char>(0xB8));
-//    test.append(0x1E);
-//    test.append(0x63);
-//    test.append(0x42);
-//    test.append(static_cast<char>(0x00));
-//    test.append(static_cast<char>(0x00));
-//    test.append(static_cast<char>(0x80));
-//    test.append(0x7F);
-//    test.append(static_cast<char>(0xB8));
-//    test.append(0x1E);
-//    test.append(0x63);
-//    test.append(0x42);
-//    test.append(static_cast<char>(0xB8));
-//    test.append(0x1E);
-//    test.append(0x63);
-//    test.append(0x42);
-//    test.append(static_cast<char>(0x00));
-//    test.append(static_cast<char>(0x00));
-//    test.append(static_cast<char>(0x80));
-//    test.append(0x7F);
-//    protocol->parase(test);
-//    protocol->printBuff();
 }
 
 void MainWindow::secTimerSlot()
@@ -184,7 +150,7 @@ void MainWindow::secTimerSlot()
         txSpeedKB = static_cast<double>(statisticTxByteCnt) / 1024.0;
         statisticTxByteCnt = 0;
     }
-    statusLabel1->setText("Speed Tx:" + QString::number(txSpeedKB, 'f', 2) + "KB/s " + "Rx:" + QString::number(rxSpeedKB, 'f', 2) + "KB/s");
+    statusSpeedLabel->setText(" Tx:" + QString::number(txSpeedKB, 'f', 2) + "KB/s " + "Rx:" + QString::number(rxSpeedKB, 'f', 2) + "KB/s");
     secCnt++;
 }
 
@@ -377,7 +343,7 @@ void MainWindow::readSerialPort()
         }
 
         //更新收发统计
-        ui->statusBar->showMessage(serial.getTxRxString());
+        statusStatisticLabel->setText(serial.getTxRxString());
     }
 }
 
@@ -462,7 +428,7 @@ void MainWindow::on_sendButton_clicked()
                 ui->multiString->addItem(ui->textEdit->toPlainText());
         }
         //更新收发统计
-        ui->statusBar->showMessage(serial.getTxRxString());
+        statusStatisticLabel->setText(serial.getTxRxString());
     }else {
         QMessageBox::information(this,"提示","串口未打开");
     }
@@ -489,7 +455,7 @@ void MainWindow::on_clearWindows_clicked()
     ui->customPlot->replot();
 
     //更新收发统计
-    ui->statusBar->showMessage(serial.getTxRxString());
+    statusStatisticLabel->setText(serial.getTxRxString());
 }
 
 void MainWindow::on_TimerSendCheck_clicked(bool checked)
@@ -647,7 +613,7 @@ void MainWindow::on_actionSaveOriginData_triggered()
                                                     QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".txt",
                                                     "Text File(*.txt);;All File(*.*)");
     //检查路径格式
-    if(!savePath.endsWith("txt")){
+    if(!savePath.endsWith(".txt")){
         if(!savePath.isEmpty())
             QMessageBox::information(this,"尚未支持的文件格式","请选择txt文本文件。");
         return;
@@ -675,7 +641,7 @@ void MainWindow::on_actionReadOriginData_triggered()
                                                     "",
                                                     "Text File(*.txt);;All File(*.*)");
     //检查文件路径结尾
-    if(!readPath.endsWith("txt")){
+    if(!readPath.endsWith(".txt")){
         if(!readPath.isEmpty())
             QMessageBox::information(this,"尚未支持的文件格式","请选择txt文本文件。");
         return;
@@ -1247,4 +1213,22 @@ void MainWindow::on_actionManual_triggered()
     }else{
         QMessageBox::information(this, "提示", "帮助文件丢失。");
     }
+
+}
+
+void MainWindow::on_actionSavePlotData_triggered()
+{
+    //打开保存文件对话框
+    QString savePath = QFileDialog::getSaveFileName(this,
+                                                    "保存数据-选择文件路径",
+                                                    QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".xlsx",
+                                                    "Text File(*.xlsx);;All File(*.*)");
+    //检查路径格式
+    if(!savePath.endsWith(".xlsx")){
+        if(!savePath.isEmpty())
+            QMessageBox::information(this,"尚未支持的文件格式","请选择xlsx文件。");
+        return;
+    }
+    if(!MyXlsx::write(ui->customPlot, savePath))
+        QMessageBox::information(this, "警告", "保存失败。");
 }

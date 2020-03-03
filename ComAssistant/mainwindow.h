@@ -30,6 +30,7 @@
 #include "mytracer.h"
 
 //
+#include "myxlsx.h"
 #include "highlighter.h"
 #include "myserialport.h"
 #include "baseconversion.h"
@@ -146,12 +147,14 @@ private slots:
 
     void on_actionManual_triggered();
 
+    void on_actionSavePlotData_triggered();
+
 private:
     bool needSaveConfig = true;
     void readConfig();
     Ui::MainWindow *ui;
     mySerialPort serial;
-    QLabel *statusLabel1, *statusLabel2;
+    QLabel *statusSpeedLabel, *statusStatisticLabel;
     QByteArray RxBuff, TxBuff; //原始数据的收发缓冲
     QByteArray unshowedRxBuff;    //未上屏的接收缓冲
     QTimer continuousWriteTimer; //自动发送定时器

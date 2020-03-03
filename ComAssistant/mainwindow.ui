@@ -379,7 +379,7 @@ p, li { white-space: pre-wrap; }
         </item>
         <item>
          <property name="text">
-          <string>在“多行文本输入区”输入并点击发送即可添加条目</string>
+          <string>点击发送按钮添加条目</string>
          </property>
         </item>
        </widget>
@@ -436,6 +436,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionSaveOriginData"/>
     <addaction name="actionReadOriginData"/>
     <addaction name="actionSaveShowedData"/>
+    <addaction name="actionSavePlotData"/>
    </widget>
    <widget class="QMenu" name="function">
     <property name="title">
@@ -634,6 +635,11 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>恢复默认设置</string>
+   </property>
+  </action>
+  <action name="actionSavePlotData">
+   <property name="text">
+    <string>保存曲线数据</string>
    </property>
   </action>
  </widget>
