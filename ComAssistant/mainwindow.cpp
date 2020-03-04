@@ -1222,13 +1222,52 @@ void MainWindow::on_actionSavePlotData_triggered()
     QString savePath = QFileDialog::getSaveFileName(this,
                                                     "保存数据-选择文件路径",
                                                     QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".xlsx",
-                                                    "Text File(*.xlsx);;All File(*.*)");
+                                                    "Xlsx File(*.xlsx);;All File(*.*)");
     //检查路径格式
     if(!savePath.endsWith(".xlsx")){
         if(!savePath.isEmpty())
-            QMessageBox::information(this,"尚未支持的文件格式","请选择xlsx文件。");
+            QMessageBox::information(this,"提示","尚未支持的文件格式。请选择xlsx文件。");
         return;
     }
     if(!MyXlsx::write(ui->customPlot, savePath))
-        QMessageBox::information(this, "警告", "保存失败。");
+        QMessageBox::warning(this, "警告", "保存失败。");
+}
+
+void MainWindow::on_actionSavePlotAsPicture_triggered()
+{
+    //打开保存文件对话框
+    QString savePath = QFileDialog::getSaveFileName(this,
+                                                    "保存数据-选择文件路径",
+                                                    QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss"),
+                                                    "Jpeg File(*.jpg);;Bmp File(*.bmp);;Png File(*.png);;Pdf File(*.pdf);;All File(*.*)");
+    //检查路径格式
+    if(!savePath.endsWith(".jpg") &&
+       !savePath.endsWith(".bmp") &&
+       !savePath.endsWith(".png") &&
+       !savePath.endsWith(".pdf")){
+        if(!savePath.isEmpty())
+            QMessageBox::information(this,"提示","尚未支持的文件格式。请选择jpg/bmp/png/pdf文件。");
+        return;
+    }
+    //保存
+    if(savePath.endsWith(".jpg")){
+        if(!ui->customPlot->saveJpg(savePath,0,0,1,100))
+            QMessageBox::warning(this, "警告", "保存失败。");
+        return;
+    }
+    if(savePath.endsWith(".bmp")){
+        if(!ui->customPlot->saveBmp(savePath))
+            QMessageBox::warning(this, "警告", "保存失败。");
+        return;
+    }
+    if(savePath.endsWith(".png")){
+        if(!ui->customPlot->savePng(savePath,0,0,1,100))
+            QMessageBox::warning(this, "警告", "保存失败。");
+        return;
+    }
+    if(savePath.endsWith(".pdf")){
+        if(!ui->customPlot->savePdf(savePath))
+            QMessageBox::warning(this, "警告", "保存失败。");
+        return;
+    }
 }

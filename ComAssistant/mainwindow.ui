@@ -437,6 +437,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionReadOriginData"/>
     <addaction name="actionSaveShowedData"/>
     <addaction name="actionSavePlotData"/>
+    <addaction name="actionSavePlotAsPicture"/>
    </widget>
    <widget class="QMenu" name="function">
     <property name="title">
@@ -640,6 +641,11 @@ p, li { white-space: pre-wrap; }
   <action name="actionSavePlotData">
    <property name="text">
     <string>保存曲线数据</string>
+   </property>
+  </action>
+  <action name="actionSavePlotAsPicture">
+   <property name="text">
+    <string>保存曲线图片</string>
    </property>
   </action>
  </widget>

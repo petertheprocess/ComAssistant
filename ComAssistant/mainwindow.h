@@ -149,6 +149,8 @@ private slots:
 
     void on_actionSavePlotData_triggered();
 
+    void on_actionSavePlotAsPicture_triggered();
+
 private:
     bool needSaveConfig = true;
     void readConfig();
