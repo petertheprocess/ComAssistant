@@ -112,7 +112,7 @@ private slots:
 
     void clearSeedsSlot();
 
-    void on_actionPlotter_2_triggered(bool checked);
+    void on_actionPlotterSwitch_triggered(bool checked);
 
     void secTimerSlot();
     void debugTimerSlot();

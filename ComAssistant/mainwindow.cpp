@@ -48,8 +48,8 @@ void MainWindow::readConfig()
     ui->baudrateList->setCurrentText(QString::number(Config::getBaudrate()));
 
     //绘图器
-    ui->actionPlotter_2->setChecked(Config::getPlotterState());
-    if(ui->actionPlotter_2->isChecked())
+    ui->actionPlotterSwitch->setChecked(Config::getPlotterState());
+    if(ui->actionPlotterSwitch->isChecked())
         ui->customPlot->show();
     else
         ui->customPlot->close();
@@ -164,8 +164,8 @@ void MainWindow::debugTimerSlot()
     num3 = qCos(count)*1.5-qSin(count/0.4364)*0.5;
 
     if(ui->actionAscii->isChecked()){
-//        tmp = "{:" + QString::number(num1,'f') + "," + QString::number(num2,'f') + "," + QString::number(num3,'f') + "}\r\n";
-        tmp = "{:" + QString::number(num1) + "," + QString::number(num2) + "," + QString::number(num3) + "}\r\n";//这样可以生成一些错误数据
+        tmp = "{:" + QString::number(num1,'f') + "," + QString::number(num2,'f') + "," + QString::number(num3,'f') + "}\r\n";
+//        tmp = "{:" + QString::number(num1) + "," + QString::number(num2) + "," + QString::number(num3) + "}\r\n";//这样可以生成一些错误数据
     }
 
     if(serial.isOpen()){
@@ -198,7 +198,7 @@ MainWindow::~MainWindow()
         Config::setParity(serial.parity());
         Config::setFlowControl(serial.flowControl());
         //plotter
-        Config::setPlotterState(ui->actionPlotter_2->isChecked());
+        Config::setPlotterState(ui->actionPlotterSwitch->isChecked());
         if(ui->actionAscii->isChecked())
             Config::setPlotterType(ProtocolType_e::Ascii);
         else
@@ -282,9 +282,12 @@ void MainWindow::readSerialPort()
     //速度统计
     statisticRxByteCnt += tmpReadBuff.size();
 
-    //绘图器解析
-    protocol->parase(tmpReadBuff);
-    plotControl.displayToPlotter(ui->customPlot, protocol->popOneRowData());
+    if(ui->actionPlotterSwitch->isChecked()){
+        //绘图器解析
+        protocol->parase(tmpReadBuff);
+        plotControl.displayToPlotter(ui->customPlot, protocol->popOneRowData());
+    }
+
 
     //'\r'若单独结尾则可能被误切断，放到下一批数据中
     if(tmpReadBuff.endsWith('\r')){
@@ -850,7 +853,7 @@ void MainWindow::clearSeedsSlot()
 /*
  * Function:绘图器开关
 */
-void MainWindow::on_actionPlotter_2_triggered(bool checked)
+void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 {
     if(checked){
         ui->customPlot->show();
@@ -1206,7 +1209,7 @@ void MainWindow::on_actionManual_triggered()
             html = file.readAll();
             file.close();
             ui->textBrowser->clear();
-            ui->textBrowser->setHtml(html);
+            ui->textBrowser->append(html);
         }else{
             QMessageBox::information(this, "提示", "帮助文件被占用。");
         }
@@ -1237,7 +1240,7 @@ void MainWindow::on_actionSavePlotAsPicture_triggered()
 {
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
-                                                    "保存数据-选择文件路径",
+                                                    "保存图片-选择文件路径",
                                                     QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss"),
                                                     "Jpeg File(*.jpg);;Bmp File(*.bmp);;Png File(*.png);;Pdf File(*.pdf);;All File(*.*)");
     //检查路径格式

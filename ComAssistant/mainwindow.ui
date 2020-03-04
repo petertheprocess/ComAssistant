@@ -465,7 +465,7 @@ p, li { white-space: pre-wrap; }
      <addaction name="actionScatterLinePlot"/>
      <addaction name="actionScatterPlot"/>
     </widget>
-    <addaction name="actionPlotter_2"/>
+    <addaction name="actionPlotterSwitch"/>
     <addaction name="menu_3"/>
     <addaction name="menu_4"/>
    </widget>
@@ -565,7 +565,7 @@ p, li { white-space: pre-wrap; }
     <string>多字符串</string>
    </property>
   </action>
-  <action name="actionPlotter_2">
+  <action name="actionPlotterSwitch">
    <property name="checkable">
     <bool>true</bool>
    </property>
