@@ -135,7 +135,7 @@ MainWindow::MainWindow(QWidget *parent) :
     statusStatisticLabel->setText(serial.getTxRxString());
 
     //只存在一个串口时自动打开
-    if(ui->comList->count()==1){
+    if(ui->comList->count()==1 && ui->comList->currentText()!="未找到可用串口!"){
         ui->comSwitch->setChecked(true);
         on_comSwitch_clicked(true);
     }
@@ -265,7 +265,7 @@ void MainWindow::on_comSwitch_clicked(bool checked)
             ui->comSwitch->setText("打开串口");
             ui->comSwitch->setChecked(false);
             ui->refreshCom->setEnabled(true);
-            QMessageBox::critical(this, "串口打开失败!", "该串口设备不存在或已被占用", QMessageBox::Ok);
+            QMessageBox::critical(this, "串口打开失败!", "所选串口设备不存在或已被占用", QMessageBox::Ok);
         }
     }
     else
