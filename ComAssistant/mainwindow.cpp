@@ -1334,7 +1334,9 @@ void MainWindow::httpFinishedSlot(QNetworkReply *)
     else
     {
         if(httpFunction == GetVersion){
-            QMessageBox::information(this,"提示","更新失败。\n请访问：https://github.com/inhowe/ComAssistant/releases");
+            QMessageBox::information(this,"提示","当前版本号："+Config::getVersion()+
+                                          "\n编译时间：" + QString(__DATE__) + " " + QString(__TIME__) +
+                                          "检查更新失败。\n请访问：https://github.com/inhowe/ComAssistant/releases");
         }
         qDebug()<< m_Reply->errorString();
     }
