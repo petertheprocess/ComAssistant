@@ -15,6 +15,7 @@ void Config::writeDefault(){
     iniFile->setValue(SECTION_GLOBAL+KEY_HEXSENDSTATE, false);
     iniFile->setValue(SECTION_GLOBAL+KEY_HEXSHOWSTATE, false);
     iniFile->setValue(SECTION_GLOBAL+KEY_MULTISTRINGSTATE, false);
+    iniFile->setValue(SECTION_GLOBAL+KEY_KEYWORDHIGHLIGHTSTATE, true);
 
     iniFile->setValue(SECTION_SERIAL+KEY_BAUDRATE, QSerialPort::Baud115200);
     iniFile->setValue(SECTION_SERIAL+KEY_PARITY, QSerialPort::NoParity);
@@ -214,6 +215,19 @@ bool Config::getMultiStringState(){
     return value;
 }
 
+void Config::setKeyWordHighlightState(bool checked){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_GLOBAL+KEY_KEYWORDHIGHLIGHTSTATE, checked);
+    delete iniFile;
+}
+bool Config::getKeyWordHighlightState(){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    bool value = iniFile->value(SECTION_GLOBAL+KEY_KEYWORDHIGHLIGHTSTATE, true).toBool();
+    delete iniFile;
+    return value;
+}
+//plotter
 void Config::setPlotterState(bool checked){
     createDefaultIfNotExist();
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);

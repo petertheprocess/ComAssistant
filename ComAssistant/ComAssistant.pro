@@ -6,6 +6,8 @@
 
 QT       += core gui
 QT       += serialport
+# 支持http等网络操作
+QT       += network
 # 支持xlsx操作
 QT       += gui-private
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets

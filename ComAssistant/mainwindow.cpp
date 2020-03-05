@@ -28,13 +28,12 @@ void MainWindow::readConfig()
     }
 
     //多字符串
-    if(Config::getMultiStringState() == true){
-        ui->actionMultiString->setChecked(true);
-        on_actionMultiString_triggered(true);
-    }else {
-        ui->actionMultiString->setChecked(false);
-        on_actionMultiString_triggered(false);
-    }
+    ui->actionMultiString->setChecked(Config::getMultiStringState());
+    on_actionMultiString_triggered(Config::getMultiStringState());
+
+    //加载高亮规则
+    ui->actionKeyWordHighlight->setChecked(Config::getKeyWordHighlightState());
+    on_actionKeyWordHighlight_triggered(Config::getKeyWordHighlightState());
 
     //时间戳
     ui->timeStampDisplayCheckBox->setChecked(Config::getTimeStampState());
@@ -100,6 +99,10 @@ MainWindow::MainWindow(QWidget *parent) :
     // 坐标跟随
     connect(ui->customPlot, SIGNAL(mouseMove(QMouseEvent*)), this,SLOT(showTracer(QMouseEvent*)));
 
+    //http访问
+    m_NetManger = new QNetworkAccessManager(this);
+    connect(m_NetManger, SIGNAL(finished(QNetworkReply*)), this, SLOT(httpFinishedSlot(QNetworkReply*)));
+
     //状态栏标签
     statusSpeedLabel = new QLabel(this);
     statusStatisticLabel = new QLabel(this);
@@ -111,7 +114,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->sendInterval->setValidator(new QIntValidator(0,99999,this));
 
     //加载高亮规则
-    highlighter = new Highlighter(ui->textBrowser->document());
+    on_actionKeyWordHighlight_triggered(ui->actionKeyWordHighlight->isChecked());
 
     //初始化协议栈
     protocol = new DataProtocol;
@@ -120,6 +123,9 @@ MainWindow::MainWindow(QWidget *parent) :
     //初始化绘图器
     plotControl.setupPlotter(ui->customPlot);
     m_Tracer = new MyTracer(ui->customPlot, ui->customPlot->graph(), TracerType::DataTracer);
+
+    //读取配置（所有资源加载完成后、动作执行前读取）
+    readConfig();
 
     //搜寻可用串口
     on_refreshCom_clicked();
@@ -137,8 +143,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //初始化秒定时器
     secTimer.start(1000);
 
-    //读取配置（所有资源加载完成后读取）
-    readConfig();
+
 }
 
 void MainWindow::secTimerSlot()
@@ -152,6 +157,17 @@ void MainWindow::secTimerSlot()
     }
     statusSpeedLabel->setText(" Tx:" + QString::number(txSpeedKB, 'f', 2) + "KB/s " + "Rx:" + QString::number(rxSpeedKB, 'f', 2) + "KB/s");
     secCnt++;
+
+    //http超时放弃
+    if(httpTimeout){
+        httpTimeout--;
+        if(httpTimeout==0){
+            m_Reply->abort();
+//            m_Reply->deleteLater();
+            qDebug()<<"http timed out";
+            ui->statusBar->showMessage("Http request timed out.", 2000);
+        }
+    }
 }
 
 void MainWindow::debugTimerSlot()
@@ -191,6 +207,7 @@ MainWindow::~MainWindow()
         Config::setSendInterval(ui->sendInterval->text().toInt());
         Config::setTimeStampState(ui->timeStampDisplayCheckBox->isChecked());
         Config::setMultiStringState(ui->actionMultiString->isChecked());
+        Config::setKeyWordHighlightState(ui->actionKeyWordHighlight->isChecked());
         //serial
         Config::setBaudrate(serial.baudRate());
         Config::setDataBits(serial.dataBits());
@@ -756,9 +773,15 @@ void MainWindow::on_actionSaveShowedData_triggered()
 
 void MainWindow::on_actionUpdate_triggered()
 {
-    QMessageBox::information(this,"提示","当前版本号："+Config::getVersion()+
-                                        "\n编译时间：" + QString(__DATE__) + " " + QString(__TIME__) +
-                                        "\n暂时无法检查更新");
+    ui->statusBar->showMessage("正在检查更新，请稍候……", 2000);
+    httpTimeout = 5;
+    httpFunction = GetVersion;
+    //发起http请求远端的发布版本号
+    QUrl url("https://api.github.com/repos/inhowe/ComAssistant/releases");
+    QNetworkRequest request;
+    request.setSslConfiguration(QSslConfiguration::defaultConfiguration());
+    request.setUrl(url);
+    m_Reply = m_NetManger->get(request);
 }
 
 void MainWindow::on_sendInterval_textChanged(const QString &arg1)
@@ -1272,5 +1295,60 @@ void MainWindow::on_actionSavePlotAsPicture_triggered()
         if(!ui->customPlot->savePdf(savePath))
             QMessageBox::warning(this, "警告", "保存失败。");
         return;
+    }
+}
+
+void MainWindow::httpFinishedSlot(QNetworkReply *)
+{
+    httpTimeout = 0;
+    m_Reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
+    m_Reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+
+    if (m_Reply->error() == QNetworkReply::NoError)
+    {
+        QByteArray bytes = m_Reply->readAll();
+        QString string = QString::fromUtf8(bytes);
+        if(httpFunction == GetVersion){
+            QString remoteVersion;
+            QString remoteNote;
+            remoteVersion = string.mid(string.indexOf("tag_name"));
+            remoteVersion = remoteVersion.mid(remoteVersion.indexOf(":")+2, remoteVersion.indexOf(",") - remoteVersion.indexOf(":")-3);
+            remoteNote = string.mid(string.indexOf("body"));
+            remoteNote = remoteNote.mid(remoteNote.indexOf(":\"")+2, remoteNote.indexOf("}") - remoteNote.indexOf(":\"")-3);
+            while(remoteNote.indexOf("\\r\\n")!=-1){
+                remoteNote = remoteNote.replace("\\r\\n","\n");
+            }
+//            qDebug()<<remoteVersion<<remoteNote;
+            QMessageBox::Button button;
+            button = QMessageBox::information(this,"提示","当前版本号："+Config::getVersion()+
+                                                "\n编译时间：" + QString(__DATE__) + " " + QString(__TIME__) +
+                                                "\n远端版本号："+remoteVersion+
+                                                "\n更新内容："+
+                                                "\n"+remoteNote, QMessageBox::Ok|QMessageBox::No);
+            if(button == QMessageBox::Ok)
+                QDesktopServices::openUrl(QUrl("https://github.com/inhowe/ComAssistant/releases"));
+        }else{
+            qDebug()<<string;
+        }
+    }
+    else
+    {
+        if(httpFunction == GetVersion){
+            QMessageBox::information(this,"提示","更新失败。\n请访问：https://github.com/inhowe/ComAssistant/releases");
+        }
+        qDebug()<< m_Reply->errorString();
+    }
+
+    m_Reply->deleteLater();
+}
+
+void MainWindow::on_actionKeyWordHighlight_triggered(bool checked)
+{
+    if(checked){
+        if(highlighter==nullptr)
+            highlighter = new Highlighter(ui->textBrowser->document());
+    }else{
+        delete highlighter;
+        highlighter = nullptr;
     }
 }

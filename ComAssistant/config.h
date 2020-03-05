@@ -10,7 +10,7 @@
 #include <QTextCodec>
 
 //版本
-#define VERSION_STRING  "0.0.2"
+#define VERSION_STRING  "0.0.3"
 //保存路径
 #define SAVE_PATH   "config.ini"
 //默认发送间隔
@@ -29,6 +29,7 @@
 #define KEY_HEXSENDSTATE        QString("HexSendState")
 #define KEY_HEXSHOWSTATE        QString("HexShowState")
 #define KEY_MULTISTRINGSTATE    QString("MultiStringState")
+#define KEY_KEYWORDHIGHLIGHTSTATE      QString("HighlightState")
 
 //serial键
 #define KEY_BAUDRATE        QString("Baudrate")
@@ -100,6 +101,8 @@ public:
     static bool getHexShowState();
     static void setMultiStringState(bool checked);
     static bool getMultiStringState();
+    static void setKeyWordHighlightState(bool checked);
+    static bool getKeyWordHighlightState();
     static void setPlotterState(bool checked);
     static bool getPlotterState();
     static void setPlotterType(ProtocolType_e type);

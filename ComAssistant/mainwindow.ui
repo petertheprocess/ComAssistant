@@ -418,6 +418,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionCOM_Config"/>
     <addaction name="textCode"/>
     <addaction name="enterStyle"/>
+    <addaction name="actionKeyWordHighlight"/>
     <addaction name="actionResetDefaultConfig"/>
    </widget>
    <widget class="QMenu" name="help">
@@ -646,6 +647,17 @@ p, li { white-space: pre-wrap; }
   <action name="actionSavePlotAsPicture">
    <property name="text">
     <string>保存曲线图片</string>
+   </property>
+  </action>
+  <action name="actionKeyWordHighlight">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>关键字高亮</string>
    </property>
   </action>
  </widget>

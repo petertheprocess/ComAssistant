@@ -21,7 +21,10 @@
 #include <QVector>
 #include <QMenu>
 #include <QInputDialog>
-
+#include <QtNetwork/QNetworkAccessManager>
+#include <QtNetwork/QNetworkRequest>
+#include <QtNetwork/QNetworkReply>
+#include <QDesktopServices>
 //绘图器
 #include "qcustomplot.h"
 #include "dataprotocol.h"
@@ -151,6 +154,9 @@ private slots:
 
     void on_actionSavePlotAsPicture_triggered();
 
+    void httpFinishedSlot(QNetworkReply*);
+    void on_actionKeyWordHighlight_triggered(bool checked);
+
 private:
     bool needSaveConfig = true;
     void readConfig();
@@ -167,10 +173,19 @@ private:
     double txSpeedKB = 0;
     int statisticRxByteCnt = 0;
     int statisticTxByteCnt = 0;
-    Highlighter *highlighter;
+    Highlighter *highlighter = nullptr;
     DataProtocol* protocol;
     QCustomPlotControl plotControl;
     MyTracer *m_Tracer; //坐标跟随鼠标
+    //http访问
+    QNetworkAccessManager *m_NetManger;
+    QNetworkReply* m_Reply;
+    typedef enum{
+        GetVersion,
+        DownloadFile,
+    }HttpFunction_e;
+    HttpFunction_e httpFunction;//http的用途
+    int httpTimeout;
 };
 
 #endif // MAINWINDOW_H

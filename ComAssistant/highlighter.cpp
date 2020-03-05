@@ -57,8 +57,28 @@ Highlighter::Highlighter(QTextDocument *parent)
     HighlightingRule rule;
     QStringList keywordPatterns;
 
+    //分隔符高亮
+    keywordPatterns.clear();
+    keywordPatterns << ","
+                    << ";"
+                    << "{"
+                    << "}"
+                    << ":"
+                    << "="
+                    << "\\("
+                    << "\\)"
+                    << "\\["
+                    << "]"
+                    << "<"
+                    << ">";
+    separateFormat.setForeground(Qt::red);
+    foreach (const QString &pattern, keywordPatterns) {
+        rule.pattern = QRegularExpression(pattern);
+        rule.format = separateFormat;
+        highlightingRules.append(rule);
+    }
 
-    //时间戳高亮
+    //时间戳高亮，放在后面以便覆盖重复的匹配字符
     keywordPatterns.clear();
     keywordPatterns << "\\[\\d{2}:\\d{2}:\\d{2}\\.\\d{3}\\][TR]x[-<>]{2}";
     keywordFormat.setForeground(Qt::darkGreen);
@@ -67,18 +87,6 @@ Highlighter::Highlighter(QTextDocument *parent)
         rule.format = keywordFormat;
         highlightingRules.append(rule);
     }
-
-    //分隔符高亮
-    keywordPatterns.clear();
-    keywordPatterns << ","
-                    << ";";
-    separateFormat.setForeground(Qt::darkGreen);
-    foreach (const QString &pattern, keywordPatterns) {
-        rule.pattern = QRegularExpression(pattern);
-        rule.format = separateFormat;
-        highlightingRules.append(rule);
-    }
-
 
 }
 //! [6]
