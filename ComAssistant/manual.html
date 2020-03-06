@@ -27,13 +27,47 @@
 <h2>绘图器</h2>
 <ul>
   <li>开启：绘图器开关</li>
-  <li>协议类型：绘图器支持两种简单的协议类型
+  <li>协议类型：绘图器支持两种简单的协议类型，均为单精度浮点型。
     <ul>
       <li>
-        Asic: 协议规则为：printf("{:%f,%f,%f}", data1, data2, data3);。变量数量不能超过15个
+        Asic: 协议规则为：
+        <pre>
+          printf("{:%f,%f,%f}", data1, data2, data3);
+        </pre>
+        表示同一时刻，3条曲线的数据。曲线数量不能超过15个。
       </li>
       <li>
-        Float: 协议规则为直接将float类型数据按小段顺序拆成4个字节依次发送，并以0x00, 0x00, 0x80, 0x7F四个字节作为一组数据的结尾。变量数量不能超过15个
+        Float: 协议规则为直接将float类型数据按小端顺序拆成4个字节依次发送，并以0x00, 0x00, 0x80, 0x7F四个字节作为一组数据的结尾，其中第一个数据表示第一条曲线，依次类推，曲线数量不能超过15个。
+        <pre>
+        //float转byte宏
+        #define BYTE0(dwTemp)       (*(char *)(&dwTemp))
+        #define BYTE1(dwTemp)       (*((char *)(&dwTemp) + 1))
+        #define BYTE2(dwTemp)       (*((char *)(&dwTemp) + 2))
+        #define BYTE3(dwTemp)       (*((char *)(&dwTemp) + 3))
+        //发送函数
+        void SendCurve(float data1, float data2)
+        {
+          u8 dataBuff[4+4+4];
+          u8 cnt = 0;
+          dataBuff[cnt++]=BYTE0(data1);
+          dataBuff[cnt++]=BYTE1(data1);
+          dataBuff[cnt++]=BYTE2(data1);
+          dataBuff[cnt++]=BYTE3(data1);
+          dataBuff[cnt++]=BYTE0(data2);
+          dataBuff[cnt++]=BYTE1(data2);
+          dataBuff[cnt++]=BYTE2(data2);
+          dataBuff[cnt++]=BYTE3(data2);
+          dataBuff[cnt++]=0x00;
+          dataBuff[cnt++]=0x00;
+          dataBuff[cnt++]=0x80;
+          dataBuff[cnt++]=0x7F;
+
+          u8 size = cnt;
+          for(int i = 0; i &lt; cnt; i++){
+            printf("%d",dataBuff[i]);
+          }
+        }
+        </pre>
       </li>
     </ul>
   </li>
