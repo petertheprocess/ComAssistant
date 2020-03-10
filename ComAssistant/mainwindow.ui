@@ -255,12 +255,12 @@ p, li { white-space: pre-wrap; }
         </item>
         <item>
          <property name="text">
-          <string>1500000</string>
+          <string>1000000</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>1000000</string>
+          <string>1500000</string>
          </property>
         </item>
         <item>
@@ -427,8 +427,9 @@ p, li { white-space: pre-wrap; }
     </property>
     <addaction name="actionManual"/>
     <addaction name="actionUpdate"/>
-    <addaction name="actionAbout"/>
+    <addaction name="actionUsageStatic"/>
     <addaction name="actiondebug"/>
+    <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="file">
     <property name="title">
@@ -658,6 +659,11 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>关键字高亮</string>
+   </property>
+  </action>
+  <action name="actionUsageStatic">
+   <property name="text">
+    <string>使用统计</string>
    </property>
   </action>
  </widget>

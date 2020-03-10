@@ -1,6 +1,82 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+//获取MAC地址
+QString getHostMacAddress()
+{
+    QList<QNetworkInterface> nets = QNetworkInterface::allInterfaces();// 获取所有网络接口列表
+    int nCnt = nets.count();
+    QString strMacAddr = "";
+    for(int i = 0; i < nCnt; i ++)
+    {
+        // 如果此网络接口被激活并且正在运行并且不是回环地址，则就是我们需要找的Mac地址
+        if(nets[i].flags().testFlag(QNetworkInterface::IsUp) && nets[i].flags().testFlag(QNetworkInterface::IsRunning) && !nets[i].flags().testFlag(QNetworkInterface::IsLoopBack))
+        {
+            strMacAddr = nets[i].hardwareAddress();
+            break;
+        }
+    }
+    return strMacAddr;
+}
+
+/*
+ * Function:上传使用统计
+ * Web端代码：static.php
+<?php
+    $val = "";
+    $fileName = $_GET["filename"];//从URL中获取文件名称,格式http://www.inhowe.com/test.php?filename=a.txt
+    @$data = fopen($fileName,'a+');//添加不覆盖，首先会判断这个文件是否存在，如果不存在，则会创建该文件
+    //应该以键值对的形式提交信息
+    if($_POST){
+        $val.='|POST|';
+        foreach($_POST as $key =>$value){
+            $val .= '|'.$key.":".$value;
+        }
+    }else{
+        $val.='|GET|';
+        foreach($_GET as $key =>$value){
+                $val .= '|'.$key.":".$value;
+        }
+    }
+    $val.= "\n";
+    fwrite($data,$val);//写入文本中
+    fclose($data);
+?>
+*/
+void MainWindow::postUsageStatic(void)
+{
+    //旧请求未完成时不执行。
+    if(httpTimeout>0)
+        return;
+
+    ui->statusBar->showMessage("正在提交使用统计...", 1000);
+    httpTimeout = 5;
+    httpFunction = PostStatic;
+
+    //准备上传数据
+    QString sendData = "startTime=#STARTTIME#&lastRunTime=#LASTRUNTIME#&lastTxCnt=#LASTTXCNT#&lastRxCnt=#LASTRXCNT#";
+    QDateTime current_date_time =QDateTime::currentDateTime();
+    QString current_date_str =current_date_time.toString("yyyyMMddhhmmss");
+    sendData.replace("#STARTTIME#",current_date_str);
+    sendData.replace("#LASTRUNTIME#",Config::getLastRunTime());
+    sendData.replace("#LASTTXCNT#",Config::getLastTxCnt());
+    sendData.replace("#LASTRXCNT#",Config::getLastRxCnt());
+
+    //以本机MAC地址作为上传的文件名
+    QString tmp = "http://www.inhowe.com/ComAssistant/static.php?filename=#FILENAME#.txt";
+    tmp.replace("#FILENAME#",getHostMacAddress());
+    QUrl url(tmp);
+
+    //request请求
+    QNetworkRequest request;
+//    request.setSslConfiguration(QSslConfiguration::defaultConfiguration()); //开启ssl，需要在exe下放openssl的lib包
+    request.setUrl(url);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded;charset=utf-8"); //以表单键值对的形式提交
+    request.setHeader(QNetworkRequest::ContentLengthHeader, sendData.size());
+//    m_NetManger = new QNetworkAccessManager;//重复使用所以不重复定义
+    m_Reply = m_NetManger->post(request, sendData.toUtf8());
+}
+
 /*
  * Function:读取配置
 */
@@ -127,36 +203,32 @@ MainWindow::MainWindow(QWidget *parent) :
     //读取配置（所有资源加载完成后、动作执行前读取）
     readConfig();
 
-    //搜寻可用串口
-    on_refreshCom_clicked();
-
     //显示收发统计
     serial.resetCnt();
     statusStatisticLabel->setText(serial.getTxRxString());
 
-    //只存在一个串口时自动打开
-    if(ui->comList->count()==1 && ui->comList->currentText()!="未找到可用串口!"){
-        ui->comSwitch->setChecked(true);
-        on_comSwitch_clicked(true);
-    }
+    //搜寻可用串口
+    on_refreshCom_clicked();
 
     //初始化秒定时器
     secTimer.start(1000);
 
-
+    //提交使用统计
+    postUsageStatic();
 }
 
 void MainWindow::secTimerSlot()
 {
     static int64_t secCnt = 0;
     if(secCnt){
+        //速度统计
         rxSpeedKB = static_cast<double>(statisticRxByteCnt) / 1024.0;
         statisticRxByteCnt = 0;
         txSpeedKB = static_cast<double>(statisticTxByteCnt) / 1024.0;
         statisticTxByteCnt = 0;
     }
+    //显示速度
     statusSpeedLabel->setText(" Tx:" + QString::number(txSpeedKB, 'f', 2) + "KB/s " + "Rx:" + QString::number(rxSpeedKB, 'f', 2) + "KB/s");
-    secCnt++;
 
     //http超时放弃
     if(httpTimeout){
@@ -168,6 +240,9 @@ void MainWindow::secTimerSlot()
             ui->statusBar->showMessage("Http request timed out.", 2000);
         }
     }
+
+    secCnt++;
+    currentRunTime++;
 }
 
 void MainWindow::debugTimerSlot()
@@ -221,6 +296,14 @@ MainWindow::~MainWindow()
         else
             Config::setPlotterType(ProtocolType_e::Float);
         Config::setPlotterGraphNames(plotControl.getNameSet());
+        //static
+        Config::setLastRunTime(currentRunTime);
+        Config::setTotalRunTime(currentRunTime);
+        Config::setLastTxCnt(serial.getTotalTxCnt());//getTotalTxCnt是本次软件运行时的总发送量
+        Config::setTotalTxCnt(serial.getTotalTxCnt());
+        Config::setLastRxCnt(serial.getTotalRxCnt());
+        Config::setTotalRxCnt(serial.getTotalRxCnt());
+        Config::setTotalRunCnt(1);
     }
 
     delete protocol;
@@ -246,6 +329,13 @@ void MainWindow::on_refreshCom_clicked()
 
     if(ui->comList->count() == 0)
         ui->comList->addItem("未找到可用串口!");
+
+    //只存在一个串口时自动打开
+    if(ui->comList->count()==1 && ui->comList->currentText()!="未找到可用串口!"){
+        ui->refreshCom->setChecked(false);
+        ui->comSwitch->setChecked(true);
+        on_comSwitch_clicked(true);
+    }
 }
 
 //串口开关
@@ -265,7 +355,8 @@ void MainWindow::on_comSwitch_clicked(bool checked)
             ui->comSwitch->setText("打开串口");
             ui->comSwitch->setChecked(false);
             ui->refreshCom->setEnabled(true);
-            QMessageBox::critical(this, "串口打开失败!", "所选串口设备不存在或已被占用", QMessageBox::Ok);
+            QString msg = "请检查下列情况后重新打开串口：\n\n# USB线缆是否松动？\n# 是否选择了正确的串口设备？\n# 该串口是否被其他程序占用？\n# 是否设置了过高的波特率？\n";
+            QMessageBox::critical(this, "串口打开失败!", msg, QMessageBox::Ok);
         }
     }
     else
@@ -410,6 +501,7 @@ void MainWindow::on_sendButton_clicked()
 
             //utf8编码
             serial.write(tmp);
+
             //速度统计
             statisticTxByteCnt += tmp.size();
 
@@ -492,9 +584,11 @@ void MainWindow::on_TimerSendCheck_clicked(bool checked)
 
     //启停定时器
     if(checked){
+        ui->TimerSendCheck->setChecked(true);
         continuousWriteTimer.start(ui->sendInterval->text().toInt());
     }
     else {
+        ui->TimerSendCheck->setChecked(false);
         continuousWriteTimer.stop();
     }
 }
@@ -721,12 +815,7 @@ void MainWindow::on_baudrateList_currentTextChanged(const QString &arg1)
     bool ok;
     int baud = arg1.toInt(&ok);
     if(ok){
-        if(serial.isOpen()){
-            on_comSwitch_clicked(false);
-            on_comSwitch_clicked(true);
-        }else{
-            serial.setBaudRate(baud);
-        }
+        serial.setBaudRate(baud);
     }
     else {
         QMessageBox::information(this,"提示","请输入合法波特率");
@@ -738,6 +827,15 @@ void MainWindow::on_baudrateList_currentTextChanged(const QString &arg1)
 */
 void MainWindow::on_comList_currentTextChanged(const QString &arg1)
 {
+    //关闭自动发送功能
+    if(ui->TimerSendCheck->isChecked()){
+        on_TimerSendCheck_clicked(false);
+    }
+    if(ui->actiondebug->isChecked()){
+        debugTimer.stop();
+        ui->actiondebug->setChecked(false);
+    }
+    ui->statusBar->showMessage("重新启动串口",2000);
     QString unused = arg1;//屏蔽警告
     //重新打开串口
     if(serial.isOpen()){
@@ -773,6 +871,10 @@ void MainWindow::on_actionSaveShowedData_triggered()
 
 void MainWindow::on_actionUpdate_triggered()
 {
+    //旧请求未完成时不执行。
+    if(httpTimeout>0)
+        return;
+
     ui->statusBar->showMessage("正在检查更新，请稍候……", 2000);
     httpTimeout = 5;
     httpFunction = GetVersion;
@@ -1206,6 +1308,10 @@ void MainWindow::on_actionResetDefaultConfig_triggered(bool checked)
 {
     if(checked)
     {
+        QMessageBox::Button button = QMessageBox::warning(this,"警告：确认恢复默认设置吗？","该操作会重置软件初始状态，统计信息也会被删除！",QMessageBox::Ok|QMessageBox::No);
+        if(button == QMessageBox::No)
+            return;
+
         QFile file(SAVE_PATH);
         if(file.exists()){
             if(file.remove()){
@@ -1300,6 +1406,7 @@ void MainWindow::on_actionSavePlotAsPicture_triggered()
 
 void MainWindow::httpFinishedSlot(QNetworkReply *)
 {
+    //超时定时器清0
     httpTimeout = 0;
     m_Reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
     m_Reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
@@ -1308,6 +1415,7 @@ void MainWindow::httpFinishedSlot(QNetworkReply *)
     {
         QByteArray bytes = m_Reply->readAll();
         QString string = QString::fromUtf8(bytes);
+
         if(httpFunction == GetVersion){
             QString remoteVersion;
             QString remoteNote;
@@ -1327,6 +1435,10 @@ void MainWindow::httpFinishedSlot(QNetworkReply *)
                                                 "\n"+remoteNote, QMessageBox::Ok|QMessageBox::No);
             if(button == QMessageBox::Ok)
                 QDesktopServices::openUrl(QUrl("https://github.com/inhowe/ComAssistant/releases"));
+        }else if(httpFunction == PostStatic){
+            if(string.isEmpty())
+                return;
+            qDebug()<<"使用统计返回内容："<<string;
         }else{
             qDebug()<<string;
         }
@@ -1338,6 +1450,8 @@ void MainWindow::httpFinishedSlot(QNetworkReply *)
                                           "\n编译时间：" + QString(__DATE__) + " " + QString(__TIME__) +
                                           "\n检查更新失败。"+
                                           "\n请访问：https://github.com/inhowe/ComAssistant/releases");
+        }else if(httpFunction == PostStatic){
+
         }
         qDebug()<< m_Reply->errorString();
         m_Reply->abort();
@@ -1355,4 +1469,131 @@ void MainWindow::on_actionKeyWordHighlight_triggered(bool checked)
         delete highlighter;
         highlighter = nullptr;
     }
+}
+/*
+ * Funciont:显示使用统计
+*/
+void MainWindow::on_actionUsageStatic_triggered()
+{
+    double currentTx = serial.getTxCnt();
+    double currentRx = serial.getRxCnt();
+    double currentRunTime_f = currentRunTime;
+    double totalTx = Config::getTotalTxCnt().toUInt() + currentTx;
+    double totalRx = Config::getTotalRxCnt().toUInt() + currentRx;
+    double totalRunTime = Config::getTotalRunTime().toUInt() + currentRunTime_f;
+    //单位
+    QString totalTxUnit;
+    QString totalRxUnit;
+    QString currentTxUnit;
+    QString currentRxUnit;
+    //时间换算
+    QString days;
+    QString hou;
+    QString min;
+    QString sec;
+    QString currentRunTimeStr, totalRunTimeStr;
+    long day;
+    long hour;
+    long minute;
+    long second;
+    int nest = 0; //执行统计
+
+    //单位换算
+    nest = 0;
+    while(totalTx>1024){
+        totalTx = totalTx/1024;
+        nest++;
+    }
+    switch(nest){
+        case 0:totalTxUnit = "B";break;
+        case 1:totalTxUnit = "KB";break;
+        case 2:totalTxUnit = "MB";break;
+        case 3:totalTxUnit = "GB";break;
+        case 4:totalTxUnit = "TB";break;
+    }
+    //单位换算
+    nest = 0;
+    while(totalRx>1024){
+        totalRx = totalRx/1024;
+        nest++;
+    }
+    switch(nest){
+        case 0:totalRxUnit = "B";break;
+        case 1:totalRxUnit = "KB";break;
+        case 2:totalRxUnit = "MB";break;
+        case 3:totalRxUnit = "GB";break;
+        case 4:totalRxUnit = "TB";break;
+    }
+    //单位换算
+    nest = 0;
+    while(currentTx>1024){
+        currentTx = currentTx/1024;
+        nest++;
+    }
+    switch(nest){
+        case 0:currentTxUnit = "B";break;
+        case 1:currentTxUnit = "KB";break;
+        case 2:currentTxUnit = "MB";break;
+        case 3:currentTxUnit = "GB";break;
+        case 4:currentTxUnit = "TB";break;
+    }
+    //单位换算
+    nest = 0;
+    while(currentRx>1024){
+        currentRx = currentRx/1024;
+        nest++;
+    }
+    switch(nest){
+        case 0:currentRxUnit = "B";break;
+        case 1:currentRxUnit = "KB";break;
+        case 2:currentRxUnit = "MB";break;
+        case 3:currentRxUnit = "GB";break;
+        case 4:currentRxUnit = "TB";break;
+    }
+    //时间常数
+    int mi = 60;
+    int hh = mi * 60;
+    int dd = hh * 24;
+    //时间换算
+    day = static_cast<long>(currentRunTime_f / dd);
+    hour = static_cast<long>((currentRunTime_f - day * dd) / hh);
+    minute = static_cast<long>((currentRunTime_f - day * dd - hour * hh) / mi);
+    second = static_cast<long>((currentRunTime_f - day * dd - hour * hh - minute * mi));
+
+    days = QString::number(day,10);
+    hou = QString::number(hour,10);
+    min = QString::number(minute,10);
+    sec = QString::number(second,10);
+    currentRunTimeStr = days + "天 " + hou + "小时 " + min + "分钟 " + sec + "秒";
+    //时间换算
+    day = static_cast<long>(totalRunTime / dd);
+    hour = static_cast<long>((totalRunTime - day * dd) / hh);
+    minute = static_cast<long>((totalRunTime - day * dd - hour * hh) / mi);
+    second = static_cast<long>((totalRunTime - day * dd - hour * hh - minute * mi));
+
+    days = QString::number(day,10);
+    hou = QString::number(hour,10);
+    min = QString::number(minute,10);
+    sec = QString::number(second,10);
+    totalRunTimeStr = days + "天 " + hou + "小时 " + min + "分钟 " + sec + "秒";
+    //上屏显示
+    ui->textBrowser->clear();
+    ui->textBrowser->append("<h2>设备信息：</h2>");
+    ui->textBrowser->append("MAC地址："+getHostMacAddress());
+    ui->textBrowser->append("<h2>软件使用统计</h2>");
+    ui->textBrowser->append("<h3>自本次启动软件以来，您：</h3>");
+    ui->textBrowser->append("共发送数据："+QString::number(currentTx,'f',2)+currentTxUnit);
+    ui->textBrowser->append("共接收数据："+QString::number(currentRx,'f',2)+currentRxUnit);
+    ui->textBrowser->append("共运行本软件："+currentRunTimeStr);
+    ui->textBrowser->append("<h3>自首次启动软件以来，您：</h3>");
+    ui->textBrowser->append("共发送数据："+QString::number(totalTx,'f',2)+totalTxUnit);
+    ui->textBrowser->append("共接收数据："+QString::number(totalRx,'f',2)+totalRxUnit);
+    ui->textBrowser->append("共运行本软件："+totalRunTimeStr);
+    ui->textBrowser->append("共启动本软件："+QString::number(Config::getTotalRunCnt().toInt()+1)+"次");
+    ui->textBrowser->append("<h2>隐私声明</h2>");
+    ui->textBrowser->append("以上统计信息可能会被上传至服务器用于统计。");
+    ui->textBrowser->append("其他任何信息均不会被上传。");
+    ui->textBrowser->append("如您不同意本声明，可通过系统防火墙阻断本软件的网络请求或者您应该停止使用本软件。");
+    ui->textBrowser->append("<h2>感谢您的使用</h2>");
+    ui->textBrowser->append("<p>");
 }

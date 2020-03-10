@@ -25,6 +25,8 @@ public:
     //获取收发统计值
     unsigned int getTxCnt();
     unsigned int getRxCnt();
+    int64_t getTotalTxCnt();
+    int64_t getTotalRxCnt();
     QString getTxRxString();
     //重置收发统计
     void resetCnt();
@@ -40,6 +42,8 @@ private:
     StopBits stopbits;
     FlowControl flowcontrol;
     Parity paritybit;
+    int64_t totalTxCnt;
+    int64_t totalRxCnt;
 };
 
 #endif // MYSERIALPORT_H

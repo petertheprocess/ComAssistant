@@ -21,18 +21,20 @@
 #include <QVector>
 #include <QMenu>
 #include <QInputDialog>
+#include <QList>
+#include <QDesktopServices>
+//网络类
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtNetwork/QNetworkRequest>
 #include <QtNetwork/QNetworkReply>
-#include <QDesktopServices>
-//绘图器
+#include <QNetworkInterface>
+//绘图器类
 #include "qcustomplot.h"
 #include "dataprotocol.h"
 #include "qcustomplotcontrol.h"
 #include "axistag.h"
 #include "mytracer.h"
-
-//
+//自定义类
 #include "myxlsx.h"
 #include "highlighter.h"
 #include "myserialport.h"
@@ -157,6 +159,8 @@ private slots:
     void httpFinishedSlot(QNetworkReply*);
     void on_actionKeyWordHighlight_triggered(bool checked);
 
+    void on_actionUsageStatic_triggered();
+
 private:
     bool needSaveConfig = true;
     void readConfig();
@@ -183,9 +187,14 @@ private:
     typedef enum{
         GetVersion,
         DownloadFile,
+        PostStatic,
     }HttpFunction_e;
     HttpFunction_e httpFunction;//http的用途
-    int httpTimeout;
+    int httpTimeout = 0;
+    //使用统计
+    int currentRunTime = 0; //运行时间
+
+    void postUsageStatic(void);
 };
 
 #endif // MAINWINDOW_H

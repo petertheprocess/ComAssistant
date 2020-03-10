@@ -27,6 +27,14 @@ void Config::writeDefault(){
     iniFile->setValue(SECTION_PLOTTER+KEY_PROTOCOLTYPE, ProtocolType_e::Ascii);
     iniFile->setValue(SECTION_PLOTTER+KEY_GRAPHNAME, defualtGraphName);
 
+    iniFile->setValue(SECTION_STATIC+KEY_LASTRUNTIME, 0);
+    iniFile->setValue(SECTION_STATIC+KEY_TOTALRUNTIME, 0);
+    iniFile->setValue(SECTION_STATIC+KEY_LASTTXCNT, 0);
+    iniFile->setValue(SECTION_STATIC+KEY_TOTALTXCNT, 0);
+    iniFile->setValue(SECTION_STATIC+KEY_LASTRXCNT, 0);
+    iniFile->setValue(SECTION_STATIC+KEY_TOTALRXCNT, 0);
+    iniFile->setValue(SECTION_STATIC+KEY_TOTALRUNCNT, 0);
+
     iniFile->setValue(SECTION_ABOUT+KEY_VERSION, VERSION_STRING);
     iniFile->setValue(SECTION_ABOUT+KEY_SOURCE_CODE, "www.github.com/inhowe/ComAssistant");
     iniFile->setValue(SECTION_ABOUT+KEY_AUTHER, "INHOWE");
@@ -288,4 +296,103 @@ QVector<QString> Config::getPlotterGraphNames(int maxValidGraphNumber){
     delete iniFile;
 //    qDebug()<<"getPlotterGraphNames:"<<newValue;
     return newValue;
+}
+
+void Config::setLastRunTime(int sec){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_STATIC+KEY_LASTRUNTIME, sec);
+    delete iniFile;
+}
+QString Config::getLastRunTime(void){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    QString value = iniFile->value(SECTION_STATIC+KEY_LASTRUNTIME, 0).toString();
+    delete iniFile;
+    return value;
+}
+
+void Config::setTotalRunTime(int currentRunTime){
+    createDefaultIfNotExist();
+    int total = getTotalRunTime().toInt();
+    total += currentRunTime;
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_STATIC+KEY_TOTALRUNTIME, total);
+    delete iniFile;
+}
+QString Config::getTotalRunTime(void){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    QString value = iniFile->value(SECTION_STATIC+KEY_TOTALRUNTIME, 0).toString();
+    delete iniFile;
+    return value;
+}
+
+void Config::setLastTxCnt(int64_t cnt){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_STATIC+KEY_LASTTXCNT, cnt);
+    delete iniFile;
+}
+QString Config::getLastTxCnt(void){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    QString value = iniFile->value(SECTION_STATIC+KEY_LASTTXCNT, 0).toString();
+    delete iniFile;
+    return value;
+}
+
+void Config::setLastRxCnt(int64_t cnt){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_STATIC+KEY_LASTRXCNT, cnt);
+    delete iniFile;
+}
+QString Config::getLastRxCnt(void){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    QString value = iniFile->value(SECTION_STATIC+KEY_LASTRXCNT, 0).toString();
+    delete iniFile;
+    return value;
+}
+
+void Config::setTotalTxCnt(int64_t currentTxCnt){
+    createDefaultIfNotExist();
+    int64_t total = getTotalTxCnt().toInt();
+    total += currentTxCnt;
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_STATIC+KEY_TOTALTXCNT, total);
+    delete iniFile;
+}
+QString Config::getTotalTxCnt(void){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    QString value = iniFile->value(SECTION_STATIC+KEY_TOTALTXCNT, 0).toString();
+    delete iniFile;
+    return value;
+}
+
+void Config::setTotalRxCnt(int64_t currentRxCnt){
+    createDefaultIfNotExist();
+    int64_t total = getTotalRxCnt().toInt();
+    total += currentRxCnt;
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_STATIC+KEY_TOTALRXCNT, total);
+    delete iniFile;
+}
+QString Config::getTotalRxCnt(void){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    QString value = iniFile->value(SECTION_STATIC+KEY_TOTALRXCNT, 0).toString();
+    delete iniFile;
+    return value;
+}
+
+void Config::setTotalRunCnt(int64_t runCnt){
+    createDefaultIfNotExist();
+    int64_t total = getTotalRunCnt().toInt();
+    total += runCnt;
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_STATIC+KEY_TOTALRUNCNT, total);
+    delete iniFile;
+}
+QString Config::getTotalRunCnt(void){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    QString value = iniFile->value(SECTION_STATIC+KEY_TOTALRUNCNT, 0).toString();
+    delete iniFile;
+    return value;
 }

@@ -1,6 +1,6 @@
 #include "myserialport.h"
 
-mySerialPort::mySerialPort():TxCnt(0),RxCnt(0)
+mySerialPort::mySerialPort():TxCnt(0),RxCnt(0),totalTxCnt(0),totalRxCnt(0)
 {
     moreSetting(Config::getStopBits(),Config::getParity(),Config::getFlowControl(),Config::getDataBits());
 }
@@ -81,6 +81,21 @@ unsigned int mySerialPort::getRxCnt()
 }
 
 /*
+ * Function: 获取发送统计
+*/
+int64_t mySerialPort::getTotalTxCnt()
+{
+    return totalTxCnt;
+}
+
+/*
+*/
+int64_t mySerialPort::getTotalRxCnt()
+{
+    return totalRxCnt;
+}
+
+/*
 */
 QString mySerialPort::getTxRxString()
 {
@@ -110,8 +125,10 @@ qint64 mySerialPort::write(QByteArray data)
     qint64 tmp;
 
     tmp = QSerialPort::write(data);
-    if(tmp != -1)
+    if(tmp != -1){
         TxCnt+=static_cast<uint32_t>(data.size());
+        totalTxCnt+=static_cast<uint32_t>(data.size());
+    }
 
     return tmp;
 }
@@ -124,8 +141,10 @@ QByteArray mySerialPort::readAll()
     QByteArray tmp;
 
     tmp = QSerialPort::readAll();
-    if(!tmp.isEmpty())
+    if(!tmp.isEmpty()){
         RxCnt+=static_cast<uint32_t>(tmp.size());
+        totalRxCnt+=static_cast<uint32_t>(tmp.size());
+    }
 
     return tmp;
 }

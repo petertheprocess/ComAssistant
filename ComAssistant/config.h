@@ -19,6 +19,7 @@
 #define SECTION_GLOBAL   QString("Global/")
 #define SECTION_SERIAL   QString("Serial/")
 #define SECTION_PLOTTER   QString("Plotter/")
+#define SECTION_STATIC   QString("Static/")
 #define SECTION_ABOUT    QString("About/")
 
 //global键
@@ -45,6 +46,14 @@
 //#define KEY_LINETYPE            QString("LineType")
 //#define KEY_XRANGELENGH         QString("xRangeLength")
 
+//static键
+#define KEY_LASTRUNTIME     QString("LastRunTime")
+#define KEY_TOTALRUNTIME    QString("TotalRunTime")
+#define KEY_LASTTXCNT       QString("LastTxCnt")
+#define KEY_TOTALTXCNT      QString("TotalTxCnt")
+#define KEY_LASTRXCNT       QString("LastRxCnt")
+#define KEY_TOTALRXCNT      QString("TotalRxCnt")
+#define KEY_TOTALRUNCNT     QString("TotalRunCnt")
 //about键
 #define KEY_VERSION     QString("Version")
 #define KEY_SOURCE_CODE QString("SourceCode")
@@ -109,6 +118,20 @@ public:
     static ProtocolType_e getPlotterType();
     static void setPlotterGraphNames(QVector<QString> names);
     static QVector<QString> getPlotterGraphNames(int maxValidGraphNumber);
+    static void setLastRunTime(int sec);
+    static QString getLastRunTime(void);
+    static void setTotalRunTime(int sec);
+    static QString getTotalRunTime(void);
+    static void setLastTxCnt(int64_t cnt);
+    static QString getLastTxCnt(void);
+    static void setLastRxCnt(int64_t cnt);
+    static QString getLastRxCnt(void);
+    static void setTotalTxCnt(int64_t currentTxCnt);
+    static QString getTotalTxCnt(void);
+    static void setTotalRxCnt(int64_t currentRxCnt);
+    static QString getTotalRxCnt(void);
+    static void setTotalRunCnt(int64_t runCnt=1);
+    static QString getTotalRunCnt(void);
 };
 
 #endif // CONFIG_H
