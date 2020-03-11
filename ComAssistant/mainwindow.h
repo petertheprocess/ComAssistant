@@ -206,6 +206,8 @@ private:
     bool postUsageStatic(void);
     bool getRemoteVersion(void);
     bool downloadAdvertisement(void);
+
+    bool saveGraphAsTxt(const QString& filePath, char separate=' ');
 };
 
 #endif // MAINWINDOW_H

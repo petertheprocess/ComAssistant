@@ -1422,21 +1422,63 @@ void MainWindow::on_actionManual_triggered()
 
 }
 
+bool MainWindow::saveGraphAsTxt(const QString& filePath, char separate)
+{
+    //列表头和值
+    double value;
+    QString txtBuff;
+    QSharedPointer<QCPGraphDataContainer> tmpContainer;
+
+    //构造表头
+    for(int j = 0; j < ui->customPlot->graphCount(); j++){
+        txtBuff += ui->customPlot->graph(j)->name() + separate;
+    }
+    txtBuff += "\n";
+
+    //构造数据行
+    int dataLen = ui->customPlot->graph(0)->data()->size();
+    for(int i = 0; i < dataLen; i++){
+        for(int j = 0; j < ui->customPlot->graphCount(); j++){
+            tmpContainer = ui->customPlot->graph(j)->data();
+            value = (tmpContainer->constBegin()+i)->mainValue();
+            txtBuff += QString::number(value,'f') + separate;
+        }
+        txtBuff += "\n";
+    }
+
+    QFile file(filePath);
+    if(!file.open(QFile::WriteOnly|QFile::Text))
+        return false;
+    file.write(txtBuff.toUtf8());
+    file.flush();
+    file.close();
+    return true;
+}
+
 void MainWindow::on_actionSavePlotData_triggered()
 {
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
                                                     "保存数据-选择文件路径",
                                                     QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".xlsx",
-                                                    "Xlsx File(*.xlsx);;All File(*.*)");
+                                                    "XLSX File(*.xlsx);;CSV File(*.csv);;TXT File(*.txt);;All File(*.*)");
     //检查路径格式
-    if(!savePath.endsWith(".xlsx")){
+    if(!savePath.endsWith(".xlsx") && !savePath.endsWith(".csv")&& !savePath.endsWith(".txt")){
         if(!savePath.isEmpty())
-            QMessageBox::information(this,"提示","尚未支持的文件格式。请选择xlsx文件。");
+            QMessageBox::information(this,"提示","尚未支持的文件格式。请选择xlsx或者csv或者txt格式文件。");
         return;
     }
-    if(!MyXlsx::write(ui->customPlot, savePath))
-        QMessageBox::warning(this, "警告", "保存失败。");
+    if(savePath.endsWith(".xlsx")){
+        if(!MyXlsx::write(ui->customPlot, savePath))
+            QMessageBox::warning(this, "警告", "保存失败。文件是否被占用？");
+    }else if(savePath.endsWith(".csv")){
+        if(!saveGraphAsTxt(savePath,','))
+            QMessageBox::warning(this, "警告", "保存失败。文件是否被占用？");
+    }else if(savePath.endsWith(".txt")){
+        if(!saveGraphAsTxt(savePath,' '))
+            QMessageBox::warning(this, "警告", "保存失败。文件是否被占用？");
+    }
+
 }
 
 void MainWindow::on_actionSavePlotAsPicture_triggered()

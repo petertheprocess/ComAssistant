@@ -24,7 +24,7 @@ bool MyXlsx::write(QCustomPlot *customPlot, QString path)
     for(int j = 0; j < graphNum; j++){
         //曲线数据遍历
         tmpContainer = customPlot->graph(j)->data();
-        for(int i = 0; i < tmpContainer->size(); i++){
+        for(int i = 0; i < tmpContainer->size(); ){
             if(rowNumber==1){
                 //表头
                 xlsxPos = QString(columnNumber) + QString::number(rowNumber);
@@ -35,6 +35,7 @@ bool MyXlsx::write(QCustomPlot *customPlot, QString path)
                 xlsxPos = QString(columnNumber) + QString::number(rowNumber);
                 value = (tmpContainer->constBegin()+i)->mainValue();
                 xlsx.write(xlsxPos, value);
+                i++; // rowNumber = 1时不应该占用一次循环
 //                qDebug()<<xlsxPos<<value;
             }
             rowNumber++;
