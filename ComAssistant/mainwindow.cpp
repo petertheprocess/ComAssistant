@@ -43,15 +43,14 @@ QString getHostMacAddress()
     fclose($data);
 ?>
 */
-void MainWindow::postUsageStatic(void)
+bool MainWindow::postUsageStatic(void)
 {
     //旧请求未完成时不执行。
     if(httpTimeout>0)
-        return;
+        return false;
 
     ui->statusBar->showMessage("正在提交使用统计...", 1000);
-    httpTimeout = 5;
-    httpFunction = PostStatic;
+//    httpFunction = PostStatic;
 
     //准备上传数据
     QString sendData = "startTime=#STARTTIME#&lastRunTime=#LASTRUNTIME#&lastTxCnt=#LASTTXCNT#&lastRxCnt=#LASTRXCNT#";
@@ -75,8 +74,40 @@ void MainWindow::postUsageStatic(void)
     request.setHeader(QNetworkRequest::ContentLengthHeader, sendData.size());
 //    m_NetManger = new QNetworkAccessManager;//重复使用所以不重复定义
     m_Reply = m_NetManger->post(request, sendData.toUtf8());
+    return true;
 }
 
+bool MainWindow::getRemoteVersion(void)
+{
+    //旧请求未完成时不执行。
+    if(httpTimeout>0)
+        return false;
+
+    ui->statusBar->showMessage("正在检查更新，请稍候……", 2000);
+//    httpFunction = GetVersion;
+    //发起http请求远端的发布版本号
+    QUrl url("https://api.github.com/repos/inhowe/ComAssistant/releases");
+    QNetworkRequest request;
+    request.setSslConfiguration(QSslConfiguration::defaultConfiguration());
+    request.setUrl(url);
+    m_Reply = m_NetManger->get(request);
+    return true;
+}
+
+bool MainWindow::downloadAdvertisement(void)
+{
+    //旧请求未完成时不执行。
+    if(httpTimeout>0)
+        return false;
+//    httpFunction = DownloadADs;
+    //发起http请求远端的发布版本号
+    QUrl url("http://www.inhowe.com/ComAssistant/ad.txt");
+    QNetworkRequest request;
+    request.setSslConfiguration(QSslConfiguration::defaultConfiguration());
+    request.setUrl(url);
+    m_Reply = m_NetManger->get(request);
+    return true;
+}
 /*
  * Function:读取配置
 */
@@ -180,8 +211,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(m_NetManger, SIGNAL(finished(QNetworkReply*)), this, SLOT(httpFinishedSlot(QNetworkReply*)));
 
     //状态栏标签
+    statusAdLabel = new QLabel(this);
     statusSpeedLabel = new QLabel(this);
     statusStatisticLabel = new QLabel(this);
+    statusAdLabel->setOpenExternalLinks(true);//可打开外链
+    ui->statusBar->addPermanentWidget(statusAdLabel);
     ui->statusBar->addPermanentWidget(statusStatisticLabel);//显示永久信息
     ui->statusBar->addPermanentWidget(statusSpeedLabel);
 
@@ -213,30 +247,58 @@ MainWindow::MainWindow(QWidget *parent) :
     //初始化秒定时器
     secTimer.start(1000);
 
-    //提交使用统计
-    postUsageStatic();
+    //提交使用统计任务
+//    postUsageStatic();
+//    downloadAdvertisement();
+    httpTaskVector.push_back(PostStatic);
+    httpTaskVector.push_back(DownloadADs);
 }
 
 void MainWindow::secTimerSlot()
 {
     static int64_t secCnt = 0;
-    if(secCnt){
-        //速度统计
-        rxSpeedKB = static_cast<double>(statisticRxByteCnt) / 1024.0;
-        statisticRxByteCnt = 0;
-        txSpeedKB = static_cast<double>(statisticTxByteCnt) / 1024.0;
-        statisticTxByteCnt = 0;
-    }
-    //显示速度
+    static int adIndex = 0;
+
+    //传输速度统计与显示
+    rxSpeedKB = static_cast<double>(statisticRxByteCnt) / 1024.0;
+    statisticRxByteCnt = 0;
+    txSpeedKB = static_cast<double>(statisticTxByteCnt) / 1024.0;
+    statisticTxByteCnt = 0;
     statusSpeedLabel->setText(" Tx:" + QString::number(txSpeedKB, 'f', 2) + "KB/s " + "Rx:" + QString::number(rxSpeedKB, 'f', 2) + "KB/s");
+
+    //处理http任务请求队列
+    if(httpTaskVector.size()>0 && httpTimeout==0){
+        switch(httpTaskVector.at(0)){
+        case GetVersion:
+            getRemoteVersion();break;
+        case DownloadFile:
+            httpTaskVector.pop_front();break;
+        case PostStatic:
+            postUsageStatic();break;
+        case DownloadADs:
+            downloadAdvertisement();break;
+        default:
+            httpTaskVector.pop_front();break;
+        }
+        httpTimeout = 5;
+    }
+
+    //显示广告
+    if(adList.size()>0 && secCnt%10==0){
+        statusAdLabel->setText(adList.at(adIndex++));
+        if(adIndex==adList.size())
+            adIndex = 0;
+    }
 
     //http超时放弃
     if(httpTimeout){
         httpTimeout--;
         if(httpTimeout==0){
             m_Reply->abort();
-//            m_Reply->deleteLater();
-            qDebug()<<"http timed out";
+            if(httpTaskVector.size()>0){
+                qDebug()<<"http timed out."<<httpTaskVector.at(0);
+                httpTaskVector.pop_front();
+            }
             ui->statusBar->showMessage("Http request timed out.", 2000);
         }
     }
@@ -283,6 +345,7 @@ MainWindow::~MainWindow()
         Config::setTimeStampState(ui->timeStampDisplayCheckBox->isChecked());
         Config::setMultiStringState(ui->actionMultiString->isChecked());
         Config::setKeyWordHighlightState(ui->actionKeyWordHighlight->isChecked());
+        Config::setVersion();
         //serial
         Config::setBaudrate(serial.baudRate());
         Config::setDataBits(serial.dataBits());
@@ -381,11 +444,15 @@ void MainWindow::readSerialPort()
 {
     QByteArray tmpReadBuff;
 
-    tmpReadBuff = serial.readAll();
+    if(paraseFromRxBuff)
+        tmpReadBuff = RxBuff;
+    else
+        tmpReadBuff = serial.readAll();
     //读取数据并衔接到上次未处理完的数据后面
     tmpReadBuff = unshowedRxBuff + tmpReadBuff;
     unshowedRxBuff.clear();
-    RxBuff.append(tmpReadBuff);
+    if(!paraseFromRxBuff)
+        RxBuff.append(tmpReadBuff);
 
     //速度统计
     statisticRxByteCnt += tmpReadBuff.size();
@@ -393,9 +460,10 @@ void MainWindow::readSerialPort()
     if(ui->actionPlotterSwitch->isChecked()){
         //绘图器解析
         protocol->parase(tmpReadBuff);
-        plotControl.displayToPlotter(ui->customPlot, protocol->popOneRowData());
+        while(protocol->parasedBuffSize()>0){
+            plotControl.displayToPlotter(ui->customPlot, protocol->popOneRowData());
+        }
     }
-
 
     //'\r'若单独结尾则可能被误切断，放到下一批数据中
     if(tmpReadBuff.endsWith('\r')){
@@ -766,11 +834,14 @@ void MainWindow::on_actionReadOriginData_triggered()
     QTextStream stream(&file);
     //读文件
     if(file.open(QFile::ReadOnly|QFile::Text)){
-        QMessageBox::information(this,"开发者提示","读取的文件可能缺少 '\\r' 字符");
         RxBuff.clear();
         RxBuff.append(stream.readAll());
-        ui->textBrowser->setText(RxBuff);
         file.close();
+        // 解析读取的数据
+        paraseFromRxBuff = true;
+        unshowedRxBuff.clear();
+        readSerialPort();
+        paraseFromRxBuff = false;
     }
 }
 
@@ -871,19 +942,8 @@ void MainWindow::on_actionSaveShowedData_triggered()
 
 void MainWindow::on_actionUpdate_triggered()
 {
-    //旧请求未完成时不执行。
-    if(httpTimeout>0)
-        return;
-
-    ui->statusBar->showMessage("正在检查更新，请稍候……", 2000);
-    httpTimeout = 5;
-    httpFunction = GetVersion;
-    //发起http请求远端的发布版本号
-    QUrl url("https://api.github.com/repos/inhowe/ComAssistant/releases");
-    QNetworkRequest request;
-    request.setSslConfiguration(QSslConfiguration::defaultConfiguration());
-    request.setUrl(url);
-    m_Reply = m_NetManger->get(request);
+//    getRemoteVersion();
+    httpTaskVector.push_back(GetVersion);
 }
 
 void MainWindow::on_sendInterval_textChanged(const QString &arg1)
@@ -1415,8 +1475,13 @@ void MainWindow::httpFinishedSlot(QNetworkReply *)
     {
         QByteArray bytes = m_Reply->readAll();
         QString string = QString::fromUtf8(bytes);
+        //没有任务需求，不执行后面语句防止at访问越界
+        if(httpTaskVector.size()==0){
+            qDebug()<<"httpTaskVector's size is 0. Received:"+bytes;
+            return;
+        }
 
-        if(httpFunction == GetVersion){
+        if(httpTaskVector.at(0) == GetVersion){
             QString remoteVersion;
             QString remoteNote;
             remoteVersion = string.mid(string.indexOf("tag_name"));
@@ -1435,24 +1500,38 @@ void MainWindow::httpFinishedSlot(QNetworkReply *)
                                                 "\n"+remoteNote, QMessageBox::Ok|QMessageBox::No);
             if(button == QMessageBox::Ok)
                 QDesktopServices::openUrl(QUrl("https://github.com/inhowe/ComAssistant/releases"));
-        }else if(httpFunction == PostStatic){
-            if(string.isEmpty())
-                return;
-            qDebug()<<"使用统计返回内容："<<string;
+        }else if(httpTaskVector.at(0) == PostStatic){
+            if(!string.isEmpty())
+                qDebug()<<"PostStatic:"<<string;
+        }else if(httpTaskVector.at(0) == DownloadADs){
+            //把下载的广告添加进变量
+            adList = string.split('\n',QString::SkipEmptyParts);
         }else{
             qDebug()<<string;
         }
+        //正确响应，弹出一个http任务
+        httpTaskVector.pop_front();
     }
     else
     {
-        if(httpFunction == GetVersion){
+        //http任务队列为空，不执行后面语句防止at访问越界
+        if(httpTaskVector.size()==0){
+            qDebug()<< m_Reply->errorString();
+            m_Reply->abort();
+            return;
+        }
+
+        if(httpTaskVector.at(0) == GetVersion){
             QMessageBox::information(this,"提示","当前版本号："+Config::getVersion()+
                                           "\n编译时间：" + QString(__DATE__) + " " + QString(__TIME__) +
                                           "\n检查更新失败。"+
                                           "\n请访问：https://github.com/inhowe/ComAssistant/releases");
-        }else if(httpFunction == PostStatic){
+        }else if(httpTaskVector.at(0) == PostStatic){
 
         }
+        //弹出
+        httpTaskVector.pop_front();
+
         qDebug()<< m_Reply->errorString();
         m_Reply->abort();
     }

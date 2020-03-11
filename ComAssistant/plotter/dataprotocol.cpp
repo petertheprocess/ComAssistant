@@ -49,6 +49,11 @@ void DataProtocol::printBuff()
     }
 }
 
+int DataProtocol::parasedBuffSize()
+{
+    return dataPool.size();
+}
+
 QVector<double> DataProtocol::popOneRowData()
 {
     QVector<double> tmp;

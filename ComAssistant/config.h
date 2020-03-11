@@ -85,6 +85,7 @@ public:
     static void writeDefault();
     static void createDefaultIfNotExist();
     static bool isFileExist(QString path);
+    static void setVersion(void);
     static QString getVersion();
     static void setBaudrate(int baud);
     static void setParity(QSerialPort::Parity parity);

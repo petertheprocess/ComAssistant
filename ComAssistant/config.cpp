@@ -62,6 +62,12 @@ bool Config::isFileExist(QString path)
     }
     return false;
 }
+void Config::setVersion(void){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_ABOUT+KEY_VERSION, VERSION_STRING);
+    delete iniFile;
+}
 QString Config::getVersion(){
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
     QString value = iniFile->value(SECTION_ABOUT+KEY_VERSION, VERSION_STRING).toString();

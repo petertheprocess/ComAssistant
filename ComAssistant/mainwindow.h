@@ -166,7 +166,8 @@ private:
     void readConfig();
     Ui::MainWindow *ui;
     mySerialPort serial;
-    QLabel *statusSpeedLabel, *statusStatisticLabel;
+    QLabel *statusSpeedLabel, *statusStatisticLabel, *statusAdLabel;
+    bool paraseFromRxBuff = false;
     QByteArray RxBuff, TxBuff; //原始数据的收发缓冲
     QByteArray unshowedRxBuff;    //未上屏的接收缓冲
     QTimer continuousWriteTimer; //自动发送定时器
@@ -185,16 +186,22 @@ private:
     QNetworkAccessManager *m_NetManger;
     QNetworkReply* m_Reply;
     typedef enum{
+        Idle,
         GetVersion,
         DownloadFile,
         PostStatic,
+        DownloadADs,
     }HttpFunction_e;
-    HttpFunction_e httpFunction;//http的用途
+//    HttpFunction_e httpFunction = Idle;//http的用途
+    QVector<HttpFunction_e> httpTaskVector;
     int httpTimeout = 0;
+    QStringList adList;//广告列表
     //使用统计
     int currentRunTime = 0; //运行时间
 
-    void postUsageStatic(void);
+    bool postUsageStatic(void);
+    bool getRemoteVersion(void);
+    bool downloadAdvertisement(void);
 };
 
 #endif // MAINWINDOW_H
