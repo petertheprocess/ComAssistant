@@ -14,6 +14,7 @@
 #include <QDateTime>
 #include <QFileDialog>
 #include <QTextStream>
+#include <QDataStream>
 #include <QFile>
 #include <QRegExp>
 #include <QListWidgetItem>
@@ -68,6 +69,7 @@ private slots:
     void on_clearWindows_clicked();
 
     void readSerialPort();
+    void serialBytesWritten(qint64 bytes);
 
     void continuousWriteSlot();
 
@@ -160,6 +162,8 @@ private slots:
     void on_actionKeyWordHighlight_triggered(bool checked);
 
     void on_actionUsageStatic_triggered();
+
+    void on_actionSendFile_triggered();
 
 private:
     bool needSaveConfig = true;

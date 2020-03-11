@@ -18,7 +18,7 @@ public:
     //保留父类的open函数并重载open函数
     using QSerialPort::open;
     bool open(QString PortName,int BaudRate);
-    qint64 write(QByteArray data);
+    qint64 write(const QByteArray& data);
     QByteArray readAll();
     //刷新串口
     QList<QString> refreshSerialPort();

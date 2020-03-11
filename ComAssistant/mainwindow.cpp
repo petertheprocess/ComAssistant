@@ -182,6 +182,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&autoSubcontractTimer, SIGNAL(timeout()), this, SLOT(autoSubcontractTimerSlot()));
     connect(&secTimer, SIGNAL(timeout()), this, SLOT(secTimerSlot()));
     connect(&serial, SIGNAL(readyRead()), this, SLOT(readSerialPort()));
+    connect(&serial, SIGNAL(bytesWritten(qint64)), this, SLOT(serialBytesWritten(qint64)));
 
     // connect slot that ties some axis selections together (especially opposite axes):
     connect(ui->customPlot, SIGNAL(selectionChangedByUser()), this, SLOT(selectionChanged()));
@@ -446,13 +447,13 @@ void MainWindow::readSerialPort()
 
     if(paraseFromRxBuff)
         tmpReadBuff = RxBuff;
-    else
+    else{
         tmpReadBuff = serial.readAll();
+        RxBuff.append(tmpReadBuff);
+    }
     //读取数据并衔接到上次未处理完的数据后面
     tmpReadBuff = unshowedRxBuff + tmpReadBuff;
     unshowedRxBuff.clear();
-    if(!paraseFromRxBuff)
-        RxBuff.append(tmpReadBuff);
 
     //速度统计
     statisticRxByteCnt += tmpReadBuff.size();
@@ -526,6 +527,12 @@ void MainWindow::readSerialPort()
     }
 }
 
+void MainWindow::serialBytesWritten(qint64 bytes)
+{
+    //发送速度统计
+    statisticTxByteCnt += bytes;
+}
+
 /*
  * Function:连续发送定时器槽，执行数据发送
 */
@@ -570,9 +577,6 @@ void MainWindow::on_sendButton_clicked()
             //utf8编码
             serial.write(tmp);
 
-            //速度统计
-            statisticTxByteCnt += tmp.size();
-
             //若添加了时间戳则把发送的数据也显示在接收区
             if(ui->timeStampDisplayCheckBox->isChecked()){
                 QString timeString;
@@ -593,8 +597,6 @@ void MainWindow::on_sendButton_clicked()
             tmp = HexStringToByteArray(ui->textEdit->toPlainText(),ok);
             if(ok){
                 serial.write(tmp);
-                //速度统计
-                statisticTxByteCnt += tmp.size();
             }
         }
         //给多字符串控件添加条目
@@ -626,7 +628,7 @@ void MainWindow::on_clearWindows_clicked()
     RxBuff.clear();
 
     //发送区
-    ui->textEdit->clear();
+//    ui->textEdit->clear();
 
     //对象缓存
     unshowedRxBuff.clear();
@@ -792,22 +794,23 @@ void MainWindow::on_actionSaveOriginData_triggered()
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
                                                     "保存数据-选择文件路径",
-                                                    QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".txt",
-                                                    "Text File(*.txt);;All File(*.*)");
+                                                    QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".dat",
+                                                    "Dat File(*.dat);;All File(*.*)");
     //检查路径格式
-    if(!savePath.endsWith(".txt")){
+    if(!savePath.endsWith(".dat")){
         if(!savePath.isEmpty())
-            QMessageBox::information(this,"尚未支持的文件格式","请选择txt文本文件。");
+            QMessageBox::information(this,"尚未支持的文件格式","请选择dat文件。");
         return;
     }
 
     //保存数据
     QFile file(savePath);
-    QTextStream stream(&file);
     //删除旧数据形式写文件
-    if(file.open(QFile::WriteOnly|QFile::Text|QFile::Truncate)){
-        stream<<RxBuff;
+    if(file.open(QFile::WriteOnly|QFile::Truncate)){
+        file.write(RxBuff);//不用DataStream写入非文本文件，它会额外添加4个字节作为文件头
+        file.flush();
         file.close();
+        ui->textBrowser->append("Total saved "+QString::number(RxBuff.size())+" Bytes in "+savePath);
     }
 }
 
@@ -817,26 +820,37 @@ void MainWindow::on_actionSaveOriginData_triggered()
 */
 void MainWindow::on_actionReadOriginData_triggered()
 {   
+    static QString lastPath;
     //打开文件对话框
     QString readPath = QFileDialog::getOpenFileName(this,
                                                     "读取数据-选择文件路径",
-                                                    "",
-                                                    "Text File(*.txt);;All File(*.*)");
+                                                    lastPath,
+                                                    "Dat File(*.dat);;All File(*.*)");
     //检查文件路径结尾
-    if(!readPath.endsWith(".txt")){
+    if(!readPath.endsWith(".dat")){
         if(!readPath.isEmpty())
-            QMessageBox::information(this,"尚未支持的文件格式","请选择txt文本文件。");
+            QMessageBox::information(this,"尚未支持的文件格式","请选择dat文件。");
         return;
     }
 
     //读取文件
     QFile file(readPath);
-    QTextStream stream(&file);
     //读文件
-    if(file.open(QFile::ReadOnly|QFile::Text)){
+    if(file.open(QFile::ReadOnly)){
+        //记录上一次路径
+        lastPath = readPath;
+        while(lastPath.indexOf('/')!=-1){
+            lastPath = lastPath.mid(lastPath.indexOf('/')+1);
+        }
+
         RxBuff.clear();
-        RxBuff.append(stream.readAll());
+        RxBuff = file.readAll();
         file.close();
+        ui->textBrowser->clear();
+        ui->textBrowser->append("File size:"+QString::number(file.size())+" Byte");
+        ui->textBrowser->append("Read size:"+QString::number(RxBuff.size())+" Byte");
+        ui->textBrowser->append("Read containt:\n");
+        qDebug()<<"Read:"<<RxBuff;
         // 解析读取的数据
         paraseFromRxBuff = true;
         unshowedRxBuff.clear();
@@ -1675,4 +1689,41 @@ void MainWindow::on_actionUsageStatic_triggered()
     ui->textBrowser->append("如您不同意本声明，可通过系统防火墙阻断本软件的网络请求或者您应该停止使用本软件。");
     ui->textBrowser->append("<h2>感谢您的使用</h2>");
     ui->textBrowser->append("<p>");
+}
+
+void MainWindow::on_actionSendFile_triggered()
+{
+    static QString lastPath;
+    //打开文件对话框
+    QString readPath = QFileDialog::getOpenFileName(this,
+                                                    "打开文件",
+                                                    lastPath,
+                                                    "All File(*.*)");
+    //检查文件路径结尾
+    if(readPath.isEmpty()){
+        return;
+    }
+
+    //读取文件
+    QFile file(readPath);
+
+    //读文件
+    if(file.open(QFile::ReadOnly)){
+        //记录上一次路径
+        lastPath = readPath;
+        while(lastPath.indexOf('/')!=-1){
+            lastPath = lastPath.mid(lastPath.indexOf('/')+1);
+        }
+
+        TxBuff.clear();
+        TxBuff = file.readAll();
+        file.close();
+        if(serial.isOpen()){
+            serial.write(TxBuff);
+        }
+        else
+            QMessageBox::information(this,"提示","请先打开串口。");
+    }else{
+        QMessageBox::information(this,"提示","文件打开失败。");
+    }
 }

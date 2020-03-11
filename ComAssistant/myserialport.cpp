@@ -120,7 +120,7 @@ bool mySerialPort::open(QString PortName,int BaudRate)
 /*
  *
 */
-qint64 mySerialPort::write(QByteArray data)
+qint64 mySerialPort::write(const QByteArray& data)
 {
     qint64 tmp;
 
