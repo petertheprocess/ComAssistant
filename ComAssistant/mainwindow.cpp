@@ -283,7 +283,6 @@ void MainWindow::secTimerSlot()
         }
         httpTimeout = 5;
     }
-
     //显示广告
     if(adList.size()>0 && secCnt%10==0){
         statusAdLabel->setText(adList.at(adIndex++));
@@ -966,7 +965,6 @@ void MainWindow::on_actionSaveShowedData_triggered()
 
 void MainWindow::on_actionUpdate_triggered()
 {
-//    getRemoteVersion();
     httpTaskVector.push_back(GetVersion);
 }
 
@@ -1251,11 +1249,11 @@ void MainWindow::contextMenuRequest(QPoint pos)
 
   if (ui->customPlot->legend->selectTest(pos, false) >= 0) // context menu on legend requested
   {
-    menu->addAction("Move to top left", this, SLOT(moveLegend()))->setData((int)(Qt::AlignTop|Qt::AlignLeft));
-    menu->addAction("Move to top center", this, SLOT(moveLegend()))->setData((int)(Qt::AlignTop|Qt::AlignHCenter));
-    menu->addAction("Move to top right", this, SLOT(moveLegend()))->setData((int)(Qt::AlignTop|Qt::AlignRight));
-    menu->addAction("Move to bottom right", this, SLOT(moveLegend()))->setData((int)(Qt::AlignBottom|Qt::AlignRight));
-    menu->addAction("Move to bottom left", this, SLOT(moveLegend()))->setData((int)(Qt::AlignBottom|Qt::AlignLeft));
+    menu->addAction("Move to top left", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignTop|Qt::AlignLeft));
+    menu->addAction("Move to top center", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignTop|Qt::AlignHCenter));
+    menu->addAction("Move to top right", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignTop|Qt::AlignRight));
+    menu->addAction("Move to bottom right", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignBottom|Qt::AlignRight));
+    menu->addAction("Move to bottom left", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignBottom|Qt::AlignLeft));
   } else  // general context menu on graphs requested
   {
     if (ui->customPlot->graphCount() > 0)
@@ -1281,7 +1279,7 @@ void MainWindow::moveLegend()
     int dataInt = contextAction->data().toInt(&ok);
     if (ok)
     {
-      ui->customPlot->axisRect()->insetLayout()->setInsetAlignment(0, (Qt::Alignment)dataInt);
+      ui->customPlot->axisRect()->insetLayout()->setInsetAlignment(0, static_cast<Qt::Alignment>(dataInt));
       ui->customPlot->replot();
     }
   }
@@ -1541,6 +1539,15 @@ void MainWindow::httpFinishedSlot(QNetworkReply *)
 {
     //超时定时器清0
     httpTimeout = 0;
+    HttpFunction_e state;
+    if(httpTaskVector.size()>0){
+        state = httpTaskVector.at(0); //提取，防止超时pop
+        httpTaskVector.pop_front();
+    }
+    else{
+        state = Idle;
+    }
+
     m_Reply->attribute(QNetworkRequest::HttpStatusCodeAttribute);
     m_Reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
 
@@ -1548,13 +1555,8 @@ void MainWindow::httpFinishedSlot(QNetworkReply *)
     {
         QByteArray bytes = m_Reply->readAll();
         QString string = QString::fromUtf8(bytes);
-        //没有任务需求，不执行后面语句防止at访问越界
-        if(httpTaskVector.size()==0){
-            qDebug()<<"httpTaskVector's size is 0. Received:"+bytes;
-            return;
-        }
 
-        if(httpTaskVector.at(0) == GetVersion){
+        if(state == GetVersion){
             QString remoteVersion;
             QString remoteNote;
             remoteVersion = string.mid(string.indexOf("tag_name"));
@@ -1567,44 +1569,30 @@ void MainWindow::httpFinishedSlot(QNetworkReply *)
 //            qDebug()<<remoteVersion<<remoteNote;
             QMessageBox::Button button;
             button = QMessageBox::information(this,"提示","当前版本号："+Config::getVersion()+
-                                                "\n编译时间：" + QString(__DATE__) + " " + QString(__TIME__) +
                                                 "\n远端版本号："+remoteVersion+
                                                 "\n更新内容："+
                                                 "\n"+remoteNote, QMessageBox::Ok|QMessageBox::No);
             if(button == QMessageBox::Ok)
                 QDesktopServices::openUrl(QUrl("https://github.com/inhowe/ComAssistant/releases"));
-        }else if(httpTaskVector.at(0) == PostStatic){
+        }else if(state == PostStatic){
             if(!string.isEmpty())
                 qDebug()<<"PostStatic:"<<string;
-        }else if(httpTaskVector.at(0) == DownloadADs){
+        }else if(state == DownloadADs){
             //把下载的广告添加进变量
             adList = string.split('\n',QString::SkipEmptyParts);
         }else{
             qDebug()<<string;
         }
-        //正确响应，弹出一个http任务
-        httpTaskVector.pop_front();
     }
     else
     {
-        //http任务队列为空，不执行后面语句防止at访问越界
-        if(httpTaskVector.size()==0){
-            qDebug()<< m_Reply->errorString();
-            m_Reply->abort();
-            return;
-        }
-
-        if(httpTaskVector.at(0) == GetVersion){
+        if(state == GetVersion){
             QMessageBox::information(this,"提示","当前版本号："+Config::getVersion()+
-                                          "\n编译时间：" + QString(__DATE__) + " " + QString(__TIME__) +
                                           "\n检查更新失败。"+
                                           "\n请访问：https://github.com/inhowe/ComAssistant/releases");
-        }else if(httpTaskVector.at(0) == PostStatic){
+        }else if(state == PostStatic){
 
         }
-        //弹出
-        httpTaskVector.pop_front();
-
         qDebug()<< m_Reply->errorString();
         m_Reply->abort();
     }
