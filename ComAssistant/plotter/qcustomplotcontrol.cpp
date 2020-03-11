@@ -249,7 +249,7 @@ void QCustomPlotControl::setupScatterStyle(QCustomPlot* customPlot, bool enable)
 {
     if(enable){
         for(int i = 0; i < customPlot->graphCount(); i++){
-            customPlot->graph(i)->setScatterStyle(QCPScatterStyle(scatterShapeSet.at(i),2));
+            customPlot->graph(i)->setScatterStyle(QCPScatterStyle(scatterShapeSet.at(i),4));
         }
     }else{
         for(int i = 0; i < customPlot->graphCount(); i++){
@@ -263,7 +263,7 @@ void QCustomPlotControl::setupScatterStyle(QCustomPlot* customPlot, QCPScatterSt
 {
     if(shape != QCPScatterStyle::ssNone){
         for(int i = 0; i < customPlot->graphCount(); i++){
-            customPlot->graph(i)->setScatterStyle(QCPScatterStyle(shape,2));
+            customPlot->graph(i)->setScatterStyle(QCPScatterStyle(shape,4));
         }
     }else{
         for(int i = 0; i < customPlot->graphCount(); i++){
