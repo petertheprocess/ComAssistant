@@ -10,7 +10,7 @@
 #include <QTextCodec>
 
 //版本
-#define VERSION_STRING  "0.0.4"
+#define VERSION_STRING  "0.0.5"
 //保存路径
 #define SAVE_PATH   "config.ini"
 //默认发送间隔
