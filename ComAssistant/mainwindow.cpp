@@ -794,7 +794,7 @@ void MainWindow::on_actionSaveOriginData_triggered()
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
                                                     "保存数据-选择文件路径",
-                                                    QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".dat",
+                                                    lastPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".dat",
                                                     "Dat File(*.dat);;All File(*.*)");
     //检查路径格式
     if(!savePath.endsWith(".dat")){
@@ -802,6 +802,9 @@ void MainWindow::on_actionSaveOriginData_triggered()
             QMessageBox::information(this,"尚未支持的文件格式","请选择dat文件。");
         return;
     }
+    //记忆路径
+    lastPath = savePath;
+    lastPath = lastPath.mid(0, lastPath.lastIndexOf('/')+1);
 
     //保存数据
     QFile file(savePath);
@@ -820,11 +823,11 @@ void MainWindow::on_actionSaveOriginData_triggered()
 */
 void MainWindow::on_actionReadOriginData_triggered()
 {   
-    static QString lastPath;
+    static QString lastFileName;
     //打开文件对话框
     QString readPath = QFileDialog::getOpenFileName(this,
                                                     "读取数据-选择文件路径",
-                                                    lastPath,
+                                                    lastPath + lastFileName,
                                                     "Dat File(*.dat);;All File(*.*)");
     //检查文件路径结尾
     if(!readPath.endsWith(".dat")){
@@ -832,15 +835,17 @@ void MainWindow::on_actionReadOriginData_triggered()
             QMessageBox::information(this,"尚未支持的文件格式","请选择dat文件。");
         return;
     }
-
+    //记录上次路径
+    lastPath = readPath;
+    lastPath = lastPath.mid(0, lastPath.lastIndexOf('/')+1);
     //读取文件
     QFile file(readPath);
     //读文件
     if(file.open(QFile::ReadOnly)){
-        //记录上一次路径
-        lastPath = readPath;
-        while(lastPath.indexOf('/')!=-1){
-            lastPath = lastPath.mid(lastPath.indexOf('/')+1);
+        //记录上一次文件名
+        lastFileName = readPath;
+        while(lastFileName.indexOf('/')!=-1){
+            lastFileName = lastFileName.mid(lastFileName.indexOf('/')+1);
         }
 
         RxBuff.clear();
@@ -856,6 +861,9 @@ void MainWindow::on_actionReadOriginData_triggered()
         unshowedRxBuff.clear();
         readSerialPort();
         paraseFromRxBuff = false;
+    }else{
+        QMessageBox::information(this,"提示","文件打开失败。");
+        lastFileName.clear();
     }
 }
 
@@ -935,7 +943,7 @@ void MainWindow::on_actionSaveShowedData_triggered()
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
                                                     "保存数据-选择文件路径",
-                                                    QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".txt",
+                                                    lastPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".txt",
                                                     "Text File(*.txt);;All File(*.*)");
     //检查路径
     if(!savePath.endsWith("txt")){
@@ -943,7 +951,9 @@ void MainWindow::on_actionSaveShowedData_triggered()
             QMessageBox::information(this,"尚未支持的文件格式","请选择txt文本文件。");
         return;
     }
-
+    //记忆路径
+    lastPath = savePath;
+    lastPath = lastPath.mid(0, lastPath.lastIndexOf('/')+1);
     //保存数据
     QFile file(savePath);
     QTextStream stream(&file);
@@ -1422,6 +1432,9 @@ void MainWindow::on_actionManual_triggered()
 
 }
 
+/*
+ * Function:保存图像为文本格式，可以选择不同的分隔符，csv文件可以用,
+*/
 bool MainWindow::saveGraphAsTxt(const QString& filePath, char separate)
 {
     //列表头和值
@@ -1460,7 +1473,7 @@ void MainWindow::on_actionSavePlotData_triggered()
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
                                                     "保存数据-选择文件路径",
-                                                    QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".xlsx",
+                                                    lastPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".xlsx",
                                                     "XLSX File(*.xlsx);;CSV File(*.csv);;TXT File(*.txt);;All File(*.*)");
     //检查路径格式
     if(!savePath.endsWith(".xlsx") && !savePath.endsWith(".csv")&& !savePath.endsWith(".txt")){
@@ -1470,15 +1483,16 @@ void MainWindow::on_actionSavePlotData_triggered()
     }
     if(savePath.endsWith(".xlsx")){
         if(!MyXlsx::write(ui->customPlot, savePath))
-            QMessageBox::warning(this, "警告", "保存失败。文件是否被占用？");
+            QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
     }else if(savePath.endsWith(".csv")){
         if(!saveGraphAsTxt(savePath,','))
-            QMessageBox::warning(this, "警告", "保存失败。文件是否被占用？");
+            QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
     }else if(savePath.endsWith(".txt")){
         if(!saveGraphAsTxt(savePath,' '))
-            QMessageBox::warning(this, "警告", "保存失败。文件是否被占用？");
+            QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
     }
-
+    lastPath = savePath;
+    lastPath = lastPath.mid(0, lastPath.lastIndexOf('/')+1);
 }
 
 void MainWindow::on_actionSavePlotAsPicture_triggered()
@@ -1486,8 +1500,8 @@ void MainWindow::on_actionSavePlotAsPicture_triggered()
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
                                                     "保存图片-选择文件路径",
-                                                    QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss"),
-                                                    "Jpeg File(*.jpg);;Bmp File(*.bmp);;Png File(*.png);;Pdf File(*.pdf);;All File(*.*)");
+                                                    lastPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss"),
+                                                    "Bmp File(*.bmp);;Pdf File(*.pdf);;Jpeg File(*.jpg);;Png File(*.png);;All File(*.*)");
     //检查路径格式
     if(!savePath.endsWith(".jpg") &&
        !savePath.endsWith(".bmp") &&
@@ -1497,25 +1511,28 @@ void MainWindow::on_actionSavePlotAsPicture_triggered()
             QMessageBox::information(this,"提示","尚未支持的文件格式。请选择jpg/bmp/png/pdf文件。");
         return;
     }
+    //记录上次路径
+    lastPath = savePath;
+    lastPath = lastPath.mid(0, lastPath.lastIndexOf('/')+1);
     //保存
     if(savePath.endsWith(".jpg")){
         if(!ui->customPlot->saveJpg(savePath,0,0,1,100))
-            QMessageBox::warning(this, "警告", "保存失败。");
+            QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
         return;
     }
     if(savePath.endsWith(".bmp")){
         if(!ui->customPlot->saveBmp(savePath))
-            QMessageBox::warning(this, "警告", "保存失败。");
+            QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
         return;
     }
     if(savePath.endsWith(".png")){
         if(!ui->customPlot->savePng(savePath,0,0,1,100))
-            QMessageBox::warning(this, "警告", "保存失败。");
+            QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
         return;
     }
     if(savePath.endsWith(".pdf")){
         if(!ui->customPlot->savePdf(savePath))
-            QMessageBox::warning(this, "警告", "保存失败。");
+            QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
         return;
     }
 }
@@ -1735,26 +1752,28 @@ void MainWindow::on_actionUsageStatic_triggered()
 
 void MainWindow::on_actionSendFile_triggered()
 {
-    static QString lastPath;
+    static QString lastFileName;
     //打开文件对话框
     QString readPath = QFileDialog::getOpenFileName(this,
                                                     "打开文件",
-                                                    lastPath,
+                                                    lastPath + lastFileName,
                                                     "All File(*.*)");
     //检查文件路径结尾
     if(readPath.isEmpty()){
         return;
     }
-
+    //记录上次路径
+    lastPath = readPath;
+    lastPath = lastPath.mid(0, lastPath.lastIndexOf('/')+1);
     //读取文件
     QFile file(readPath);
 
     //读文件
     if(file.open(QFile::ReadOnly)){
-        //记录上一次路径
-        lastPath = readPath;
-        while(lastPath.indexOf('/')!=-1){
-            lastPath = lastPath.mid(lastPath.indexOf('/')+1);
+        //记录上一次文件名
+        lastFileName = readPath;
+        while(lastFileName.indexOf('/')!=-1){
+            lastFileName = lastFileName.mid(lastFileName.indexOf('/')+1);
         }
 
         TxBuff.clear();
@@ -1767,5 +1786,6 @@ void MainWindow::on_actionSendFile_triggered()
             QMessageBox::information(this,"提示","请先打开串口。");
     }else{
         QMessageBox::information(this,"提示","文件打开失败。");
+        lastFileName.clear();
     }
 }
