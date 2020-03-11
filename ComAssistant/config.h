@@ -12,7 +12,7 @@
 //版本
 #define VERSION_STRING  "0.0.5"
 //保存路径
-#define SAVE_PATH   "config.ini"
+#define SAVE_PATH   "ComAssistantConfig.ini"
 //默认发送间隔
 #define DEFAULT_SEND_INTERVAL   100
 //节
