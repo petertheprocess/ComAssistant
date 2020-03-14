@@ -143,7 +143,7 @@ void MainWindow::readConfig()
     on_actionKeyWordHighlight_triggered(Config::getKeyWordHighlightState());
 
     //时间戳
-    ui->timeStampDisplayCheckBox->setChecked(Config::getTimeStampState());
+    ui->timeStampCheckBox->setChecked(Config::getTimeStampState());
     //发送间隔
     ui->sendInterval->setText(QString::number(Config::getSendInterval()));
     //hex发送
@@ -178,7 +178,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     //槽
-    connect(&continuousWriteTimer, SIGNAL(timeout()), this, SLOT(continuousWriteSlot()));
+    connect(&cycleSendTimer, SIGNAL(timeout()), this, SLOT(cycleSendTimerSlot()));
     connect(&autoSubcontractTimer, SIGNAL(timeout()), this, SLOT(autoSubcontractTimerSlot()));
     connect(&secTimer, SIGNAL(timeout()), this, SLOT(secTimerSlot()));
     connect(&serial, SIGNAL(readyRead()), this, SLOT(readSerialPort()));
@@ -346,7 +346,7 @@ MainWindow::~MainWindow()
         Config::setHexSendState(ui->hexSend->isChecked());
         Config::setHexShowState(ui->hexDisplay->isChecked());
         Config::setSendInterval(ui->sendInterval->text().toInt());
-        Config::setTimeStampState(ui->timeStampDisplayCheckBox->isChecked());
+        Config::setTimeStampState(ui->timeStampCheckBox->isChecked());
         Config::setMultiStringState(ui->actionMultiString->isChecked());
         Config::setKeyWordHighlightState(ui->actionKeyWordHighlight->isChecked());
         Config::setVersion();
@@ -429,9 +429,9 @@ void MainWindow::on_comSwitch_clicked(bool checked)
     else
     {
         //关闭定时器
-        if(continuousWriteTimer.isActive()){
-            continuousWriteTimer.stop();
-            ui->TimerSendCheck->setChecked(false);
+        if(cycleSendTimer.isActive()){
+            cycleSendTimer.stop();
+            ui->cycleSendCheck->setChecked(false);
         }
 
         serial.close();
@@ -509,7 +509,7 @@ void MainWindow::readSerialPort()
         //移动光标
         ui->textBrowser->moveCursor(QTextCursor::End);
         //追加数据
-        if(ui->timeStampDisplayCheckBox->isChecked()){
+        if(ui->timeStampCheckBox->isChecked()){
             //需要添加时间戳
             QString timeString;
             if(!autoSubcontractTimer.isActive()){
@@ -539,7 +539,7 @@ void MainWindow::serialBytesWritten(qint64 bytes)
 /*
  * Function:连续发送定时器槽，执行数据发送
 */
-void MainWindow::continuousWriteSlot()
+void MainWindow::cycleSendTimerSlot()
 {
     on_sendButton_clicked();
 }
@@ -581,7 +581,7 @@ void MainWindow::on_sendButton_clicked()
             serial.write(tmp);
 
             //若添加了时间戳则把发送的数据也显示在接收区
-            if(ui->timeStampDisplayCheckBox->isChecked()){
+            if(ui->timeStampCheckBox->isChecked()){
                 QString timeString;
                 timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
                 timeString = "["+timeString+"]Tx-> ";
@@ -637,13 +637,17 @@ void MainWindow::on_clearWindows_clicked()
     unshowedRxBuff.clear();
     protocol->clearBuff();
     plotControl.clearPlotter(ui->customPlot, -1);
+    //删除图像
+    while(ui->customPlot->graphCount()>1){
+        ui->customPlot->removeGraph(ui->customPlot->graphCount()-1);
+    }
     ui->customPlot->replot();
 
     //更新收发统计
     statusStatisticLabel->setText(serial.getTxRxString());
 }
 
-void MainWindow::on_TimerSendCheck_clicked(bool checked)
+void MainWindow::on_cycleSendCheck_clicked(bool checked)
 {
     if(ui->sendInterval->text().toInt() < 15 && checked){
         QMessageBox::warning(this,"警告","发送间隔较小可能不够准确");
@@ -651,18 +655,18 @@ void MainWindow::on_TimerSendCheck_clicked(bool checked)
 
     if(!serial.isOpen()){
         QMessageBox::information(this,"提示","串口未打开");
-        ui->TimerSendCheck->setChecked(false);
+        ui->cycleSendCheck->setChecked(false);
         return;
     }
 
     //启停定时器
     if(checked){
-        ui->TimerSendCheck->setChecked(true);
-        continuousWriteTimer.start(ui->sendInterval->text().toInt());
+        ui->cycleSendCheck->setChecked(true);
+        cycleSendTimer.start(ui->sendInterval->text().toInt());
     }
     else {
-        ui->TimerSendCheck->setChecked(false);
-        continuousWriteTimer.stop();
+        ui->cycleSendCheck->setChecked(false);
+        cycleSendTimer.stop();
     }
 }
 
@@ -715,7 +719,7 @@ void MainWindow::on_hexDisplay_clicked(bool checked)
 {
     QMessageBox::StandardButton res;
     //如果启用时间戳则在hex转string时要求删除时间戳信息。
-    if(ui->timeStampDisplayCheckBox->isChecked() && checked == false){
+    if(ui->timeStampCheckBox->isChecked() && checked == false){
         res = QMessageBox::question(this, "询问", "该操作可能会删除时间戳信息");
         if(QMessageBox::No == res){
             ui->hexDisplay->setChecked(true);
@@ -731,7 +735,7 @@ void MainWindow::on_hexDisplay_clicked(bool checked)
         bool ok;
         QString converted;
         //删除时间戳信息。
-        if(ui->timeStampDisplayCheckBox->isChecked()){
+        if(ui->timeStampCheckBox->isChecked()){
             unconverted.replace(QRegExp("\\[.*\\]Tx->"), "");
             unconverted.replace(QRegExp("\\[.*\\]Rx<-"), "");
         }
@@ -791,7 +795,7 @@ void MainWindow::on_actionUTF8_triggered(bool checked)
 void MainWindow::on_actionSaveOriginData_triggered()
 {
     //如果追加时间戳则提示时间戳不会被保存
-    if(ui->timeStampDisplayCheckBox->isChecked())
+    if(ui->timeStampCheckBox->isChecked())
         QMessageBox::information(this,"提示","时间戳数据不会被保存！只保存接收到的原始数据。");
 
     //打开保存文件对话框
@@ -924,8 +928,8 @@ void MainWindow::on_baudrateList_currentTextChanged(const QString &arg1)
 void MainWindow::on_comList_currentTextChanged(const QString &arg1)
 {
     //关闭自动发送功能
-    if(ui->TimerSendCheck->isChecked()){
-        on_TimerSendCheck_clicked(false);
+    if(ui->cycleSendCheck->isChecked()){
+        on_cycleSendCheck_clicked(false);
     }
     if(ui->actiondebug->isChecked()){
         debugTimer.stop();
@@ -974,8 +978,8 @@ void MainWindow::on_actionUpdate_triggered()
 
 void MainWindow::on_sendInterval_textChanged(const QString &arg1)
 {
-    if(continuousWriteTimer.isActive())
-        continuousWriteTimer.setInterval(arg1.toInt());
+    if(cycleSendTimer.isActive())
+        cycleSendTimer.setInterval(arg1.toInt());
 }
 
 void MainWindow::on_actionSTM32_ISP_triggered()
@@ -1624,6 +1628,8 @@ void MainWindow::httpFinishedSlot(QNetworkReply *)
             button = QMessageBox::information(this,"提示","当前版本号："+Config::getVersion()+
                                           "\n检查更新失败。"+
                                           "\n请访问：https://github.com/inhowe/ComAssistant/releases",  QMessageBox::Ok|QMessageBox::No);
+            if(button == QMessageBox::Ok)
+                QDesktopServices::openUrl(QUrl("https://github.com/inhowe/ComAssistant/releases"));
         }else if(state == BackStageGetVersion){
 
         }else if(state == PostStatic){

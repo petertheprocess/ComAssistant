@@ -72,11 +72,11 @@ private slots:
     void readSerialPort();
     void serialBytesWritten(qint64 bytes);
 
-    void continuousWriteSlot();
+    void cycleSendTimerSlot();
 
     void autoSubcontractTimerSlot();
 
-    void on_TimerSendCheck_clicked(bool checked);
+    void on_cycleSendCheck_clicked(bool checked);
 
     void on_textEdit_textChanged();
 
@@ -175,7 +175,7 @@ private:
     bool paraseFromRxBuff = false;
     QByteArray RxBuff, TxBuff; //原始数据的收发缓冲
     QByteArray unshowedRxBuff;    //未上屏的接收缓冲
-    QTimer continuousWriteTimer; //自动发送定时器
+    QTimer cycleSendTimer; //循环发送定时器
     QTimer autoSubcontractTimer; //自动分包定时器
     QTimer debugTimer; //调试定时器
     QTimer secTimer;  //秒定时器
