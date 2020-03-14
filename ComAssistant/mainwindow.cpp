@@ -253,6 +253,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //    downloadAdvertisement();
     httpTaskVector.push_back(PostStatic);
     httpTaskVector.push_back(DownloadADs);
+    httpTaskVector.push_back(BackStageGetVersion);
 }
 
 void MainWindow::secTimerSlot()
@@ -271,6 +272,8 @@ void MainWindow::secTimerSlot()
     if(httpTaskVector.size()>0 && httpTimeout==0){
         switch(httpTaskVector.at(0)){
         case GetVersion:
+            getRemoteVersion();break;
+        case BackStageGetVersion:
             getRemoteVersion();break;
         case DownloadFile:
             httpTaskVector.pop_front();break;
@@ -295,6 +298,7 @@ void MainWindow::secTimerSlot()
         httpTimeout--;
         if(httpTimeout==0){
             m_Reply->abort();
+            m_Reply->deleteLater();
             if(httpTaskVector.size()>0){
                 qDebug()<<"http timed out."<<httpTaskVector.at(0);
                 httpTaskVector.pop_front();
@@ -976,11 +980,14 @@ void MainWindow::on_sendInterval_textChanged(const QString &arg1)
 
 void MainWindow::on_actionSTM32_ISP_triggered()
 {
-    on_comSwitch_clicked(false);
+    bool serialState = ui->comSwitch->isChecked();
+    if(serialState)
+        on_comSwitch_clicked(false);
     STM32ISP_Dialog *p = new STM32ISP_Dialog(this);
     p->exec();
     delete p;
-    on_comSwitch_clicked(true);
+    if(serialState)
+        on_comSwitch_clicked(true);
 }
 
 /*
@@ -1556,9 +1563,10 @@ void MainWindow::httpFinishedSlot(QNetworkReply *)
         QByteArray bytes = m_Reply->readAll();
         QString string = QString::fromUtf8(bytes);
 
-        if(state == GetVersion){
+        if(state == GetVersion || state == BackStageGetVersion ){
             QString remoteVersion;
             QString remoteNote;
+
             remoteVersion = string.mid(string.indexOf("tag_name"));
             remoteVersion = remoteVersion.mid(remoteVersion.indexOf(":")+2, remoteVersion.indexOf(",") - remoteVersion.indexOf(":")-3);
             remoteNote = string.mid(string.indexOf("body"));
@@ -1566,14 +1574,39 @@ void MainWindow::httpFinishedSlot(QNetworkReply *)
             while(remoteNote.indexOf("\\r\\n")!=-1){
                 remoteNote = remoteNote.replace("\\r\\n","\n");
             }
+            QString localVersion;
+            localVersion = Config::getVersion();
 //            qDebug()<<remoteVersion<<remoteNote;
-            QMessageBox::Button button;
-            button = QMessageBox::information(this,"提示","当前版本号："+Config::getVersion()+
-                                                "\n远端版本号："+remoteVersion+
-                                                "\n更新内容："+
-                                                "\n"+remoteNote, QMessageBox::Ok|QMessageBox::No);
-            if(button == QMessageBox::Ok)
-                QDesktopServices::openUrl(QUrl("https://github.com/inhowe/ComAssistant/releases"));
+            //版本号转数字
+            QString localVersionTemp = localVersion;
+            QString remoteVersionTemp = remoteVersion;
+            while(localVersionTemp.indexOf('.')!=-1){
+                localVersionTemp.remove('.');
+            }
+            while(remoteVersionTemp.indexOf('.')!=-1){
+                remoteVersionTemp.remove('.');
+            }
+
+            //远端版本有更新
+            if(remoteVersionTemp.toInt() > localVersionTemp.toInt()){
+                QMessageBox::Button button;
+                if(state == GetVersion){
+                    button = QMessageBox::information(this,"提示","当前版本号："+ localVersion +
+                                                        "\n远端版本号："+remoteVersion+
+                                                        "\n更新内容："+
+                                                        "\n"+remoteNote, QMessageBox::Ok|QMessageBox::No);
+                    if(button == QMessageBox::Ok)
+                        QDesktopServices::openUrl(QUrl("https://github.com/inhowe/ComAssistant/releases"));
+                }else{
+                     QWidget::setWindowTitle("串口调试助手 发现新版本：V"+remoteVersion);
+                }
+            }else{
+                if(state == GetVersion){
+                    QMessageBox::information(this,"提示","当前版本号："+ localVersion +
+                                                                        "\n远端版本号："+remoteVersion+
+                                                                        "\n已经是最新版本。");
+                }
+            }
         }else if(state == PostStatic){
             if(!string.isEmpty())
                 qDebug()<<"PostStatic:"<<string;
@@ -1587,9 +1620,12 @@ void MainWindow::httpFinishedSlot(QNetworkReply *)
     else
     {
         if(state == GetVersion){
-            QMessageBox::information(this,"提示","当前版本号："+Config::getVersion()+
+            QMessageBox::Button button;
+            button = QMessageBox::information(this,"提示","当前版本号："+Config::getVersion()+
                                           "\n检查更新失败。"+
-                                          "\n请访问：https://github.com/inhowe/ComAssistant/releases");
+                                          "\n请访问：https://github.com/inhowe/ComAssistant/releases",  QMessageBox::Ok|QMessageBox::No);
+        }else if(state == BackStageGetVersion){
+
         }else if(state == PostStatic){
 
         }

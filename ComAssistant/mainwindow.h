@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QTextCodec>
 #include <QString>
 #include <QDebug>
 #include <QtCore/QObject>
@@ -193,6 +194,7 @@ private:
     typedef enum{
         Idle,
         GetVersion,
+        BackStageGetVersion,//后台检查更新
         DownloadFile,
         PostStatic,
         DownloadADs,
