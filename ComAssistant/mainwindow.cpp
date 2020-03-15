@@ -50,7 +50,6 @@ bool MainWindow::postUsageStatic(void)
         return false;
 
     ui->statusBar->showMessage("正在提交使用统计...", 1000);
-//    httpFunction = PostStatic;
 
     //准备上传数据
     QString sendData = "startTime=#STARTTIME#&lastRunTime=#LASTRUNTIME#&lastTxCnt=#LASTTXCNT#&lastRxCnt=#LASTRXCNT#";
@@ -83,8 +82,8 @@ bool MainWindow::getRemoteVersion(void)
     if(httpTimeout>0)
         return false;
 
-    ui->statusBar->showMessage("正在检查更新，请稍候……", 2000);
-//    httpFunction = GetVersion;
+    ui->statusBar->showMessage("正在检查更新，请稍候……", 1000);
+
     //发起http请求远端的发布版本号
     QUrl url("https://api.github.com/repos/inhowe/ComAssistant/releases");
     QNetworkRequest request;
@@ -99,8 +98,8 @@ bool MainWindow::downloadAdvertisement(void)
     //旧请求未完成时不执行。
     if(httpTimeout>0)
         return false;
-//    httpFunction = DownloadADs;
-    //发起http请求远端的发布版本号
+
+    //下载广告
     QUrl url("http://www.inhowe.com/ComAssistant/ad.txt");
     QNetworkRequest request;
     request.setSslConfiguration(QSslConfiguration::defaultConfiguration());
@@ -125,7 +124,7 @@ void MainWindow::readConfig()
     }else {
         ui->action_winLikeEnter->setChecked(true);
         ui->action_unixLikeEnter->setChecked(false);
-        QMessageBox::warning(this, "警告", "未知的回车风格");
+        QMessageBox::warning(this, "警告", "读取到未知的回车风格");
     }
 
     //编码规则
@@ -133,7 +132,7 @@ void MainWindow::readConfig()
         ui->actionUTF8->setChecked(true);
     }else {
         ui->actionUTF8->setChecked(true);
-        QMessageBox::warning(this, "警告", "未支持的编码格式");
+        QMessageBox::warning(this, "警告", "读取到未支持的编码格式");
     }
 
     //多字符串
@@ -305,7 +304,7 @@ void MainWindow::secTimerSlot()
                 qDebug()<<"http timed out."<<httpTaskVector.at(0);
                 httpTaskVector.pop_front();
             }
-            ui->statusBar->showMessage("Http request timed out.", 2000);
+            ui->statusBar->showMessage("Http请求超时。", 1000);
         }
     }
 
@@ -937,10 +936,11 @@ void MainWindow::on_comList_currentTextChanged(const QString &arg1)
         debugTimer.stop();
         ui->actiondebug->setChecked(false);
     }
-    ui->statusBar->showMessage("重新启动串口",2000);
+
     QString unused = arg1;//屏蔽警告
     //重新打开串口
     if(serial.isOpen()){
+        ui->statusBar->showMessage("重新启动串口",1000);
         on_comSwitch_clicked(false);
         on_comSwitch_clicked(true);
     }
