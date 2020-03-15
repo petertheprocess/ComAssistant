@@ -113,6 +113,8 @@ bool MainWindow::downloadAdvertisement(void)
 */
 void MainWindow::readConfig()
 {
+    //先写入版本号
+    Config::setVersion();
     //回车风格
     if(Config::getEnterStyle() == EnterStyle_e::WinStyle){
         ui->action_winLikeEnter->setChecked(true);
