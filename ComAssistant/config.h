@@ -10,7 +10,7 @@
 #include <QTextCodec>
 
 //版本
-#define VERSION_STRING  "0.0.6"
+#define VERSION_STRING  "0.0.7"
 //保存路径
 #define SAVE_PATH   "ComAssistantConfig.ini"
 //默认发送间隔
@@ -30,8 +30,8 @@
 #define KEY_HEXSENDSTATE        QString("HexSendState")
 #define KEY_HEXSHOWSTATE        QString("HexShowState")
 #define KEY_MULTISTRINGSTATE    QString("MultiStringState")
-#define KEY_KEYWORDHIGHLIGHTSTATE      QString("HighlightState")
-
+#define KEY_HIGHLIGHTSTATE      QString("HighlightState")
+#define KEY_TEXTSENDAREA        QString("TextSendArea")
 //serial键
 #define KEY_BAUDRATE        QString("Baudrate")
 #define KEY_STOPBIT         QString("StopBit")
@@ -63,8 +63,8 @@
 //
 //值
 enum CodeRule_e{
-    UTF8 = 0,
-    GBK2312 = 1
+    GBK,
+    UTF8
 };
 
 enum EnterStyle_e{
@@ -113,6 +113,8 @@ public:
     static bool getMultiStringState();
     static void setKeyWordHighlightState(bool checked);
     static bool getKeyWordHighlightState();
+    static void setTextSendArea(QString str);
+    static QString getTextSendArea();
     static void setPlotterState(bool checked);
     static bool getPlotterState();
     static void setPlotterType(ProtocolType_e type);

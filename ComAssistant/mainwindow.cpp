@@ -72,7 +72,7 @@ bool MainWindow::postUsageStatic(void)
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded;charset=utf-8"); //以表单键值对的形式提交
     request.setHeader(QNetworkRequest::ContentLengthHeader, sendData.size());
 //    m_NetManger = new QNetworkAccessManager;//重复使用所以不重复定义
-    m_Reply = m_NetManger->post(request, sendData.toUtf8());
+    m_Reply = m_NetManger->post(request, sendData.toLocal8Bit());
     return true;
 }
 
@@ -129,11 +129,14 @@ void MainWindow::readConfig()
 
     //编码规则
     if(Config::getCodeRule() == CodeRule_e::UTF8){
-        ui->actionUTF8->setChecked(true);
-    }else {
-        ui->actionUTF8->setChecked(true);
-        QMessageBox::warning(this, "警告", "读取到未支持的编码格式");
+        on_actionUTF8_triggered(true);
+    }else if(Config::getCodeRule() == CodeRule_e::GBK){
+        on_actionGBK_triggered(true);
     }
+
+    //文本发送区
+    ui->textEdit->setText(Config::getTextSendArea());
+    ui->textEdit->moveCursor(QTextCursor::End);
 
     //多字符串
     ui->actionMultiString->setChecked(Config::getMultiStringState());
@@ -327,7 +330,7 @@ void MainWindow::debugTimerSlot()
     }
 
     if(serial.isOpen()){
-        serial.write(tmp.toUtf8());
+        serial.write(tmp.toLocal8Bit());
     }
     count = count + 0.1;
 }
@@ -337,19 +340,22 @@ MainWindow::~MainWindow()
     if(needSaveConfig){
         if(ui->actionUTF8->isChecked()){
             Config::setCodeRule(CodeRule_e::UTF8);
+        }else if(ui->actionGBK->isChecked()){
+            Config::setCodeRule(CodeRule_e::GBK);
         }
         if(ui->action_winLikeEnter->isChecked()){
             Config::setEnterStyle(EnterStyle_e::WinStyle);
         }else if(ui->action_unixLikeEnter->isChecked()){
             Config::setEnterStyle(EnterStyle_e::UnixStyle);
         }
-        //general
+        //global
         Config::setHexSendState(ui->hexSend->isChecked());
         Config::setHexShowState(ui->hexDisplay->isChecked());
         Config::setSendInterval(ui->sendInterval->text().toInt());
         Config::setTimeStampState(ui->timeStampCheckBox->isChecked());
         Config::setMultiStringState(ui->actionMultiString->isChecked());
         Config::setKeyWordHighlightState(ui->actionKeyWordHighlight->isChecked());
+        Config::setTextSendArea(ui->textEdit->toPlainText());
         Config::setVersion();
         //serial
         Config::setBaudrate(serial.baudRate());
@@ -372,8 +378,9 @@ MainWindow::~MainWindow()
         Config::setLastRxCnt(serial.getTotalRxCnt());
         Config::setTotalRxCnt(serial.getTotalRxCnt());
         Config::setTotalRunCnt(1);
+    }else{
+        Config::writeDefault();
     }
-
     delete protocol;
     delete highlighter;
     delete ui;
@@ -480,7 +487,8 @@ void MainWindow::readSerialPort()
 
     //是否进制转换，不转换则考虑中文处理
     if(ui->hexDisplay->isChecked()){
-        tmpReadBuff = toHexDisplay(tmpReadBuff).toUtf8();
+        tmpReadBuff = toHexDisplay(tmpReadBuff).toLatin1();
+//        qDebug()<<"after"<<toHexDisplay(tmpReadBuff);
     }else if(ui->actionUTF8->isChecked()){
         //UTF8中文字符处理
         //最后一个字符不是ascii字符才处理，否则直接上屏       
@@ -503,6 +511,28 @@ void MainWindow::readSerialPort()
             tmpReadBuff = tmpReadBuff.mid(0,lastUTFpos+1);
         }
 //        qDebug()<<unshowedRxBuff<<tmpReadBuff;
+    }else if(ui->actionGBK->isChecked()){
+        //GBK中文字符处理
+        //最后一个字符不是ascii字符才处理，否则直接上屏
+        if(tmpReadBuff.back() & 0x80){
+            //中文一定有连续2个字符高位为1
+            int continuesCnt = 0;
+            int lastUTFpos = -1;
+            for(int i = 0; i < tmpReadBuff.size(); i++){
+                if(tmpReadBuff.at(i)&0x80){
+                    continuesCnt++;
+                }else {
+                    continuesCnt=0;
+                }
+                if(continuesCnt == 2){
+                    continuesCnt = 0;
+                    lastUTFpos = i;
+                }
+            }
+            unshowedRxBuff = tmpReadBuff.mid(lastUTFpos+1);
+            tmpReadBuff = tmpReadBuff.mid(0,lastUTFpos+1);
+        }
+//        qDebug()<<unshowedRxBuff<<tmpReadBuff;
     }
 
     //打印数据
@@ -517,13 +547,13 @@ void MainWindow::readSerialPort()
                 timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
                 timeString = "["+timeString+"]Rx<- ";
             }
-            ui->textBrowser->insertPlainText(timeString + tmpReadBuff);
+            ui->textBrowser->insertPlainText(timeString + QString::fromLocal8Bit(tmpReadBuff));
             //分包定时器
             autoSubcontractTimer.start(10);
             autoSubcontractTimer.setSingleShot(true);
         }else{
             //不需要时间戳
-            ui->textBrowser->insertPlainText(tmpReadBuff);
+            ui->textBrowser->insertPlainText(QString::fromLocal8Bit(tmpReadBuff));
         }
 
         //更新收发统计
@@ -560,8 +590,8 @@ void MainWindow::on_sendButton_clicked()
     if(serial.isOpen()){
         //十六进制检查
         if(!ui->hexSend->isChecked()){
+            QByteArray tmp = ui->textEdit->toPlainText().toLocal8Bit();
             //回车风格转换，win风格补上'\r'，默认unix风格
-            QByteArray tmp = ui->textEdit->toPlainText().toUtf8();
             if(ui->action_winLikeEnter->isChecked()){
                 //win风格
                 while (tmp.indexOf('\n') != -1) {
@@ -588,7 +618,7 @@ void MainWindow::on_sendButton_clicked()
                 timeString = "["+timeString+"]Tx-> ";
                 //如果hex发送则把显示在接收区的发送数据转为hex模式
                 if(ui->hexDisplay->isChecked())
-                    tmp = toHexDisplay(tmp).toUtf8();
+                    tmp = toHexDisplay(tmp).toLocal8Bit();
                 ui->textBrowser->moveCursor(QTextCursor::End);
                 ui->textBrowser->insertPlainText("\r\n" + timeString + tmp + "\r\n");
             }
@@ -730,7 +760,7 @@ void MainWindow::on_hexDisplay_clicked(bool checked)
     if(checked){
         QString tmp = ui->textBrowser->toPlainText();
         ui->textBrowser->clear();
-        ui->textBrowser->setText(toHexDisplay(tmp));
+        ui->textBrowser->setText(toHexDisplay(tmp.toLocal8Bit()));
     }else {
         QString unconverted = ui->textBrowser->toPlainText();
         bool ok;
@@ -780,12 +810,27 @@ void MainWindow::on_action_unixLikeEnter_triggered(bool checked)
 
 /*
  * Action:激活使用UTF8编码
- * Function:暂未支持其他格式编码
+ * Function:
 */
 void MainWindow::on_actionUTF8_triggered(bool checked)
 {
-    if(!checked){
-        ui->actionUTF8->setChecked(!checked);
+    ui->actionUTF8->setChecked(true);
+    if(checked){
+        //设置中文编码
+        QTextCodec *codec = QTextCodec::codecForName("UTF-8");
+        QTextCodec::setCodecForLocale(codec);
+        ui->actionGBK->setChecked(false);
+    }
+}
+
+void MainWindow::on_actionGBK_triggered(bool checked)
+{
+    ui->actionGBK->setChecked(true);
+    if(checked){
+        //设置中文编码
+        QTextCodec *codec = QTextCodec::codecForName("GBK");
+        QTextCodec::setCodecForLocale(codec);
+        ui->actionUTF8->setChecked(false);
     }
 }
 
@@ -863,7 +908,7 @@ void MainWindow::on_actionReadOriginData_triggered()
         ui->textBrowser->append("File size:"+QString::number(file.size())+" Byte");
         ui->textBrowser->append("Read size:"+QString::number(RxBuff.size())+" Byte");
         ui->textBrowser->append("Read containt:\n");
-        qDebug()<<"Read:"<<RxBuff;
+//        qDebug()<<"Read:"<<RxBuff;
         // 解析读取的数据
         paraseFromRxBuff = true;
         unshowedRxBuff.clear();
@@ -1403,20 +1448,9 @@ void MainWindow::on_actionResetDefaultConfig_triggered(bool checked)
 {
     if(checked)
     {
-        QMessageBox::Button button = QMessageBox::warning(this,"警告：确认恢复默认设置吗？","该操作会重置软件初始状态，统计信息也会被删除！",QMessageBox::Ok|QMessageBox::No);
+        QMessageBox::Button button = QMessageBox::warning(this,"警告：确认恢复默认设置吗？","该操作会重置软件初始状态！",QMessageBox::Ok|QMessageBox::No);
         if(button == QMessageBox::No)
             return;
-
-        QFile file(SAVE_PATH);
-        if(file.exists()){
-            if(file.remove()){
-                needSaveConfig = false;
-                QMessageBox::information(this, "提示", "重置成功。请重启程序。");
-            }else{
-                QMessageBox::information(this, "提示", "操作失败。请自行删除程序目录下的" + QString(SAVE_PATH) + "文件。");
-            }
-            return;
-        }
         needSaveConfig = false;
         QMessageBox::information(this, "提示", "重置成功。请重启程序。");
     }else{
@@ -1473,7 +1507,7 @@ bool MainWindow::saveGraphAsTxt(const QString& filePath, char separate)
     QFile file(filePath);
     if(!file.open(QFile::WriteOnly|QFile::Text))
         return false;
-    file.write(txtBuff.toUtf8());
+    file.write(txtBuff.toLocal8Bit());
     file.flush();
     file.close();
     return true;
@@ -1811,7 +1845,10 @@ void MainWindow::on_actionSendFile_triggered()
         TxBuff.clear();
         TxBuff = file.readAll();
         file.close();
+
         if(serial.isOpen()){
+            ui->textBrowser->clear();
+            ui->textBrowser->append("File size:"+QString::number(file.size())+" Byte");
             serial.write(TxBuff);
         }
         else
@@ -1821,3 +1858,4 @@ void MainWindow::on_actionSendFile_triggered()
         lastFileName.clear();
     }
 }
+

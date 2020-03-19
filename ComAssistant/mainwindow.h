@@ -166,6 +166,8 @@ private slots:
 
     void on_actionSendFile_triggered();
 
+    void on_actionGBK_triggered(bool checked);
+
 private:
     bool needSaveConfig = true;
     void readConfig();

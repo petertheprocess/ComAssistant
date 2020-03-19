@@ -167,17 +167,18 @@ QByteArray HexStringToByteArray(QString HexString, bool &isOK)
 /*
  * Function:将数据转换为十六进制显示
 */
-QString toHexDisplay(QString const &data)
+QString toHexDisplay(QByteArray const &data)
 {
     QString res;
-    res = ByteArrayToHexString(data.toUtf8());
+    qDebug()<<"toHexDisplay"<<data;
+    res = ByteArrayToHexString(data);
     return res;
 }
 
 /*
  * Function:带开关的十六进制转换
 */
-QString toHexDisplay(bool needConvert, QString const &data)
+QString toHexDisplay(bool needConvert, QByteArray const &data)
 {
     if(needConvert)
         return toHexDisplay(data);

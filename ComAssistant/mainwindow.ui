@@ -406,6 +406,7 @@ p, li { white-space: pre-wrap; }
      <property name="title">
       <string>编码规则</string>
      </property>
+     <addaction name="actionGBK"/>
      <addaction name="actionUTF8"/>
     </widget>
     <widget class="QMenu" name="enterStyle">
@@ -437,9 +438,12 @@ p, li { white-space: pre-wrap; }
     </property>
     <addaction name="actionSaveOriginData"/>
     <addaction name="actionReadOriginData"/>
+    <addaction name="separator"/>
     <addaction name="actionSaveShowedData"/>
+    <addaction name="separator"/>
     <addaction name="actionSavePlotData"/>
     <addaction name="actionSavePlotAsPicture"/>
+    <addaction name="separator"/>
     <addaction name="actionSendFile"/>
    </widget>
    <widget class="QMenu" name="function">
@@ -670,6 +674,17 @@ p, li { white-space: pre-wrap; }
   <action name="actionSendFile">
    <property name="text">
     <string>发送文件</string>
+   </property>
+  </action>
+  <action name="actionGBK">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>GBK</string>
    </property>
   </action>
  </widget>

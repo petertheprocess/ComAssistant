@@ -8,14 +8,15 @@ Config::Config()
 void Config::writeDefault(){
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
 
-    iniFile->setValue(SECTION_GLOBAL+KEY_CODERULE, CodeRule_e::UTF8);
+    iniFile->setValue(SECTION_GLOBAL+KEY_CODERULE, CodeRule_e::GBK);
     iniFile->setValue(SECTION_GLOBAL+KEY_ENTERSTYLE , EnterStyle_e::WinStyle);
     iniFile->setValue(SECTION_GLOBAL+KEY_TIMESTAMPSTATE, false);
     iniFile->setValue(SECTION_GLOBAL+KEY_SENDINTERVAL, DEFAULT_SEND_INTERVAL);
     iniFile->setValue(SECTION_GLOBAL+KEY_HEXSENDSTATE, false);
     iniFile->setValue(SECTION_GLOBAL+KEY_HEXSHOWSTATE, false);
     iniFile->setValue(SECTION_GLOBAL+KEY_MULTISTRINGSTATE, false);
-    iniFile->setValue(SECTION_GLOBAL+KEY_KEYWORDHIGHLIGHTSTATE, true);
+    iniFile->setValue(SECTION_GLOBAL+KEY_HIGHLIGHTSTATE, true);
+    iniFile->setValue(SECTION_GLOBAL+KEY_TEXTSENDAREA, "");
 
     iniFile->setValue(SECTION_SERIAL+KEY_BAUDRATE, QSerialPort::Baud115200);
     iniFile->setValue(SECTION_SERIAL+KEY_PARITY, QSerialPort::NoParity);
@@ -27,13 +28,14 @@ void Config::writeDefault(){
     iniFile->setValue(SECTION_PLOTTER+KEY_PROTOCOLTYPE, ProtocolType_e::Ascii);
     iniFile->setValue(SECTION_PLOTTER+KEY_GRAPHNAME, defualtGraphName);
 
-    iniFile->setValue(SECTION_STATIC+KEY_LASTRUNTIME, 0);
-    iniFile->setValue(SECTION_STATIC+KEY_TOTALRUNTIME, 0);
-    iniFile->setValue(SECTION_STATIC+KEY_LASTTXCNT, 0);
-    iniFile->setValue(SECTION_STATIC+KEY_TOTALTXCNT, 0);
-    iniFile->setValue(SECTION_STATIC+KEY_LASTRXCNT, 0);
-    iniFile->setValue(SECTION_STATIC+KEY_TOTALRXCNT, 0);
-    iniFile->setValue(SECTION_STATIC+KEY_TOTALRUNCNT, 0);
+    //统计信息
+//    iniFile->setValue(SECTION_STATIC+KEY_LASTRUNTIME, 0);
+//    iniFile->setValue(SECTION_STATIC+KEY_TOTALRUNTIME, 0);
+//    iniFile->setValue(SECTION_STATIC+KEY_LASTTXCNT, 0);
+//    iniFile->setValue(SECTION_STATIC+KEY_TOTALTXCNT, 0);
+//    iniFile->setValue(SECTION_STATIC+KEY_LASTRXCNT, 0);
+//    iniFile->setValue(SECTION_STATIC+KEY_TOTALRXCNT, 0);
+//    iniFile->setValue(SECTION_STATIC+KEY_TOTALRUNCNT, 0);
 
     iniFile->setValue(SECTION_ABOUT+KEY_VERSION, VERSION_STRING);
     iniFile->setValue(SECTION_ABOUT+KEY_SOURCE_CODE, "www.github.com/inhowe/ComAssistant");
@@ -137,7 +139,7 @@ QSerialPort::FlowControl Config::getFlowControl(){
     return static_cast<QSerialPort::FlowControl>(value);
 }
 
-//general
+//global
 void Config::setCodeRule(CodeRule_e rule){
     createDefaultIfNotExist();
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
@@ -146,7 +148,7 @@ void Config::setCodeRule(CodeRule_e rule){
 }
 CodeRule_e Config::getCodeRule(){
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-    int value = iniFile->value(SECTION_GLOBAL+KEY_CODERULE, CodeRule_e::UTF8).toInt();
+    int value = iniFile->value(SECTION_GLOBAL+KEY_CODERULE, CodeRule_e::GBK).toInt();
     delete iniFile;
     return static_cast<CodeRule_e>(value);
 }
@@ -232,15 +234,29 @@ bool Config::getMultiStringState(){
 void Config::setKeyWordHighlightState(bool checked){
     createDefaultIfNotExist();
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-    iniFile->setValue(SECTION_GLOBAL+KEY_KEYWORDHIGHLIGHTSTATE, checked);
+    iniFile->setValue(SECTION_GLOBAL+KEY_HIGHLIGHTSTATE, checked);
     delete iniFile;
 }
 bool Config::getKeyWordHighlightState(){
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-    bool value = iniFile->value(SECTION_GLOBAL+KEY_KEYWORDHIGHLIGHTSTATE, true).toBool();
+    bool value = iniFile->value(SECTION_GLOBAL+KEY_HIGHLIGHTSTATE, true).toBool();
     delete iniFile;
     return value;
 }
+
+void Config::setTextSendArea(QString str){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_GLOBAL+KEY_TEXTSENDAREA, str);
+    delete iniFile;
+}
+QString Config::getTextSendArea(){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    QString value = iniFile->value(SECTION_GLOBAL+KEY_TEXTSENDAREA, "").toString();
+    delete iniFile;
+    return value;
+}
+
 //plotter
 void Config::setPlotterState(bool checked){
     createDefaultIfNotExist();

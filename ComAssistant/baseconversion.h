@@ -13,8 +13,8 @@ extern bool hexFormatCheck(QString const &data);
 extern bool hexFormatCheck(char &data);
 extern QString hexFormater(QString const &data); //在哪用了？
 //显示模式转换
-extern QString toHexDisplay(QString const &data);
-extern QString toHexDisplay(bool needConvert, QString const &data);
+extern QString toHexDisplay(QByteArray const &data);
+extern QString toHexDisplay(bool needConvert, QByteArray const &data);
 extern QString toStringDisplay(QString &hexString, bool &isOK);
 
 //hex与bytearray互转
