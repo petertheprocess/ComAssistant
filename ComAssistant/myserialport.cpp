@@ -112,7 +112,6 @@ bool mySerialPort::open(QString PortName,int BaudRate)
 //    mySerialPort::setParity(mySerialPort::NoParity);
 //    mySerialPort::setStopBits(mySerialPort::OneStop);
 //    mySerialPort::setFlowControl(mySerialPort::NoFlowControl);
-    mySerialPort::setReadBufferSize(1024);
 
     return mySerialPort::open(mySerialPort::ReadWrite);
 }

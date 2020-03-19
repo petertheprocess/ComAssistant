@@ -565,6 +565,7 @@ void MainWindow::serialBytesWritten(qint64 bytes)
 {
     //发送速度统计
     statisticTxByteCnt += bytes;
+    qDebug()<<serial.bytesToWrite();
 }
 
 /*
@@ -1848,7 +1849,7 @@ void MainWindow::on_actionSendFile_triggered()
 
         if(serial.isOpen()){
             ui->textBrowser->clear();
-            ui->textBrowser->append("File size:"+QString::number(file.size())+" Byte");
+            ui->textBrowser->append("File size:"+QString::number(file.size())+" Byte\n");
             serial.write(TxBuff);
         }
         else
