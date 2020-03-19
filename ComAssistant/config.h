@@ -8,9 +8,10 @@
 #include <QFileInfo>
 #include <QFile>
 #include <QTextCodec>
+#include <QDateTime>
 
 //版本
-#define VERSION_STRING  "0.0.7"
+#define VERSION_STRING  "0.0.8"
 //保存路径
 #define SAVE_PATH   "ComAssistantConfig.ini"
 //默认发送间隔
@@ -47,6 +48,7 @@
 //#define KEY_XRANGELENGH         QString("xRangeLength")
 
 //static键
+#define KEY_STARTTIME       QString("StartTime")
 #define KEY_LASTRUNTIME     QString("LastRunTime")
 #define KEY_TOTALRUNTIME    QString("TotalRunTime")
 #define KEY_LASTTXCNT       QString("LastTxCnt")
@@ -121,6 +123,9 @@ public:
     static ProtocolType_e getPlotterType();
     static void setPlotterGraphNames(QVector<QString> names);
     static QVector<QString> getPlotterGraphNames(int maxValidGraphNumber);
+    //static
+    static void setStartTime(QString time);
+    static QString getStartTime(void);
     static void setLastRunTime(int sec);
     static QString getLastRunTime(void);
     static void setTotalRunTime(int sec);

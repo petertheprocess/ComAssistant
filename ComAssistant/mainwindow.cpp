@@ -52,10 +52,9 @@ bool MainWindow::postUsageStatic(void)
     ui->statusBar->showMessage("正在提交使用统计...", 1000);
 
     //准备上传数据
-    QString sendData = "startTime=#STARTTIME#&lastRunTime=#LASTRUNTIME#&lastTxCnt=#LASTTXCNT#&lastRxCnt=#LASTRXCNT#";
-    QDateTime current_date_time =QDateTime::currentDateTime();
-    QString current_date_str =current_date_time.toString("yyyyMMddhhmmss");
-    sendData.replace("#STARTTIME#",current_date_str);
+    QString sendData = "lastStartTime=#LASTSTARTTIME#&lastRunTime=#LASTRUNTIME#&lastTxCnt=#LASTTXCNT#&lastRxCnt=#LASTRXCNT#";
+    QString current_date_str = Config::getStartTime();
+    sendData.replace("#LASTSTARTTIME#",current_date_str);
     sendData.replace("#LASTRUNTIME#",Config::getLastRunTime());
     sendData.replace("#LASTTXCNT#",Config::getLastTxCnt());
     sendData.replace("#LASTRXCNT#",Config::getLastRxCnt());
@@ -112,8 +111,10 @@ bool MainWindow::downloadAdvertisement(void)
 */
 void MainWindow::readConfig()
 {
-    //先写入版本号
+    //先写入版本号和启动时间
     Config::setVersion();
+    Config::setStartTime(QDateTime::currentDateTime().toString("yyyyMMddhhmmss"));
+
     //回车风格
     if(Config::getEnterStyle() == EnterStyle_e::WinStyle){
         ui->action_winLikeEnter->setChecked(true);
@@ -565,7 +566,6 @@ void MainWindow::serialBytesWritten(qint64 bytes)
 {
     //发送速度统计
     statisticTxByteCnt += bytes;
-    qDebug()<<serial.bytesToWrite();
 }
 
 /*

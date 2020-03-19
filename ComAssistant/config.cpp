@@ -29,6 +29,7 @@ void Config::writeDefault(){
     iniFile->setValue(SECTION_PLOTTER+KEY_GRAPHNAME, defualtGraphName);
 
     //统计信息
+//    iniFile->setValue(SECTION_PLOTTER+KEY_STARTTIME, QDateTime::currentDateTime().toString("yyyyMMddhhmmss"));
 //    iniFile->setValue(SECTION_STATIC+KEY_LASTRUNTIME, 0);
 //    iniFile->setValue(SECTION_STATIC+KEY_TOTALRUNTIME, 0);
 //    iniFile->setValue(SECTION_STATIC+KEY_LASTTXCNT, 0);
@@ -318,6 +319,20 @@ QVector<QString> Config::getPlotterGraphNames(int maxValidGraphNumber){
     delete iniFile;
 //    qDebug()<<"getPlotterGraphNames:"<<newValue;
     return newValue;
+}
+
+//static
+void Config::setStartTime(QString time){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_STATIC+KEY_STARTTIME, time);
+    delete iniFile;
+}
+QString Config::getStartTime(void){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    QString value = iniFile->value(SECTION_STATIC+KEY_STARTTIME, QDateTime::currentDateTime().toString("yyyyMMddhhmmss")).toString();
+    delete iniFile;
+    return value;
 }
 
 void Config::setLastRunTime(int sec){
