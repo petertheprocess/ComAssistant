@@ -367,21 +367,6 @@ p, li { white-space: pre-wrap; }
         <property name="contextMenuPolicy">
          <enum>Qt::CustomContextMenu</enum>
         </property>
-        <item>
-         <property name="text">
-          <string>双击条目发送</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>右击条目删除</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>点击发送按钮添加条目</string>
-         </property>
-        </item>
        </widget>
       </widget>
      </widget>

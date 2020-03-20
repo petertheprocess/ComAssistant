@@ -11,7 +11,7 @@
 #include <QDateTime>
 
 //版本
-#define VERSION_STRING  "0.0.8"
+#define VERSION_STRING  "0.0.9"
 //保存路径
 #define SAVE_PATH   "ComAssistantConfig.ini"
 //默认发送间隔
@@ -31,6 +31,7 @@
 #define KEY_HEXSENDSTATE        QString("HexSendState")
 #define KEY_HEXSHOWSTATE        QString("HexShowState")
 #define KEY_MULTISTRINGSTATE    QString("MultiStringState")
+#define KEY_MULTISTRING         QString("MultiString")
 #define KEY_HIGHLIGHTSTATE      QString("HighlightState")
 #define KEY_TEXTSENDAREA        QString("TextSendArea")
 //serial键
@@ -113,6 +114,8 @@ public:
     static bool getHexShowState();
     static void setMultiStringState(bool checked);
     static bool getMultiStringState();
+    static bool setMultiString(QStringList multiStr);
+    static QStringList getMultiString();
     static void setKeyWordHighlightState(bool checked);
     static bool getKeyWordHighlightState();
     static void setTextSendArea(QString str);

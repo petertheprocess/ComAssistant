@@ -232,6 +232,54 @@ bool Config::getMultiStringState(){
     return value;
 }
 
+bool Config::setMultiString(QStringList multiStr){
+
+    if(multiStr.isEmpty()){
+        multiStr.append("发送的数据会自动添加进条目");
+        multiStr.append("双击条目发送");
+        multiStr.append("右击条目删除/编辑");
+    }
+
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+
+    int i = 0;
+    for(i = 0; i > -1; i++){
+        QString tmp = iniFile->value(SECTION_GLOBAL+KEY_MULTISTRING+QString::number(i), "").toString();
+        if(!tmp.isEmpty()){
+            iniFile->setValue(SECTION_GLOBAL+KEY_MULTISTRING+QString::number(i), "");
+        }else{
+            break;
+        }
+    }
+    for(i = 0; i < multiStr.size(); i++){
+        iniFile->setValue(SECTION_GLOBAL+KEY_MULTISTRING+QString::number(i), multiStr.at(i));
+    }
+
+    delete iniFile;
+    return true;
+}
+
+QStringList Config::getMultiString(){
+    QStringList res;
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    for(int i = 0; i > -1; i++){
+        QString preStr;
+        switch (i) {
+            case 0: preStr = "发送的数据会自动添加进条目"; break;
+            case 1: preStr = "双击条目发送"; break;
+            case 2: preStr = "右击条目删除/编辑"; break;
+            default: preStr = ""; break;
+        }
+        QString value = iniFile->value(SECTION_GLOBAL+KEY_MULTISTRING+QString::number(i), preStr).toString();
+        if(value.isEmpty())
+            break;
+        else
+            res.append(value);
+    }
+    delete iniFile;
+    return res;
+}
+
 void Config::setKeyWordHighlightState(bool checked){
     createDefaultIfNotExist();
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);

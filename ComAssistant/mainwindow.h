@@ -115,9 +115,8 @@ private slots:
     void on_actionMultiString_triggered(bool checked);
 
     void on_multiString_customContextMenuRequested(const QPoint &pos);
-
+    void editSeedSlot();
     void deleteSeedSlot();
-
     void clearSeedsSlot();
 
     void on_actionPlotterSwitch_triggered(bool checked);

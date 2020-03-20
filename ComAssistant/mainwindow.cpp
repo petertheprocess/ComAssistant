@@ -142,7 +142,12 @@ void MainWindow::readConfig()
     //多字符串
     ui->actionMultiString->setChecked(Config::getMultiStringState());
     on_actionMultiString_triggered(Config::getMultiStringState());
-
+    QStringList multi;
+    multi = Config::getMultiString();
+    while(multi.size()>0){
+        ui->multiString->addItem(multi.at(0));
+        multi.pop_front();
+    }
     //加载高亮规则
     ui->actionKeyWordHighlight->setChecked(Config::getKeyWordHighlightState());
     on_actionKeyWordHighlight_triggered(Config::getKeyWordHighlightState());
@@ -358,6 +363,11 @@ MainWindow::~MainWindow()
         Config::setKeyWordHighlightState(ui->actionKeyWordHighlight->isChecked());
         Config::setTextSendArea(ui->textEdit->toPlainText());
         Config::setVersion();
+        QStringList multi;
+        for(int i = 0; i < ui->multiString->count(); i++){
+            multi.append(ui->multiString->item(i)->text());
+        }
+        Config::setMultiString(multi);
         //serial
         Config::setBaudrate(serial.baudRate());
         Config::setDataBits(serial.dataBits());
@@ -1071,23 +1081,45 @@ void MainWindow::on_actionMultiString_triggered(bool checked)
 void MainWindow::on_multiString_customContextMenuRequested(const QPoint &pos)
 {
     QListWidgetItem* curItem = ui->multiString->itemAt( pos );
+    QAction *editSeed = nullptr;
     QAction *clearSeeds = nullptr;
     QAction *deleteSeed = nullptr;
     QMenu *popMenu = new QMenu( this );
     //添加右键菜单
     if( curItem != nullptr ){
+        editSeed = new QAction(tr("编辑"), this);
+        popMenu->addAction( editSeed );
+        connect( editSeed, SIGNAL(triggered() ), this, SLOT( editSeedSlot()) );
+
         deleteSeed = new QAction(tr("删除"), this);
         popMenu->addAction( deleteSeed );
         connect( deleteSeed, SIGNAL(triggered() ), this, SLOT( deleteSeedSlot()) );
     }
     clearSeeds = new QAction(tr("清除"), this);
-
     popMenu->addAction( clearSeeds );
     connect( clearSeeds, SIGNAL(triggered() ), this, SLOT( clearSeedsSlot()) );
     popMenu->exec( QCursor::pos() );
+
     delete popMenu;
     delete clearSeeds;
     delete deleteSeed;
+
+}
+
+/*
+ * Function:编辑multiString条目
+*/
+void MainWindow::editSeedSlot()
+{
+    QListWidgetItem * item = ui->multiString->currentItem();
+    if( item == nullptr )
+        return;
+
+    int curIndex = ui->multiString->row(item);
+    bool ok = false;
+    QString newStr = QInputDialog::getText(this,"编辑条目","新的文本：", QLineEdit::Normal, ui->multiString->item(curIndex)->text(), &ok);
+    if(ok == true)
+        ui->multiString->item(curIndex)->setText(newStr);
 }
 
 /*
@@ -1157,7 +1189,7 @@ void MainWindow::axisLabelDoubleClick(QCPAxis *axis, QCPAxis::SelectablePart par
   if (part == QCPAxis::spAxisLabel) // only react when the actual axis label is clicked, not tick label or axis backbone
   {
     bool ok;
-    QString newLabel = QInputDialog::getText(this, "QCustomPlot example", "New axis label:", QLineEdit::Normal, axis->label(), &ok);
+    QString newLabel = QInputDialog::getText(this, "更改轴标签", "新的轴标签：", QLineEdit::Normal, axis->label(), &ok);
     if (ok)
     {
       axis->setLabel(newLabel);
@@ -1174,7 +1206,7 @@ void MainWindow::legendDoubleClick(QCPLegend *legend, QCPAbstractLegendItem *ite
   {
     QCPPlottableLegendItem *plItem = qobject_cast<QCPPlottableLegendItem*>(item);
     bool ok;
-    QString newName = QInputDialog::getText(this, "QCustomPlot example", "New graph name:", QLineEdit::Normal, plItem->plottable()->name(), &ok);
+    QString newName = QInputDialog::getText(this, "更改曲线名称", "新的曲线名称", QLineEdit::Normal, plItem->plottable()->name(), &ok);
     if (ok)
     {
       plItem->plottable()->setName(newName);
