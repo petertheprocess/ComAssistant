@@ -17,6 +17,7 @@ void Config::writeDefault(){
     iniFile->setValue(SECTION_GLOBAL+KEY_MULTISTRINGSTATE, false);
     iniFile->setValue(SECTION_GLOBAL+KEY_HIGHLIGHTSTATE, true);
     iniFile->setValue(SECTION_GLOBAL+KEY_TEXTSENDAREA, "");
+    iniFile->setValue(SECTION_GLOBAL+KEY_LASTFILEDIALOGPATH, "");
 
     iniFile->setValue(SECTION_SERIAL+KEY_BAUDRATE, QSerialPort::Baud115200);
     iniFile->setValue(SECTION_SERIAL+KEY_PARITY, QSerialPort::NoParity);
@@ -302,6 +303,19 @@ void Config::setTextSendArea(QString str){
 QString Config::getTextSendArea(){
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
     QString value = iniFile->value(SECTION_GLOBAL+KEY_TEXTSENDAREA, "").toString();
+    delete iniFile;
+    return value;
+}
+
+void Config::setLastFileDialogPath(QString str){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_GLOBAL+KEY_LASTFILEDIALOGPATH, str);
+    delete iniFile;
+}
+QString Config::getLastFileDialogPath(){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    QString value = iniFile->value(SECTION_GLOBAL+KEY_LASTFILEDIALOGPATH, "").toString();
     delete iniFile;
     return value;
 }

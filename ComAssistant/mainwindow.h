@@ -184,7 +184,7 @@ private:
     double txSpeedKB = 0;
     int statisticRxByteCnt = 0;
     int statisticTxByteCnt = 0;
-    QString lastPath;
+    QString lastFileDialogPath;
     Highlighter *highlighter = nullptr;
     DataProtocol* protocol;
     QCustomPlotControl plotControl;

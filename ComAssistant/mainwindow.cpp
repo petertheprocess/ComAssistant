@@ -148,6 +148,9 @@ void MainWindow::readConfig()
         ui->multiString->addItem(multi.at(0));
         multi.pop_front();
     }
+
+    //文件对话框路径
+    lastFileDialogPath = Config::getLastFileDialogPath();
     //加载高亮规则
     ui->actionKeyWordHighlight->setChecked(Config::getKeyWordHighlightState());
     on_actionKeyWordHighlight_triggered(Config::getKeyWordHighlightState());
@@ -368,6 +371,7 @@ MainWindow::~MainWindow()
             multi.append(ui->multiString->item(i)->text());
         }
         Config::setMultiString(multi);
+        Config::setLastFileDialogPath(lastFileDialogPath);
         //serial
         Config::setBaudrate(serial.baudRate());
         Config::setDataBits(serial.dataBits());
@@ -473,6 +477,11 @@ void MainWindow::readSerialPort()
         tmpReadBuff = serial.readAll();
         RxBuff.append(tmpReadBuff);
     }
+
+    //tmpReadBuff = RxBuff;可能会引入空数据
+    if(tmpReadBuff.isEmpty())
+        return;
+
     //读取数据并衔接到上次未处理完的数据后面
     tmpReadBuff = unshowedRxBuff + tmpReadBuff;
     unshowedRxBuff.clear();
@@ -858,7 +867,7 @@ void MainWindow::on_actionSaveOriginData_triggered()
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
                                                     "保存数据-选择文件路径",
-                                                    lastPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".dat",
+                                                    lastFileDialogPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".dat",
                                                     "Dat File(*.dat);;All File(*.*)");
     //检查路径格式
     if(!savePath.endsWith(".dat")){
@@ -867,8 +876,8 @@ void MainWindow::on_actionSaveOriginData_triggered()
         return;
     }
     //记忆路径
-    lastPath = savePath;
-    lastPath = lastPath.mid(0, lastPath.lastIndexOf('/')+1);
+    lastFileDialogPath = savePath;
+    lastFileDialogPath = lastFileDialogPath.mid(0, lastFileDialogPath.lastIndexOf('/')+1);
 
     //保存数据
     QFile file(savePath);
@@ -891,7 +900,7 @@ void MainWindow::on_actionReadOriginData_triggered()
     //打开文件对话框
     QString readPath = QFileDialog::getOpenFileName(this,
                                                     "读取数据-选择文件路径",
-                                                    lastPath + lastFileName,
+                                                    lastFileDialogPath + lastFileName,
                                                     "Dat File(*.dat);;All File(*.*)");
     //检查文件路径结尾
     if(!readPath.endsWith(".dat")){
@@ -900,8 +909,8 @@ void MainWindow::on_actionReadOriginData_triggered()
         return;
     }
     //记录上次路径
-    lastPath = readPath;
-    lastPath = lastPath.mid(0, lastPath.lastIndexOf('/')+1);
+    lastFileDialogPath = readPath;
+    lastFileDialogPath = lastFileDialogPath.mid(0, lastFileDialogPath.lastIndexOf('/')+1);
     //读取文件
     QFile file(readPath);
     //读文件
@@ -911,14 +920,18 @@ void MainWindow::on_actionReadOriginData_triggered()
         while(lastFileName.indexOf('/')!=-1){
             lastFileName = lastFileName.mid(lastFileName.indexOf('/')+1);
         }
-
         RxBuff.clear();
         RxBuff = file.readAll();
         file.close();
+
         ui->textBrowser->clear();
         ui->textBrowser->append("File size:"+QString::number(file.size())+" Byte");
         ui->textBrowser->append("Read size:"+QString::number(RxBuff.size())+" Byte");
         ui->textBrowser->append("Read containt:\n");
+        //readSerialPort不能处理空数据
+        if(RxBuff.isEmpty()){
+            return;
+        }
 //        qDebug()<<"Read:"<<RxBuff;
         // 解析读取的数据
         paraseFromRxBuff = true;
@@ -1009,7 +1022,7 @@ void MainWindow::on_actionSaveShowedData_triggered()
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
                                                     "保存数据-选择文件路径",
-                                                    lastPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".txt",
+                                                    lastFileDialogPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".txt",
                                                     "Text File(*.txt);;All File(*.*)");
     //检查路径
     if(!savePath.endsWith("txt")){
@@ -1018,8 +1031,8 @@ void MainWindow::on_actionSaveShowedData_triggered()
         return;
     }
     //记忆路径
-    lastPath = savePath;
-    lastPath = lastPath.mid(0, lastPath.lastIndexOf('/')+1);
+    lastFileDialogPath = savePath;
+    lastFileDialogPath = lastFileDialogPath.mid(0, lastFileDialogPath.lastIndexOf('/')+1);
     //保存数据
     QFile file(savePath);
     QTextStream stream(&file);
@@ -1552,7 +1565,7 @@ void MainWindow::on_actionSavePlotData_triggered()
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
                                                     "保存数据-选择文件路径",
-                                                    lastPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".xlsx",
+                                                    lastFileDialogPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".xlsx",
                                                     "XLSX File(*.xlsx);;CSV File(*.csv);;TXT File(*.txt);;All File(*.*)");
     //检查路径格式
     if(!savePath.endsWith(".xlsx") && !savePath.endsWith(".csv")&& !savePath.endsWith(".txt")){
@@ -1570,8 +1583,8 @@ void MainWindow::on_actionSavePlotData_triggered()
         if(!saveGraphAsTxt(savePath,' '))
             QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
     }
-    lastPath = savePath;
-    lastPath = lastPath.mid(0, lastPath.lastIndexOf('/')+1);
+    lastFileDialogPath = savePath;
+    lastFileDialogPath = lastFileDialogPath.mid(0, lastFileDialogPath.lastIndexOf('/')+1);
 }
 
 void MainWindow::on_actionSavePlotAsPicture_triggered()
@@ -1579,7 +1592,7 @@ void MainWindow::on_actionSavePlotAsPicture_triggered()
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
                                                     "保存图片-选择文件路径",
-                                                    lastPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss"),
+                                                    lastFileDialogPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss"),
                                                     "Bmp File(*.bmp);;Pdf File(*.pdf);;Jpeg File(*.jpg);;Png File(*.png);;All File(*.*)");
     //检查路径格式
     if(!savePath.endsWith(".jpg") &&
@@ -1591,8 +1604,8 @@ void MainWindow::on_actionSavePlotAsPicture_triggered()
         return;
     }
     //记录上次路径
-    lastPath = savePath;
-    lastPath = lastPath.mid(0, lastPath.lastIndexOf('/')+1);
+    lastFileDialogPath = savePath;
+    lastFileDialogPath = lastFileDialogPath.mid(0, lastFileDialogPath.lastIndexOf('/')+1);
     //保存
     if(savePath.endsWith(".jpg")){
         if(!ui->customPlot->saveJpg(savePath,0,0,1,100))
@@ -1856,15 +1869,15 @@ void MainWindow::on_actionSendFile_triggered()
     //打开文件对话框
     QString readPath = QFileDialog::getOpenFileName(this,
                                                     "打开文件",
-                                                    lastPath + lastFileName,
+                                                    lastFileDialogPath + lastFileName,
                                                     "All File(*.*)");
     //检查文件路径结尾
     if(readPath.isEmpty()){
         return;
     }
     //记录上次路径
-    lastPath = readPath;
-    lastPath = lastPath.mid(0, lastPath.lastIndexOf('/')+1);
+    lastFileDialogPath = readPath;
+    lastFileDialogPath = lastFileDialogPath.mid(0, lastFileDialogPath.lastIndexOf('/')+1);
     //读取文件
     QFile file(readPath);
 

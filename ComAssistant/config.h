@@ -34,6 +34,8 @@
 #define KEY_MULTISTRING         QString("MultiString")
 #define KEY_HIGHLIGHTSTATE      QString("HighlightState")
 #define KEY_TEXTSENDAREA        QString("TextSendArea")
+#define KEY_LASTFILEDIALOGPATH  QString("LastFileDialogPath")
+
 //serial键
 #define KEY_BAUDRATE        QString("Baudrate")
 #define KEY_STOPBIT         QString("StopBit")
@@ -88,8 +90,10 @@ public:
     static void writeDefault();
     static void createDefaultIfNotExist();
     static bool isFileExist(QString path);
+
     static void setVersion(void);
     static QString getVersion();
+    //serial
     static void setBaudrate(int baud);
     static void setParity(QSerialPort::Parity parity);
     static void setDataBits(QSerialPort::DataBits databits);
@@ -100,6 +104,7 @@ public:
     static QSerialPort::DataBits getDataBits();
     static QSerialPort::StopBits getStopBits();
     static QSerialPort::FlowControl getFlowControl();
+    //global
     static void setCodeRule(CodeRule_e rule);
     static CodeRule_e getCodeRule();
     static void setEnterStyle(EnterStyle_e style);
@@ -120,6 +125,9 @@ public:
     static bool getKeyWordHighlightState();
     static void setTextSendArea(QString str);
     static QString getTextSendArea();
+    static void setLastFileDialogPath(QString str);
+    static QString getLastFileDialogPath();
+    //plotter
     static void setPlotterState(bool checked);
     static bool getPlotterState();
     static void setPlotterType(ProtocolType_e type);
