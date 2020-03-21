@@ -175,6 +175,8 @@ private:
     QLabel *statusSpeedLabel, *statusStatisticLabel, *statusAdLabel;
     bool paraseFromRxBuff = false;
     QByteArray RxBuff, TxBuff; //原始数据的收发缓冲
+    QByteArrayList SendFileBuff;    //发送文件分包缓冲
+    int SendFileBuffIndex = 0; //
     QByteArray unshowedRxBuff;    //未上屏的接收缓冲
     QTimer cycleSendTimer; //循环发送定时器
     QTimer autoSubcontractTimer; //自动分包定时器

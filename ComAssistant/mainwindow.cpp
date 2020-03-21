@@ -451,6 +451,9 @@ void MainWindow::on_comSwitch_clicked(bool checked)
     }
     else
     {
+        //清空文件缓冲
+        SendFileBuff.clear();
+        SendFileBuffIndex = 0;
         //关闭定时器
         if(cycleSendTimer.isActive()){
             cycleSendTimer.stop();
@@ -585,6 +588,16 @@ void MainWindow::serialBytesWritten(qint64 bytes)
 {
     //发送速度统计
     statisticTxByteCnt += bytes;
+
+    if(SendFileBuff.size()>0 && SendFileBuffIndex!=SendFileBuff.size()){
+        ui->statusBar->showMessage("发送进度："+QString::number(static_cast<int>(100.0*(SendFileBuffIndex+1.0)/SendFileBuff.size()))+"%",1000);
+        serial.write(SendFileBuff.at(SendFileBuffIndex++));
+        if(SendFileBuffIndex == SendFileBuff.size()){
+//            ui->statusBar->showMessage("100%",1000);
+            SendFileBuffIndex = 0;
+            SendFileBuff.clear();
+        }
+    }
 }
 
 /*
@@ -686,9 +699,14 @@ void MainWindow::on_clearWindows_clicked()
 
     //对象缓存
     unshowedRxBuff.clear();
+
+    //清空文件缓冲
+    SendFileBuff.clear();
+    SendFileBuffIndex = 0;
+
+    //绘图器相关
     protocol->clearBuff();
     plotControl.clearPlotter(ui->customPlot, -1);
-    //删除图像
     while(ui->customPlot->graphCount()>1){
         ui->customPlot->removeGraph(ui->customPlot->graphCount()-1);
     }
@@ -925,8 +943,8 @@ void MainWindow::on_actionReadOriginData_triggered()
         file.close();
 
         ui->textBrowser->clear();
-        ui->textBrowser->append("File size:"+QString::number(file.size())+" Byte");
-        ui->textBrowser->append("Read size:"+QString::number(RxBuff.size())+" Byte");
+        ui->textBrowser->append("File size: "+QString::number(file.size())+" Byte");
+        ui->textBrowser->append("Read size: "+QString::number(RxBuff.size())+" Byte");
         ui->textBrowser->append("Read containt:\n");
         //readSerialPort不能处理空数据
         if(RxBuff.isEmpty()){
@@ -1894,10 +1912,30 @@ void MainWindow::on_actionSendFile_triggered()
         TxBuff = file.readAll();
         file.close();
 
+        #define PACKSIZE 1024
+        QElapsedTimer timer;
+        long long time;
+        SendFileBuffIndex = 0;
+        timer.start();
+        while(TxBuff.size()>PACKSIZE){
+            SendFileBuff.append(TxBuff.mid(0,PACKSIZE));
+            TxBuff.remove(0,PACKSIZE);
+        }
+        SendFileBuff.append(TxBuff); //一定会有一个元素
+        time = timer.elapsed();
+        TxBuff.clear();
+
+        if(SendFileBuff.size()<1){
+            return;
+        }
+
         if(serial.isOpen()){
             ui->textBrowser->clear();
-            ui->textBrowser->append("File size:"+QString::number(file.size())+" Byte\n");
-            serial.write(TxBuff);
+            ui->textBrowser->append("File size: "+QString::number(file.size())+" Byte");
+            ui->textBrowser->append("One pack size: "+QString::number(PACKSIZE)+" Byte");
+            ui->textBrowser->append("Total packs: "+QString::number(SendFileBuff.size())+" packs");
+            ui->textBrowser->append("Elapsed time: "+QString::number(time)+" ms\n");
+            serial.write(SendFileBuff.at(SendFileBuffIndex++));//后续缓冲的发送在串口发送完成的槽里
         }
         else
             QMessageBox::information(this,"提示","请先打开串口。");

@@ -125,7 +125,7 @@ p, li { white-space: pre-wrap; }
            </sizepolicy>
           </property>
           <property name="text">
-           <string>清空窗口</string>
+           <string>清空窗口/缓冲</string>
           </property>
          </widget>
         </item>
