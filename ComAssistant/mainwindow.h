@@ -209,7 +209,7 @@ private:
     //使用统计
     int currentRunTime = 0; //运行时间
 
-    bool postUsageStatic(void);
+    bool postUsageStatistic(void);
     bool getRemoteVersion(void);
     bool downloadAdvertisement(void);
 

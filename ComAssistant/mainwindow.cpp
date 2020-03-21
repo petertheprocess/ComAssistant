@@ -43,7 +43,7 @@ QString getHostMacAddress()
     fclose($data);
 ?>
 */
-bool MainWindow::postUsageStatic(void)
+bool MainWindow::postUsageStatistic(void)
 {
     //旧请求未完成时不执行。
     if(httpTimeout>0)
@@ -291,7 +291,7 @@ void MainWindow::secTimerSlot()
         case DownloadFile:
             httpTaskVector.pop_front();break;
         case PostStatic:
-            postUsageStatic();break;
+            postUsageStatistic();break;
         case DownloadADs:
             downloadAdvertisement();break;
         default:
@@ -1692,7 +1692,7 @@ void MainWindow::httpFinishedSlot(QNetworkReply *)
                 remoteVersionTemp.remove('.');
             }
 
-            //远端版本有更新
+            //版本号比较
             if(remoteVersionTemp.toInt() > localVersionTemp.toInt()){
                 QMessageBox::Button button;
                 if(state == GetVersion){
