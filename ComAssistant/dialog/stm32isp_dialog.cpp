@@ -74,6 +74,41 @@ STM32ISP_Dialog::STM32ISP_Dialog(QWidget *parent) :
                 tr("确保STM32已经进入ISP Bootloader(或者BT0被置高后并复位)。\r\n")+
                 tr("本程序调用stm32isp.exe实现ISP升级。\r\n")
                 );
+    ui->browser->append("STM32F1/F4系列可使用以下函数跳转至ISP Bootloader：\n");
+    ui->browser->append(
+                        "    void JumpToISP(void)\n"
+                        "    {\n"
+                        "        //根据芯片修改地址,参阅“芯片参考手册——Flash——系统存储区”部分\n"
+                        "        //stm32f10x大中小型芯片均为0x1FFFF000\n"
+                        "        //stm32f1系列的互联型芯片为0x1FFFB000\n"
+                        "        //stm32f40x为0x1FFF0000\n"
+                        "        //stm32f41x为0x1FFF0000\n"
+                        "        #define ISPAddress 0x1FFFF000 \n"
+                        "\n"
+                        "        //程序跳转不会复位外设，建议对一些可能导致问题的外设进行反初始化DeInit，如SysTick。\n"
+                        "        //看门狗一旦初始化不能被关闭，因此如果使用了看门狗，则在调用该函数前，必须先复位系统，并在初始化看门狗之前调用该函数。\n"
+                        "        uint32_t ispJumpAddr;//ISP程序的跳转地址，既程序入口\n"
+                        "        uint32_t ispSpValue;//ISP程序的SP初值，即栈指针\n"
+                        "        void (*Jump_To_ISP)(void);//定义一个函数指针\n"
+                        "\n"
+                        "        printf(\"\\r\\nJumping to ISP...\");\n"
+                        "        SysTick->CTRL=0x00;       //关闭计数器\n"
+                        "        SysTick->VAL =0X00;       //清空计数器\n"
+                        "\n"
+                        "        if (((*(__IO uint32_t*)ISPAddress) & 0x2FFE0000 ) == 0x20000000)//SP->RAM,RAM => 0x20000000\n"
+                        "        { \n"
+                        "            ispSpValue  = *(__IO uint32_t*)ISPAddress;\n"
+                        "            ispJumpAddr = *(__IO uint32_t*)(ISPAddress+4);\n"
+                        "\n"
+                        "            /* 初始化 Stack Pointer */\n"
+                        "            __set_MSP(ispSpValue);\n"
+                        "\n"
+                        "            /* Jump to isp */\n"
+                        "            Jump_To_ISP = (void (*)(void))ispJumpAddr;\n"
+                        "            Jump_To_ISP();\n"
+                        "        }\n"
+                        "    }\n"
+                        );
     ui->browser->append("欢迎访问：<a href=\"https://shop490276933.taobao.com\">https://shop490276933.taobao.com</a>\r\n");
 
         QLabel *permanent1=new QLabel(this);

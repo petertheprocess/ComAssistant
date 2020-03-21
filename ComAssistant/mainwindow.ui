@@ -435,8 +435,8 @@ p, li { white-space: pre-wrap; }
     <property name="title">
      <string>功能</string>
     </property>
-    <addaction name="actionSTM32_ISP"/>
     <addaction name="actionMultiString"/>
+    <addaction name="actionSTM32_ISP"/>
    </widget>
    <widget class="QMenu" name="menu_2">
     <property name="title">
