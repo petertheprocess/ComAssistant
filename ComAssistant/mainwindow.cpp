@@ -607,10 +607,11 @@ void MainWindow::autoSubcontractTimerSlot()
 */
 void MainWindow::on_sendButton_clicked()
 {
+    static QByteArray tmp;//用static是担心write是传递指针，发送大量数据可能会由于未发送完成而被销毁？
     if(serial.isOpen()){
         //十六进制检查
         if(!ui->hexSend->isChecked()){
-            QByteArray tmp = ui->textEdit->toPlainText().toLocal8Bit();
+            tmp = ui->textEdit->toPlainText().toLocal8Bit();
             //回车风格转换，win风格补上'\r'，默认unix风格
             if(ui->action_winLikeEnter->isChecked()){
                 //win风格
@@ -642,11 +643,10 @@ void MainWindow::on_sendButton_clicked()
                 ui->textBrowser->moveCursor(QTextCursor::End);
                 ui->textBrowser->insertPlainText("\r\n" + timeString + tmp + "\r\n");
             }
-        }
-        else {
+        }else {
             //以hex发送数据
             //HexStringToByteArray函数必须传入格式化后的字符串，如"02 31"
-            QByteArray tmp;
+            tmp.clear();
             bool ok;
             tmp = HexStringToByteArray(ui->textEdit->toPlainText(),ok);
             if(ok){
@@ -1875,6 +1875,7 @@ void MainWindow::on_actionSendFile_triggered()
     if(readPath.isEmpty()){
         return;
     }
+
     //记录上次路径
     lastFileDialogPath = readPath;
     lastFileDialogPath = lastFileDialogPath.mid(0, lastFileDialogPath.lastIndexOf('/')+1);
