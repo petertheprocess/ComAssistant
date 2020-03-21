@@ -13,22 +13,24 @@ About_Me_Dialog::~About_Me_Dialog()
     delete ui;
 }
 
+void About_Me_Dialog::getVersionString(QString str)
+{
+    if(str.isEmpty())
+        return;
+    ui->version->setText(str);
+}
+
 void About_Me_Dialog::on_okButton_clicked()
 {
     this->close();
 }
 
-void About_Me_Dialog::on_label_2_linkActivated(const QString &link)
+void About_Me_Dialog::on_githubUrl_linkActivated(const QString &link)
 {
     QDesktopServices::openUrl(QUrl(link));
 }
 
-void About_Me_Dialog::on_label_3_linkActivated(const QString &link)
-{
-    QDesktopServices::openUrl(QUrl(link));
-}
-
-void About_Me_Dialog::on_label_7_linkActivated(const QString &link)
+void About_Me_Dialog::on_email_linkActivated(const QString &link)
 {
     QDesktopServices::openUrl(QUrl(link));
 }

@@ -170,7 +170,6 @@ QByteArray HexStringToByteArray(QString HexString, bool &isOK)
 QString toHexDisplay(QByteArray const &data)
 {
     QString res;
-    qDebug()<<"toHexDisplay"<<data;
     res = ByteArrayToHexString(data);
     return res;
 }

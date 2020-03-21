@@ -939,6 +939,7 @@ void MainWindow::on_actionAbout_triggered()
 {
     //创建关于我对话框资源
     About_Me_Dialog* p = new About_Me_Dialog(this);
+    p->getVersionString(Config::getVersion());
     //设置close后自动销毁
     p->setAttribute(Qt::WA_DeleteOnClose);
     //非阻塞式显示
