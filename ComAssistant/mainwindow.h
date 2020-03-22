@@ -161,7 +161,7 @@ private slots:
     void httpFinishedSlot(QNetworkReply*);
     void on_actionKeyWordHighlight_triggered(bool checked);
 
-    void on_actionUsageStatic_triggered();
+    void on_actionUsageStatistic_triggered();
 
     void on_actionSendFile_triggered();
 

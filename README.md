@@ -4,9 +4,12 @@
 ![mainwindow](graphwindow.png)
 ![mainwindow](scatterline.png)
 ![mainwindow1](multistring.png)
+
 # 已知问题
   - 代码重构/优化/注释
 
 # 拟增功能
   - 多语言支持。
+  - 字体修改？
+  - 自动滚屏开关？
   - 串口热插拔检测。

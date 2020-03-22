@@ -52,12 +52,13 @@ bool MainWindow::postUsageStatistic(void)
     ui->statusBar->showMessage("正在提交使用统计...", 1000);
 
     //准备上传数据
-    QString sendData = "lastStartTime=#LASTSTARTTIME#&lastRunTime=#LASTRUNTIME#&lastTxCnt=#LASTTXCNT#&lastRxCnt=#LASTRXCNT#";
+    QString sendData = "Version=#VERSION#&StartTime=#STARTTIME#&RunTime=#RUNTIME#&TxCnt=#TXCNT#&RxCnt=#RXCNT#";
+    sendData.replace("#VERSION#",Config::getVersion());
     QString current_date_str = Config::getStartTime();
-    sendData.replace("#LASTSTARTTIME#",current_date_str);
-    sendData.replace("#LASTRUNTIME#",Config::getLastRunTime());
-    sendData.replace("#LASTTXCNT#",Config::getLastTxCnt());
-    sendData.replace("#LASTRXCNT#",Config::getLastRxCnt());
+    sendData.replace("#STARTTIME#",current_date_str);
+    sendData.replace("#RUNTIME#",Config::getLastRunTime());
+    sendData.replace("#TXCNT#",Config::getLastTxCnt());
+    sendData.replace("#RXCNT#",Config::getLastRxCnt());
 
     //以本机MAC地址作为上传的文件名
     QString tmp = "http://www.inhowe.com/ComAssistant/static.php?filename=#FILENAME#.txt";
@@ -1756,7 +1757,7 @@ void MainWindow::on_actionKeyWordHighlight_triggered(bool checked)
 /*
  * Funciont:显示使用统计
 */
-void MainWindow::on_actionUsageStatic_triggered()
+void MainWindow::on_actionUsageStatistic_triggered()
 {
     double currentTx = serial.getTxCnt();
     double currentRx = serial.getRxCnt();
@@ -1861,6 +1862,7 @@ void MainWindow::on_actionUsageStatic_triggered()
     totalRunTimeStr = days + "天 " + hou + "小时 " + min + "分钟 " + sec + "秒";
     //上屏显示
     ui->textBrowser->clear();
+    ui->textBrowser->append("<h2>软件版本：</h2>"+Config::getVersion());
     ui->textBrowser->append("<h2>设备信息：</h2>");
     ui->textBrowser->append("MAC地址："+getHostMacAddress());
     ui->textBrowser->append("<h2>软件使用统计</h2>");
