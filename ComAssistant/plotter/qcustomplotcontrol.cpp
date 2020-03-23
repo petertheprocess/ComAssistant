@@ -151,7 +151,7 @@ void QCustomPlotControl::adjustXRange(QCustomPlot* customPlot, const QCPRange& q
 */
 bool QCustomPlotControl::displayToPlotter(QCustomPlot* customPlot, QVector<double> rowData)
 {
-    if(rowData.size() <= 0)
+    if(rowData.size() <= 0 || rowData.size()>colorSet.size())
         return false;
 
     //判断是否需要添加曲线

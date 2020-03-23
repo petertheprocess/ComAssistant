@@ -59,6 +59,7 @@ QVector<double> DataProtocol::popOneRowData()
     QVector<double> tmp;
     if(dataPool.size()>0){
         tmp = dataPool.at(0);
+//        qDebug()<<"popOneRowData:"<<tmp;
         dataPool.pop_front();
     }
     return tmp;
@@ -70,10 +71,13 @@ void DataProtocol::parase(QByteArray inputArray)
     Pack_t pack;
     QByteArray restArray;
     unparasedBuff += inputArray;
+    //数据流分包
     extractPacks(unparasedBuff, restArray);
     unparasedBuff = restArray;
     while (packsBuff.size()>0) {
+        //提取一个包
         pack = popOnePack();
+        //提取一组数
         rowData = extractRowData(pack);
         addToDataPool(rowData);
     }
@@ -87,13 +91,20 @@ void DataProtocol::extractPacks(const QByteArray &inputArray, QByteArray &restAr
         QRegularExpressionMatch match;
         int index = 0;
         reg.setPattern("\\{.*:.+\\}");//匹配{}间的数据
+//        reg.setPattern("\\{.*:([+-]?d+(\\.d+)?,?)+\\}");//匹配{}间的数据
         reg.setPatternOptions(QRegularExpression::InvertedGreedinessOption);//设置为非贪婪模式匹配
         do {
                 match = reg.match(inputArray, index);
                 if(match.hasMatch()) {
                     index = match.capturedEnd();
-                    packsBuff << match.captured(0).toUtf8();
-    //                qDebug()<<"match"<<match.captured(0);
+                    //{}中间不应该再出现{
+                    if(match.captured(0).lastIndexOf('{')==0){
+                        packsBuff << match.captured(0).toLocal8Bit();
+                    }
+                    else{
+                        index = match.captured(0).lastIndexOf('{');
+                    }
+//                    qDebug()<<"match"<<match.captured(0);
                 }
                 else{
     //                qDebug()<<"no match";

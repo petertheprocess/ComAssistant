@@ -263,8 +263,6 @@ MainWindow::MainWindow(QWidget *parent) :
     secTimer.start(1000);
 
     //提交使用统计任务
-//    postUsageStatic();
-//    downloadAdvertisement();
     httpTaskVector.push_back(PostStatic);
     httpTaskVector.push_back(DownloadADs);
     httpTaskVector.push_back(BackStageGetVersion);
@@ -473,18 +471,20 @@ void MainWindow::on_comSwitch_clicked(bool checked)
 */
 void MainWindow::readSerialPort()
 {
+    QElapsedTimer timer;
+//    int64_t tt,tt1,tt2,tt3,tt4,tt5;
+
     QByteArray tmpReadBuff;
 
-    if(paraseFromRxBuff)
+    if(paraseFromRxBuff){
         tmpReadBuff = RxBuff;
+        if(tmpReadBuff.isEmpty())//tmpReadBuff可能为空。
+            return;
+    }
     else{
-        tmpReadBuff = serial.readAll();
+        tmpReadBuff = serial.readAll(); //tmpReadBuff一定不为空。
         RxBuff.append(tmpReadBuff);
     }
-
-    //tmpReadBuff = RxBuff;可能会引入空数据
-    if(tmpReadBuff.isEmpty())
-        return;
 
     //读取数据并衔接到上次未处理完的数据后面
     tmpReadBuff = unshowedRxBuff + tmpReadBuff;
@@ -561,8 +561,11 @@ void MainWindow::readSerialPort()
 
     //打印数据
     if(!tmpReadBuff.isEmpty()){
+//        timer.start();
         //移动光标
         ui->textBrowser->moveCursor(QTextCursor::End);
+//        tt = timer.elapsed();
+//        timer.start();
         //追加数据
         if(ui->timeStampCheckBox->isChecked()){
             //需要添加时间戳
@@ -572,17 +575,19 @@ void MainWindow::readSerialPort()
                 timeString = "["+timeString+"]Rx<- ";
             }
             ui->textBrowser->insertPlainText(timeString + QString::fromLocal8Bit(tmpReadBuff));
-            //分包定时器
+            //自动分包定时器
             autoSubcontractTimer.start(10);
             autoSubcontractTimer.setSingleShot(true);
         }else{
             //不需要时间戳
             ui->textBrowser->insertPlainText(QString::fromLocal8Bit(tmpReadBuff));
         }
-
+//        tt1 = timer.elapsed();
         //更新收发统计
         statusStatisticLabel->setText(serial.getTxRxString());
     }
+
+//    qDebug()<<"移动"<<tt<<"追加"<<tt1;
 }
 
 void MainWindow::serialBytesWritten(qint64 bytes)

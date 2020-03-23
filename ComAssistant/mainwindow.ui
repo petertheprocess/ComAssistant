@@ -413,7 +413,7 @@ p, li { white-space: pre-wrap; }
     </property>
     <addaction name="actionManual"/>
     <addaction name="actionUpdate"/>
-    <addaction name="actionUsageStatic"/>
+    <addaction name="actionUsageStatistic"/>
     <addaction name="actiondebug"/>
     <addaction name="actionAbout"/>
    </widget>
@@ -651,7 +651,7 @@ p, li { white-space: pre-wrap; }
     <string>关键字高亮</string>
    </property>
   </action>
-  <action name="actionUsageStatic">
+  <action name="actionUsageStatistic">
    <property name="text">
     <string>使用统计</string>
    </property>
