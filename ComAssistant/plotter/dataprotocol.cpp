@@ -90,20 +90,29 @@ void DataProtocol::extractPacks(const QByteArray &inputArray, QByteArray &restAr
         QRegularExpression reg;
         QRegularExpressionMatch match;
         int index = 0;
-        reg.setPattern("\\{.*:.+\\}");//匹配{}间的数据
-//        reg.setPattern("\\{.*:([+-]?d+(\\.d+)?,?)+\\}");//匹配{}间的数据
+        //匹配{}间的数据。
+        //{:之间不允许再出现{:
+        //:后，数据与逗号作为一个组，这个组至少出现一次
+        //其中，组中的逗号出现0次或1次
+        //组中的数据：符号出现或者不出现，整数部分出现至少1次，小数点与小数作为整体，可不出现或者1次
+        reg.setPattern("\\{[{:]*:(([+-]?\\d+(\\.\\d+)?)?,?)+\\}");
         reg.setPatternOptions(QRegularExpression::InvertedGreedinessOption);//设置为非贪婪模式匹配
         do {
+                QByteArray tmp;
                 match = reg.match(inputArray, index);
                 if(match.hasMatch()) {
                     index = match.capturedEnd();
-                    //{}中间不应该再出现{
-                    if(match.captured(0).lastIndexOf('{')==0){
-                        packsBuff << match.captured(0).toLocal8Bit();
+                    //连续的逗号和分号逗号之间补0
+                    tmp.clear();
+                    tmp.append(match.captured(0).toLocal8Bit());
+                    while(tmp.indexOf(",,")!=-1){
+                        tmp.insert(tmp.indexOf(",,")+1,'0');
                     }
-                    else{
-                        index = match.captured(0).lastIndexOf('{');
+                    while(tmp.indexOf(":,")!=-1){
+                        tmp.insert(tmp.indexOf(":,")+1,'0');
                     }
+                    if(!tmp.isEmpty())
+                        packsBuff << tmp;
 //                    qDebug()<<"match"<<match.captured(0);
                 }
                 else{

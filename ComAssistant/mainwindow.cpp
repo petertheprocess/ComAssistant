@@ -471,7 +471,7 @@ void MainWindow::on_comSwitch_clicked(bool checked)
 */
 void MainWindow::readSerialPort()
 {
-    QElapsedTimer timer;
+//    QElapsedTimer timer;
 //    int64_t tt,tt1,tt2,tt3,tt4,tt5;
 
     QByteArray tmpReadBuff;
@@ -497,7 +497,8 @@ void MainWindow::readSerialPort()
         //绘图器解析
         protocol->parase(tmpReadBuff);
         while(protocol->parasedBuffSize()>0){
-            plotControl.displayToPlotter(ui->customPlot, protocol->popOneRowData());
+            if(false == plotControl.displayToPlotter(ui->customPlot, protocol->popOneRowData()))
+                ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
         }
     }
 
