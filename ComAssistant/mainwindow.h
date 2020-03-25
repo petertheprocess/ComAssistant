@@ -47,6 +47,7 @@
 #include "about_me_dialog.h"
 #include "settings_dialog.h"
 
+#define PAGING_SIZE 4096 //TextBrowser分页显示大小
 
 namespace Ui {
 class MainWindow;
@@ -71,8 +72,9 @@ private slots:
 
     void readSerialPort();
     void serialBytesWritten(qint64 bytes);
-
+    void printToTextBrowser();
     void cycleSendTimerSlot();
+    void cycleReadTimerSlot();
 
     void autoSubcontractTimerSlot();
 
@@ -130,6 +132,8 @@ private slots:
 
     void on_actiondebug_triggered(bool checked);
 
+    void verticalScrollBarActionTriggered(int action);
+
     //绘图器交互
     void axisLabelDoubleClick(QCPAxis* axis, QCPAxis::SelectablePart part);
     void legendDoubleClick(QCPLegend* legend, QCPAbstractLegendItem* item);
@@ -175,6 +179,8 @@ private:
     QLabel *statusSpeedLabel, *statusStatisticLabel, *statusAdLabel;
     bool paraseFromRxBuff = false;
     QByteArray RxBuff, TxBuff; //原始数据的收发缓冲
+    QByteArray BrowserBuff; //浏览器缓冲
+    int BrowserBuffIndex = 0;
     QByteArrayList SendFileBuff;    //发送文件分包缓冲
     int SendFileBuffIndex = 0; //
     QByteArray unshowedRxBuff;    //未上屏的接收缓冲
@@ -182,6 +188,7 @@ private:
     QTimer autoSubcontractTimer; //自动分包定时器
     QTimer debugTimer; //调试定时器
     QTimer secTimer;  //秒定时器
+    QTimer cycleReadTimer; //
     double rxSpeedKB = 0;
     double txSpeedKB = 0;
     int statisticRxByteCnt = 0;

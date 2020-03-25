@@ -195,9 +195,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&cycleSendTimer, SIGNAL(timeout()), this, SLOT(cycleSendTimerSlot()));
     connect(&autoSubcontractTimer, SIGNAL(timeout()), this, SLOT(autoSubcontractTimerSlot()));
     connect(&secTimer, SIGNAL(timeout()), this, SLOT(secTimerSlot()));
-    connect(&serial, SIGNAL(readyRead()), this, SLOT(readSerialPort()));
+    connect(&cycleReadTimer, SIGNAL(timeout()), this, SLOT(cycleReadTimerSlot()));
+    cycleReadTimer.start(100);
+//    connect(&serial, SIGNAL(readyRead()), this, SLOT(readSerialPort()));
     connect(&serial, SIGNAL(bytesWritten(qint64)), this, SLOT(serialBytesWritten(qint64)));
-
+    connect(ui->textBrowser->verticalScrollBar(),SIGNAL(actionTriggered(int)),this,SLOT(verticalScrollBarActionTriggered(int)));
     // connect slot that ties some axis selections together (especially opposite axes):
     connect(ui->customPlot, SIGNAL(selectionChangedByUser()), this, SLOT(selectionChanged()));
     // connect slots that takes care that when an axis is selected, only that direction can be dragged and zoomed:
@@ -334,6 +336,7 @@ void MainWindow::debugTimerSlot()
 
     if(ui->actionAscii->isChecked()){
         tmp = "{:" + QString::number(num1,'f') + "," + QString::number(num2,'f') + "," + QString::number(num3,'f') + "}\r\n";
+//        tmp = QDateTime::currentDateTime().toString("{yyyyMMddhhmmsszzz}");
 //        tmp = "{:" + QString::number(num1) + "," + QString::number(num2) + "," + QString::number(num3) + "}\r\n";//这样可以生成一些错误数据
     }
 
@@ -471,20 +474,20 @@ void MainWindow::on_comSwitch_clicked(bool checked)
 */
 void MainWindow::readSerialPort()
 {
-//    QElapsedTimer timer;
-//    int64_t tt,tt1,tt2,tt3,tt4,tt5;
-
     QByteArray tmpReadBuff;
 
     if(paraseFromRxBuff){
         tmpReadBuff = RxBuff;
-        if(tmpReadBuff.isEmpty())//tmpReadBuff可能为空。
-            return;
     }
     else{
-        tmpReadBuff = serial.readAll(); //tmpReadBuff一定不为空。
-        RxBuff.append(tmpReadBuff);
+        if(serial.isOpen()){
+            tmpReadBuff = serial.readAll(); //tmpReadBuff一定不为空。
+            RxBuff.append(tmpReadBuff);
+        }else
+            return;
     }
+    if(tmpReadBuff.isEmpty())//tmpReadBuff可能为空。
+        return;
 
     //读取数据并衔接到上次未处理完的数据后面
     tmpReadBuff = unshowedRxBuff + tmpReadBuff;
@@ -560,35 +563,54 @@ void MainWindow::readSerialPort()
 //        qDebug()<<unshowedRxBuff<<tmpReadBuff;
     }
 
-    //打印数据
+//    QElapsedTimer timer;
+//    long long tt,tt1;
+
     if(!tmpReadBuff.isEmpty()){
-//        timer.start();
         //移动光标
         ui->textBrowser->moveCursor(QTextCursor::End);
-//        tt = timer.elapsed();
-//        timer.start();
-        //追加数据
+
+        //时间戳选项
         if(ui->timeStampCheckBox->isChecked()){
-            //需要添加时间戳
             QString timeString;
             if(!autoSubcontractTimer.isActive()){
                 timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
                 timeString = "["+timeString+"]Rx<- ";
             }
-            ui->textBrowser->insertPlainText(timeString + QString::fromLocal8Bit(tmpReadBuff));
+//            ui->textBrowser->insertPlainText(timeString + QString::fromLocal8Bit(tmpReadBuff));
+            BrowserBuff.append(timeString + QString::fromLocal8Bit(tmpReadBuff));
             //自动分包定时器
             autoSubcontractTimer.start(10);
             autoSubcontractTimer.setSingleShot(true);
         }else{
-            //不需要时间戳
-            ui->textBrowser->insertPlainText(QString::fromLocal8Bit(tmpReadBuff));
+//            ui->textBrowser->insertPlainText(QString::fromLocal8Bit(tmpReadBuff));
+//            timer.start();
+            BrowserBuff.append(QString::fromLocal8Bit(tmpReadBuff));
+//            tt = timer.elapsed();
         }
+
+        //打印数据
+//        timer.start();
+        printToTextBrowser();
 //        tt1 = timer.elapsed();
+//        qDebug()<<tt<<tt1;
+
         //更新收发统计
         statusStatisticLabel->setText(serial.getTxRxString());
     }
+}
 
-//    qDebug()<<"移动"<<tt<<"追加"<<tt1;
+void MainWindow::printToTextBrowser()
+{
+    //打印数据
+    if(BrowserBuff.size()<PAGING_SIZE){
+        ui->textBrowser->setText(BrowserBuff);
+        BrowserBuffIndex = BrowserBuff.size();
+    }else{
+        ui->textBrowser->setText(BrowserBuff.mid(BrowserBuff.size()-PAGING_SIZE));
+        BrowserBuffIndex = PAGING_SIZE;
+    }
+    ui->textBrowser->moveCursor(QTextCursor::End);
 }
 
 void MainWindow::serialBytesWritten(qint64 bytes)
@@ -600,11 +622,18 @@ void MainWindow::serialBytesWritten(qint64 bytes)
         ui->statusBar->showMessage("发送进度："+QString::number(static_cast<int>(100.0*(SendFileBuffIndex+1.0)/SendFileBuff.size()))+"%",1000);
         serial.write(SendFileBuff.at(SendFileBuffIndex++));
         if(SendFileBuffIndex == SendFileBuff.size()){
-//            ui->statusBar->showMessage("100%",1000);
             SendFileBuffIndex = 0;
             SendFileBuff.clear();
         }
     }
+
+    //更新收发统计
+    statusStatisticLabel->setText(serial.getTxRxString());
+}
+
+void MainWindow::cycleReadTimerSlot()
+{
+    readSerialPort();
 }
 
 /*
@@ -661,7 +690,10 @@ void MainWindow::on_sendButton_clicked()
                 if(ui->hexDisplay->isChecked())
                     tmp = toHexDisplay(tmp).toLocal8Bit();
                 ui->textBrowser->moveCursor(QTextCursor::End);
-                ui->textBrowser->insertPlainText("\r\n" + timeString + tmp + "\r\n");
+//                ui->textBrowser->insertPlainText("\r\n" + timeString + tmp + "\r\n");
+                BrowserBuff.append("\r\n" + timeString + tmp + "\r\n");
+                //打印数据
+                printToTextBrowser();
             }
         }else {
             //以hex发送数据
@@ -703,6 +735,9 @@ void MainWindow::on_clearWindows_clicked()
 
     //发送区
 //    ui->textEdit->clear();
+
+    BrowserBuff.clear();
+    BrowserBuffIndex = 0;
 
     //对象缓存
     unshowedRxBuff.clear();
@@ -911,7 +946,9 @@ void MainWindow::on_actionSaveOriginData_triggered()
         file.write(RxBuff);//不用DataStream写入非文本文件，它会额外添加4个字节作为文件头
         file.flush();
         file.close();
-        ui->textBrowser->append("Total saved "+QString::number(RxBuff.size())+" Bytes in "+savePath);
+//        ui->textBrowser->append("Total saved "+QString::number(RxBuff.size())+" Bytes in "+savePath);
+        BrowserBuff.append("\nTotal saved "+QString::number(RxBuff.size())+" Bytes in "+savePath + "\n");
+        printToTextBrowser();
     }
 }
 
@@ -953,6 +990,9 @@ void MainWindow::on_actionReadOriginData_triggered()
         ui->textBrowser->append("File size: "+QString::number(file.size())+" Byte");
         ui->textBrowser->append("Read size: "+QString::number(RxBuff.size())+" Byte");
         ui->textBrowser->append("Read containt:\n");
+        BrowserBuff.clear();
+        BrowserBuff.append(ui->textBrowser->document()->toPlainText());
+
         //readSerialPort不能处理空数据
         if(RxBuff.isEmpty()){
             return;
@@ -1063,7 +1103,8 @@ void MainWindow::on_actionSaveShowedData_triggered()
     QTextStream stream(&file);
     //删除旧数据形式写文件
     if(file.open(QFile::WriteOnly|QFile::Text|QFile::Truncate)){
-        stream<<ui->textBrowser->toPlainText();
+//        stream<<ui->textBrowser->toPlainText();
+        stream<<BrowserBuff;
         file.close();
     }
 }
@@ -1219,6 +1260,35 @@ void MainWindow::on_actiondebug_triggered(bool checked)
         disconnect(&debugTimer, SIGNAL(timeout()), this, SLOT(debugTimerSlot()));
     }
 }
+
+void MainWindow::verticalScrollBarActionTriggered(int action)
+{
+    QScrollBar* bar = ui->textBrowser->verticalScrollBar();
+    if(action == QAbstractSlider::SliderSingleStepAdd ||
+       action == QAbstractSlider::SliderSingleStepSub||
+       action == QAbstractSlider::SliderPageStepAdd||
+       action == QAbstractSlider::SliderPageStepSub||
+       action == QAbstractSlider::SliderMove){
+        int value = bar->value();
+        int oldMax = bar->maximum();
+        int newValue;
+        if(value == 0 && BrowserBuffIndex != BrowserBuff.size()){
+            if(BrowserBuffIndex+PAGING_SIZE < BrowserBuff.size()){
+                BrowserBuffIndex = BrowserBuffIndex +PAGING_SIZE;
+            }
+            else{
+                BrowserBuffIndex = BrowserBuff.size();
+            }
+            ui->textBrowser->setText(BrowserBuff.mid(BrowserBuff.size() - BrowserBuffIndex));
+            newValue = bar->maximum()-oldMax;
+            bar->setValue(newValue);
+//            qDebug()<<newValue<<BrowserBuff.size()<<BrowserBuffIndex<<BrowserBuff.size() - BrowserBuffIndex;
+        }
+    }
+//    qDebug()<<bar->value();
+//    qDebug()<<action;
+}
+
 
 /*plotter交互*/
 
@@ -1538,8 +1608,11 @@ void MainWindow::on_actionManual_triggered()
         if(file.open(QFile::ReadOnly)){
             html = file.readAll();
             file.close();
+
             ui->textBrowser->clear();
             ui->textBrowser->append(html);
+            BrowserBuff.clear();
+            BrowserBuff.append(html);
         }else{
             QMessageBox::information(this, "提示", "帮助文件被占用。");
         }
@@ -1887,6 +1960,8 @@ void MainWindow::on_actionUsageStatistic_triggered()
     ui->textBrowser->append("如您不同意本声明，可通过系统防火墙阻断本软件的网络请求或者您应该停止使用本软件。");
     ui->textBrowser->append("<h2>感谢您的使用</h2>");
     ui->textBrowser->append("<p>");
+    BrowserBuff.clear();
+    BrowserBuff.append(ui->textBrowser->document()->toHtml());
 }
 
 void MainWindow::on_actionSendFile_triggered()
@@ -1920,10 +1995,11 @@ void MainWindow::on_actionSendFile_triggered()
         TxBuff = file.readAll();
         file.close();
 
-        #define PACKSIZE 1024
+        #define PACKSIZE 512
         QElapsedTimer timer;
         long long time;
         SendFileBuffIndex = 0;
+        SendFileBuff.clear();
         timer.start();
         while(TxBuff.size()>PACKSIZE){
             SendFileBuff.append(TxBuff.mid(0,PACKSIZE));
@@ -1943,6 +2019,8 @@ void MainWindow::on_actionSendFile_triggered()
             ui->textBrowser->append("One pack size: "+QString::number(PACKSIZE)+" Byte");
             ui->textBrowser->append("Total packs: "+QString::number(SendFileBuff.size())+" packs");
             ui->textBrowser->append("Elapsed time: "+QString::number(time)+" ms\n");
+            BrowserBuff.clear();
+            BrowserBuff.append(ui->textBrowser->document()->toPlainText());
             serial.write(SendFileBuff.at(SendFileBuffIndex++));//后续缓冲的发送在串口发送完成的槽里
         }
         else
