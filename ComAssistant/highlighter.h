@@ -80,7 +80,9 @@ private:
 
     QTextCharFormat keywordFormat;
     QTextCharFormat separateFormat;
-
+    QTextCharFormat quotationFormat;
+    QTextCharFormat singleLineCommentFormat;
+    QTextCharFormat functionFormat;
 };
 //! [0]
 

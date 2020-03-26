@@ -602,6 +602,7 @@ void MainWindow::readSerialPort()
 
 void MainWindow::printToTextBrowser()
 {
+    //估计当前窗口可显示多少字符
     int HH = static_cast<int>(ui->textBrowser->height()/19.2);
     int WW = static_cast<int>(ui->textBrowser->width()/9.38);
     PAGING_SIZE = static_cast<int>(HH*WW*1.25);

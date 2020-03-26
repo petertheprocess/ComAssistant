@@ -92,11 +92,10 @@ void DataProtocol::extractPacks(const QByteArray &inputArray, QByteArray &restAr
         int index = 0;
         //匹配{}间的数据。
         //{:之间不允许再出现{:
-        //:后，数据与逗号作为一个组，这个组至少出现一次
-        //其中，组中的逗号出现0次或1次
+        //:后，数据与逗号作为一个组，这个组至少出现一次。
+        //其中，组中的逗号出现0次或1次，组开头允许有空白字符\\s
         //组中的数据：符号出现或者不出现，整数部分出现至少1次，小数点与小数作为整体，可不出现或者1次
-//        reg.setPattern("\\{[{:]*:(([+-]?\\d+(\\.\\d+)?)?,?)+\\}");
-        reg.setPattern("\\{[^{:]*:(([+-]?\\d+(\\.\\d+)?)?,?)+\\}");
+        reg.setPattern("\\{[^{:]*:(\\s*([+-]?\\d+(\\.\\d+)?)?,?)+\\}");
         reg.setPatternOptions(QRegularExpression::InvertedGreedinessOption);//设置为非贪婪模式匹配
         do {
                 QByteArray tmp;
@@ -114,7 +113,7 @@ void DataProtocol::extractPacks(const QByteArray &inputArray, QByteArray &restAr
                     }
                     if(!tmp.isEmpty())
                         packsBuff << tmp;
-                    qDebug()<<"match"<<match.captured(0);
+//                    qDebug()<<"match"<<match.captured(0);
                 }
                 else{
     //                qDebug()<<"no match";
