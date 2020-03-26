@@ -118,9 +118,11 @@ void MainWindow::readConfig()
 
     //回车风格
     if(Config::getEnterStyle() == EnterStyle_e::WinStyle){
+        enter = "\r\n";
         ui->action_winLikeEnter->setChecked(true);
         ui->action_unixLikeEnter->setChecked(false);
     }else if (Config::getEnterStyle() == EnterStyle_e::UnixStyle) {
+        enter = "\n";
         ui->action_winLikeEnter->setChecked(false);
         ui->action_unixLikeEnter->setChecked(true);
     }else {
@@ -334,9 +336,9 @@ void MainWindow::debugTimerSlot()
     num3 = qCos(count)*1.5-qSin(count/0.4364)*0.5;
 
     if(ui->actionAscii->isChecked()){
-        tmp = "{"+QString::number(static_cast<int>(count*10))+":" + QString::number(num1,'f') + "," + QString::number(num2,'f') + "," + QString::number(num3,'f') + "}\r\n";
+        tmp = "{"+QString::number(static_cast<int>(count*10))+":" + QString::number(num1,'f') + "," + QString::number(num2,'f') + "," + QString::number(num3,'f') + "}" + enter;
 //        tmp = QDateTime::currentDateTime().toString("{yyyyMMddhhmmsszzz}");
-//        tmp = "{:" + QString::number(num1) + "," + QString::number(num2) + "," + QString::number(num3) + "}\r\n";//这样可以生成一些错误数据
+//        tmp = "{:" + QString::number(num1) + "," + QString::number(num2) + "," + QString::number(num3) + "}" + enter;//这样可以生成一些错误数据
     }
 
     if(serial.isOpen()){
@@ -663,7 +665,6 @@ void MainWindow::autoSubcontractTimerSlot()
 void MainWindow::on_sendButton_clicked()
 {
     static QByteArray tmp;//用static是担心write是传递指针，发送大量数据可能会由于未发送完成而被销毁？
-    QString enter;
 
     if(!serial.isOpen()){
         QMessageBox::information(this,"提示","串口未打开");
@@ -680,14 +681,12 @@ void MainWindow::on_sendButton_clicked()
         while (tmp.indexOf('\t') != -1) {
             tmp = tmp.replace('\t', "\r\n");
         }
-        enter = "\r\n";
     }
     else{
         //unix风格
         while (tmp.indexOf('\r') != -1) {
             tmp = tmp.remove(tmp.indexOf('\r'),1);
         }
-        enter = "\n";
     }
 
     //十六进制检查
@@ -839,7 +838,7 @@ void MainWindow::on_hexSend_stateChanged(int arg1)
 */
 void MainWindow::on_hexDisplay_clicked(bool checked)
 {
-    checked = ~checked;
+    checked = !checked;
     printToTextBrowser();
 }
 
@@ -849,6 +848,7 @@ void MainWindow::on_hexDisplay_clicked(bool checked)
 */
 void MainWindow::on_action_winLikeEnter_triggered(bool checked)
 {
+    enter = "\r\n";
     if(checked){
         ui->action_unixLikeEnter->setChecked(false);
     }else {
@@ -862,6 +862,7 @@ void MainWindow::on_action_winLikeEnter_triggered(bool checked)
 */
 void MainWindow::on_action_unixLikeEnter_triggered(bool checked)
 {
+    enter = "\n";
     if(checked){
         ui->action_winLikeEnter->setChecked(false);
     }else {
@@ -916,9 +917,6 @@ void MainWindow::on_actionSaveOriginData_triggered()
             QMessageBox::information(this,"尚未支持的文件格式","请选择dat文件。");
         return;
     }
-    //记忆路径
-    lastFileDialogPath = savePath;
-    lastFileDialogPath = lastFileDialogPath.mid(0, lastFileDialogPath.lastIndexOf('/')+1);
 
     //保存数据
     QFile file(savePath);
@@ -928,16 +926,15 @@ void MainWindow::on_actionSaveOriginData_triggered()
         file.flush();
         file.close();
 
-        QString enter;
-        if(ui->action_winLikeEnter->isChecked())
-            enter = "\r\n";
-        else
-            enter = "\n";
         QString str = enter + "Total saved "+QString::number(RxBuff.size())+" Bytes in "+savePath + enter;
         BrowserBuff.append(str);
         hexBrowserBuff.append(toHexDisplay(str.toLocal8Bit()));
         printToTextBrowser();
     }
+
+    //记忆路径
+    lastFileDialogPath = savePath;
+    lastFileDialogPath = lastFileDialogPath.mid(0, lastFileDialogPath.lastIndexOf('/')+1);
 }
 
 /*
@@ -1083,9 +1080,11 @@ void MainWindow::on_actionSaveShowedData_triggered()
             QMessageBox::information(this,"尚未支持的文件格式","请选择txt文本文件。");
         return;
     }
+
     //记忆路径
     lastFileDialogPath = savePath;
     lastFileDialogPath = lastFileDialogPath.mid(0, lastFileDialogPath.lastIndexOf('/')+1);
+
     //保存数据
     QFile file(savePath);
     QTextStream stream(&file);
@@ -1097,12 +1096,8 @@ void MainWindow::on_actionSaveShowedData_triggered()
             stream<<BrowserBuff;
         }
         file.close();
-        QString enter;
-        if(ui->action_winLikeEnter->isChecked())
-            enter = "\r\n";
-        else
-            enter = "\n";
-        QString str = enter + "Total saved "+QString::number(stream.string()->size())+" Bytes in "+savePath + enter;
+
+        QString str = enter + "Total saved "+QString::number(file.size())+" Bytes in "+savePath + enter;
         BrowserBuff.append(str);
         hexBrowserBuff.append(toHexDisplay(str.toLocal8Bit()));
         printToTextBrowser();
@@ -1423,19 +1418,31 @@ void MainWindow::mouseWheel()
 
 void MainWindow::removeSelectedGraph()
 {
-  if (ui->customPlot->selectedGraphs().size() > 0)
-  {
-    ui->customPlot->removeGraph(ui->customPlot->selectedGraphs().first());
-    ui->customPlot->replot();
-  }
+    QMessageBox::Button res;
+    res = QMessageBox::warning(this,"警告","确定要移除所选曲线吗？",QMessageBox::Ok|QMessageBox::No);
+    if(res == QMessageBox::No)
+        return;
+
+    if (ui->customPlot->selectedGraphs().size() > 0)
+    {
+        ui->customPlot->removeGraph(ui->customPlot->selectedGraphs().first());
+        ui->customPlot->replot();
+    }
 }
 
 void MainWindow::removeAllGraphs()
 {
-    //使用给对象赋值空数据的方法清空，而不是删除对象。
-    plotControl.clearPlotter(ui->customPlot,-1);
-//  ui->customPlot->clearGraphs();
-//  ui->customPlot->replot();
+    QMessageBox::Button res;
+    res = QMessageBox::warning(this,"警告","确定要移除所有曲线吗？",QMessageBox::Ok|QMessageBox::No);
+    if(res == QMessageBox::No)
+        return;
+
+    protocol->clearBuff();
+    plotControl.clearPlotter(ui->customPlot, -1);
+    while(ui->customPlot->graphCount()>1){
+        ui->customPlot->removeGraph(ui->customPlot->graphCount()-1);
+    }
+    ui->customPlot->replot();
 }
 
 void MainWindow::hideSelectedGraph()
@@ -1469,22 +1476,25 @@ void MainWindow::contextMenuRequest(QPoint pos)
 
   if (ui->customPlot->legend->selectTest(pos, false) >= 0) // context menu on legend requested
   {
-    menu->addAction("Move to top left", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignTop|Qt::AlignLeft));
-    menu->addAction("Move to top center", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignTop|Qt::AlignHCenter));
-    menu->addAction("Move to top right", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignTop|Qt::AlignRight));
-    menu->addAction("Move to bottom right", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignBottom|Qt::AlignRight));
-    menu->addAction("Move to bottom left", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignBottom|Qt::AlignLeft));
+    menu->addAction("移动到左上角", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignTop|Qt::AlignLeft));
+    menu->addAction("移动到右上角", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignTop|Qt::AlignRight));
+    menu->addAction("移动到右下角", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignBottom|Qt::AlignRight));
+    menu->addAction("移动到左下角", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignBottom|Qt::AlignLeft));
   } else  // general context menu on graphs requested
   {
     if (ui->customPlot->graphCount() > 0)
-      menu->addAction("Remove all graphs", this, SLOT(removeAllGraphs()));
+      menu->addAction("移除所有曲线", this, SLOT(removeAllGraphs()));
   }
+  //选择了曲线
   if (ui->customPlot->selectedGraphs().size() > 0){
-    menu->addAction("Remove selected graph", this, SLOT(removeSelectedGraph()));
+    menu->addSeparator();
+    menu->addAction("移除所选曲线", this, SLOT(removeSelectedGraph()));
+    menu->addSeparator();
+    //所选曲线是否可见
     if(ui->customPlot->selectedGraphs().first()->visible()){
-        menu->addAction("Hide selected graph", this, SLOT(hideSelectedGraph()));
+        menu->addAction("隐藏所选曲线", this, SLOT(hideSelectedGraph()));
     }else{
-        menu->addAction("Show selected graph", this, SLOT(hideSelectedGraph()));
+        menu->addAction("显示所选曲线", this, SLOT(hideSelectedGraph()));
     }
   }
 
@@ -1713,11 +1723,6 @@ void MainWindow::on_actionSavePlotData_triggered()
     }
 
     if(ok){
-        QString enter;
-        if(ui->action_winLikeEnter->isChecked())
-            enter = "\r\n";
-        else
-            enter = "\n";
         QString str = enter + "Save successful in "+savePath + "!" + enter;
         BrowserBuff.append(str);
         hexBrowserBuff.append(toHexDisplay(str.toLocal8Bit()));
@@ -1768,11 +1773,6 @@ void MainWindow::on_actionSavePlotAsPicture_triggered()
     }
 
     if(ok){
-        QString enter;
-        if(ui->action_winLikeEnter->isChecked())
-            enter = "\r\n";
-        else
-            enter = "\n";
         QString str = enter + "Save successful in "+savePath + "!" + enter;
         BrowserBuff.append(str);
         hexBrowserBuff.append(toHexDisplay(str.toLocal8Bit()));
