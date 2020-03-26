@@ -177,11 +177,16 @@ private:
     void readConfig();
     Ui::MainWindow *ui;
     mySerialPort serial;
+
     QLabel *statusSpeedLabel, *statusStatisticLabel, *statusAdLabel;
     bool paraseFromRxBuff = false;
+
     QByteArray RxBuff, TxBuff; //原始数据的收发缓冲
+    QByteArray hexBrowserBuff; //十六进制格式的浏览器缓冲
+    int hexBrowserBuffIndex = 0;
     QByteArray BrowserBuff; //浏览器缓冲
-    int BrowserBuffIndex = 0;
+    int BrowserBuffIndex = 0; //显示指示
+
     QByteArrayList SendFileBuff;    //发送文件分包缓冲
     int SendFileBuffIndex = 0; //
     QByteArray unshowedRxBuff;    //未上屏的接收缓冲

@@ -18,7 +18,7 @@ extern QString toHexDisplay(bool needConvert, QByteArray const &data);
 extern QString toStringDisplay(QString &hexString, bool &isOK);
 
 //hex与bytearray互转
-extern QString ByteArrayToHexString(QByteArray data);
+extern QString ByteArrayToHexString(const QByteArray &data);
 extern QByteArray HexStringToByteArray(QString HexString, bool &isOK);
 
 #endif // BASECONVERSION_H

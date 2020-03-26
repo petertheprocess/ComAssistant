@@ -114,7 +114,7 @@ bool hexFormatCheck(char &data)
     }
 }
 
-QString ByteArrayToHexString(QByteArray data)
+QString ByteArrayToHexString(const QByteArray &data)
 {
     QString ret(data.toHex().toUpper());//转为16进制大写
     int originLen = ret.length()/2;

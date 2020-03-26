@@ -136,10 +136,6 @@ void MainWindow::readConfig()
         on_actionGBK_triggered(true);
     }
 
-    //文本发送区
-    ui->textEdit->setText(Config::getTextSendArea());
-    ui->textEdit->moveCursor(QTextCursor::End);
-
     //多字符串
     ui->actionMultiString->setChecked(Config::getMultiStringState());
     on_actionMultiString_triggered(Config::getMultiStringState());
@@ -166,6 +162,9 @@ void MainWindow::readConfig()
     ui->hexDisplay->setChecked(Config::getHexShowState());
     //波特率
     ui->baudrateList->setCurrentText(QString::number(Config::getBaudrate()));
+    //文本发送区，不能放在hex发送前面
+    ui->textEdit->setText(Config::getTextSendArea());
+    ui->textEdit->moveCursor(QTextCursor::End);
 
     //绘图器
     ui->actionPlotterSwitch->setChecked(Config::getPlotterState());
@@ -513,11 +512,8 @@ void MainWindow::readSerialPort()
             return;
     }
 
-    //是否进制转换，不转换则考虑中文处理
-    if(ui->hexDisplay->isChecked()){
-        tmpReadBuff = toHexDisplay(tmpReadBuff).toLatin1();
-//        qDebug()<<"after"<<toHexDisplay(tmpReadBuff);
-    }else if(ui->actionUTF8->isChecked()){
+    //考虑中文处理
+    if(ui->actionUTF8->isChecked()){
         //UTF8中文字符处理
         //最后一个字符不是ascii字符才处理，否则直接上屏       
         if(tmpReadBuff.back() & 0x80){
@@ -563,41 +559,32 @@ void MainWindow::readSerialPort()
 //        qDebug()<<unshowedRxBuff<<tmpReadBuff;
     }
 
-//    QElapsedTimer timer;
-//    long long tt,tt1;
-
-    if(!tmpReadBuff.isEmpty()){
-        //移动光标
-        ui->textBrowser->moveCursor(QTextCursor::End);
-
-        //时间戳选项
-        if(ui->timeStampCheckBox->isChecked()){
-            QString timeString;
-            if(!autoSubcontractTimer.isActive()){
-                timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
-                timeString = "["+timeString+"]Rx<- ";
-            }
-//            ui->textBrowser->insertPlainText(timeString + QString::fromLocal8Bit(tmpReadBuff));
-            BrowserBuff.append(timeString + QString::fromLocal8Bit(tmpReadBuff));
-            //自动分包定时器
-            autoSubcontractTimer.start(10);
-            autoSubcontractTimer.setSingleShot(true);
-        }else{
-//            ui->textBrowser->insertPlainText(QString::fromLocal8Bit(tmpReadBuff));
-//            timer.start();
-            BrowserBuff.append(QString::fromLocal8Bit(tmpReadBuff));
-//            tt = timer.elapsed();
+    //时间戳选项
+    if(ui->timeStampCheckBox->isChecked()){
+        QString timeString;
+        if(!autoSubcontractTimer.isActive()){
+            timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
+            timeString = "["+timeString+"]Rx<- ";
         }
-
-        //打印数据
-//        timer.start();
-        printToTextBrowser();
-//        tt1 = timer.elapsed();
-//        qDebug()<<"printToTextBrowser"<<tt1;
-
-        //更新收发统计
-        statusStatisticLabel->setText(serial.getTxRxString());
+//            ui->textBrowser->insertPlainText(timeString + QString::fromLocal8Bit(tmpReadBuff));
+        BrowserBuff.append(timeString + QString::fromLocal8Bit(tmpReadBuff));
+        //hex解析
+        hexBrowserBuff.append(timeString + toHexDisplay(tmpReadBuff).toLatin1());
+        //自动分包定时器
+        autoSubcontractTimer.start(10);
+        autoSubcontractTimer.setSingleShot(true);
+    }else{
+//            ui->textBrowser->insertPlainText(QString::fromLocal8Bit(tmpReadBuff));
+        BrowserBuff.append(QString::fromLocal8Bit(tmpReadBuff));
+        //hex解析
+        hexBrowserBuff.append(toHexDisplay(tmpReadBuff).toLatin1());
     }
+
+    //打印数据
+    printToTextBrowser();
+
+    //更新收发统计
+    statusStatisticLabel->setText(serial.getTxRxString());
 }
 
 void MainWindow::printToTextBrowser()
@@ -605,19 +592,30 @@ void MainWindow::printToTextBrowser()
     //估计当前窗口可显示多少字符
     int HH = static_cast<int>(ui->textBrowser->height()/19.2);
     int WW = static_cast<int>(ui->textBrowser->width()/9.38);
-    PAGING_SIZE = static_cast<int>(HH*WW*1.25);
+    PAGING_SIZE = static_cast<int>(HH*WW*1.25); //1.25冗余
     if(PAGING_SIZE > PAGEING_SIZE_MAX)
         PAGING_SIZE = PAGEING_SIZE_MAX;
 //    qDebug()<<HH<<WW<<HH*WW<<PAGING_SIZE;
 
     //打印数据
-    if(BrowserBuff.size()<PAGING_SIZE){
-        ui->textBrowser->setText(BrowserBuff);
-        BrowserBuffIndex = BrowserBuff.size();
+    if(ui->hexDisplay->isChecked()){
+        if(hexBrowserBuff.size()<PAGING_SIZE){
+            ui->textBrowser->setText(hexBrowserBuff);
+            hexBrowserBuffIndex = hexBrowserBuff.size();
+        }else{
+            ui->textBrowser->setText(hexBrowserBuff.mid(hexBrowserBuff.size()-PAGING_SIZE));
+            hexBrowserBuffIndex = PAGING_SIZE;
+        }
     }else{
-        ui->textBrowser->setText(BrowserBuff.mid(BrowserBuff.size()-PAGING_SIZE));
-        BrowserBuffIndex = PAGING_SIZE;
+        if(BrowserBuff.size()<PAGING_SIZE){
+            ui->textBrowser->setText(BrowserBuff);
+            BrowserBuffIndex = BrowserBuff.size();
+        }else{
+            ui->textBrowser->setText(BrowserBuff.mid(BrowserBuff.size()-PAGING_SIZE));
+            BrowserBuffIndex = PAGING_SIZE;
+        }
     }
+
     ui->textBrowser->moveCursor(QTextCursor::End);
 }
 
@@ -665,69 +663,75 @@ void MainWindow::autoSubcontractTimerSlot()
 void MainWindow::on_sendButton_clicked()
 {
     static QByteArray tmp;//用static是担心write是传递指针，发送大量数据可能会由于未发送完成而被销毁？
-    if(serial.isOpen()){
-        //十六进制检查
-        if(!ui->hexSend->isChecked()){
-            tmp = ui->textEdit->toPlainText().toLocal8Bit();
-            //回车风格转换，win风格补上'\r'，默认unix风格
-            if(ui->action_winLikeEnter->isChecked()){
-                //win风格
-                while (tmp.indexOf('\n') != -1) {
-                    tmp = tmp.replace('\n', '\t');
-                }
-                while (tmp.indexOf('\t') != -1) {
-                    tmp = tmp.replace('\t', "\r\n");
-                }
-            }
-            else{
-                //unix风格
-                while (tmp.indexOf('\r') != -1) {
-                    tmp = tmp.remove(tmp.indexOf('\r'),1);
-                }
-            }
+    QString enter;
 
-            //utf8编码
-            serial.write(tmp);
-
-            //若添加了时间戳则把发送的数据也显示在接收区
-            if(ui->timeStampCheckBox->isChecked()){
-                QString timeString;
-                timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
-                timeString = "["+timeString+"]Tx-> ";
-                //如果hex发送则把显示在接收区的发送数据转为hex模式
-                if(ui->hexDisplay->isChecked())
-                    tmp = toHexDisplay(tmp).toLocal8Bit();
-                ui->textBrowser->moveCursor(QTextCursor::End);
-//                ui->textBrowser->insertPlainText("\r\n" + timeString + tmp + "\r\n");
-                BrowserBuff.append("\r\n" + timeString + tmp + "\r\n");
-                //打印数据
-                printToTextBrowser();
-            }
-        }else {
-            //以hex发送数据
-            //HexStringToByteArray函数必须传入格式化后的字符串，如"02 31"
-            tmp.clear();
-            bool ok;
-            tmp = HexStringToByteArray(ui->textEdit->toPlainText(),ok);
-            if(ok){
-                serial.write(tmp);
-            }
-        }
-        //给多字符串控件添加条目
-        if(ui->actionMultiString->isChecked()){
-            bool hasItem=false;
-            for(int i = 0; i < ui->multiString->count(); i++){
-                if(ui->multiString->item(i)->text()==ui->textEdit->toPlainText())
-                    hasItem = true;
-            }
-            if(!hasItem)
-                ui->multiString->addItem(ui->textEdit->toPlainText());
-        }
-        //更新收发统计
-        statusStatisticLabel->setText(serial.getTxRxString());
-    }else {
+    if(!serial.isOpen()){
         QMessageBox::information(this,"提示","串口未打开");
+        return;
     }
+
+    //回车风格转换，win风格补上'\r'，默认unix风格
+    tmp = ui->textEdit->toPlainText().toLocal8Bit();
+    if(ui->action_winLikeEnter->isChecked()){
+        //win风格
+        while (tmp.indexOf('\n') != -1) {
+            tmp = tmp.replace('\n', '\t');
+        }
+        while (tmp.indexOf('\t') != -1) {
+            tmp = tmp.replace('\t', "\r\n");
+        }
+        enter = "\r\n";
+    }
+    else{
+        //unix风格
+        while (tmp.indexOf('\r') != -1) {
+            tmp = tmp.remove(tmp.indexOf('\r'),1);
+        }
+        enter = "\n";
+    }
+
+    //十六进制检查
+    if(false == ui->hexSend->isChecked()){
+        //utf8编码
+        serial.write(tmp);
+    }else {
+        //以hex发送数据
+        //HexStringToByteArray函数必须传入格式化后的字符串，如"02 31"
+        bool ok;
+        QByteArray tmp2 = HexStringToByteArray(tmp,ok);
+        if(ok){
+            serial.write(tmp2);
+        }else{
+            QMessageBox::information(this,"提示","文本输入区数据转换失败");
+        }
+    }
+
+    //若添加了时间戳则把发送的数据也显示在接收区
+    if(ui->timeStampCheckBox->isChecked()){
+        QString timeString;
+        timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
+        timeString = "["+timeString+"]Tx-> ";
+        //如果hex发送则把显示在接收区的发送数据转为hex模式
+        hexBrowserBuff.append(enter + timeString + ui->textEdit->toPlainText() + enter);
+        BrowserBuff.append(enter + timeString + tmp + enter);
+
+        //打印数据
+        printToTextBrowser();
+    }
+
+    //给多字符串控件添加条目
+    if(ui->actionMultiString->isChecked()){
+        bool hasItem=false;
+        for(int i = 0; i < ui->multiString->count(); i++){
+            if(ui->multiString->item(i)->text()==ui->textEdit->toPlainText())
+                hasItem = true;
+        }
+        if(!hasItem)
+            ui->multiString->addItem(ui->textEdit->toPlainText());
+    }
+
+    //更新收发统计
+    statusStatisticLabel->setText(serial.getTxRxString());
 }
 
 void MainWindow::on_clearWindows_clicked()
@@ -740,9 +744,8 @@ void MainWindow::on_clearWindows_clicked()
     //接收区
     ui->textBrowser->clear();
     RxBuff.clear();
-
-    //发送区
-//    ui->textEdit->clear();
+    hexBrowserBuff.clear();
+    hexBrowserBuffIndex = 0;
 
     BrowserBuff.clear();
     BrowserBuffIndex = 0;
@@ -836,38 +839,8 @@ void MainWindow::on_hexSend_stateChanged(int arg1)
 */
 void MainWindow::on_hexDisplay_clicked(bool checked)
 {
-    QMessageBox::StandardButton res;
-    //如果启用时间戳则在hex转string时要求删除时间戳信息。
-    if(ui->timeStampCheckBox->isChecked() && checked == false){
-        res = QMessageBox::question(this, "询问", "该操作可能会删除时间戳信息");
-        if(QMessageBox::No == res){
-            ui->hexDisplay->setChecked(true);
-            return;
-        }
-    }
-    if(checked){
-        QString tmp = ui->textBrowser->toPlainText();
-        ui->textBrowser->clear();
-        ui->textBrowser->setText(toHexDisplay(tmp.toLocal8Bit()));
-    }else {
-        QString unconverted = ui->textBrowser->toPlainText();
-        bool ok;
-        QString converted;
-        //删除时间戳信息。
-        if(ui->timeStampCheckBox->isChecked()){
-            unconverted.replace(QRegExp("\\[.*\\]Tx->"), "");
-            unconverted.replace(QRegExp("\\[.*\\]Rx<-"), "");
-        }
-        //转换且转换成功才显示
-        converted = toStringDisplay(unconverted,ok);
-        ui->textBrowser->clear();
-        if(ok)
-            ui->textBrowser->setText(converted);
-        else {
-            ui->textBrowser->setText(unconverted);
-        }
-    }
-    ui->textBrowser->moveCursor(QTextCursor::End);
+    checked = ~checked;
+    printToTextBrowser();
 }
 
 /*
@@ -1111,8 +1084,11 @@ void MainWindow::on_actionSaveShowedData_triggered()
     QTextStream stream(&file);
     //删除旧数据形式写文件
     if(file.open(QFile::WriteOnly|QFile::Text|QFile::Truncate)){
-//        stream<<ui->textBrowser->toPlainText();
-        stream<<BrowserBuff;
+        if(ui->hexDisplay->isChecked()){
+            stream<<hexBrowserBuff;
+        }else{
+            stream<<BrowserBuff;
+        }
         file.close();
     }
 }
@@ -1280,17 +1256,37 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
         int value = bar->value();
         int oldMax = bar->maximum();
         int newValue;
-        if(value == 0 && BrowserBuffIndex != BrowserBuff.size()){
+        bool res;
+
+        if(ui->hexDisplay->isChecked()){
+            res = hexBrowserBuffIndex != hexBrowserBuff.size();
+        }else{
+            res = BrowserBuffIndex != BrowserBuff.size();
+        }
+        if(value == 0 && res){
+
             if(BrowserBuffIndex+PAGING_SIZE < BrowserBuff.size()){
                 BrowserBuffIndex = BrowserBuffIndex +PAGING_SIZE;
             }
             else{
                 BrowserBuffIndex = BrowserBuff.size();
             }
-            ui->textBrowser->setText(BrowserBuff.mid(BrowserBuff.size() - BrowserBuffIndex));
+            if(hexBrowserBuffIndex+PAGING_SIZE < hexBrowserBuff.size()){
+                hexBrowserBuffIndex = hexBrowserBuffIndex +PAGING_SIZE;
+            }
+            else{
+                hexBrowserBuffIndex = hexBrowserBuff.size();
+            }
+
+            if(ui->hexDisplay->isChecked()){
+                ui->textBrowser->setText(hexBrowserBuff.mid(hexBrowserBuff.size() - hexBrowserBuffIndex));
+            }else{
+                ui->textBrowser->setText(BrowserBuff.mid(BrowserBuff.size() - BrowserBuffIndex));
+            }
+
+            //保持bar位置不动
             newValue = bar->maximum()-oldMax;
             bar->setValue(newValue);
-//            qDebug()<<newValue<<BrowserBuff.size()<<BrowserBuffIndex<<BrowserBuff.size() - BrowserBuffIndex;
         }
     }
 //    qDebug()<<bar->value();
@@ -1621,6 +1617,8 @@ void MainWindow::on_actionManual_triggered()
             ui->textBrowser->append(html);
             BrowserBuff.clear();
             BrowserBuff.append(html);
+            hexBrowserBuff.clear();
+            hexBrowserBuff.append(toHexDisplay(html.toLocal8Bit()));
         }else{
             QMessageBox::information(this, "提示", "帮助文件被占用。");
         }
@@ -1968,8 +1966,11 @@ void MainWindow::on_actionUsageStatistic_triggered()
     ui->textBrowser->append("如您不同意本声明，可通过系统防火墙阻断本软件的网络请求或者您应该停止使用本软件。");
     ui->textBrowser->append("\n<h2>感谢您的使用</h2>");
     ui->textBrowser->append("<p>");
+    QString str = ui->textBrowser->document()->toPlainText();
     BrowserBuff.clear();
-    BrowserBuff.append(ui->textBrowser->document()->toPlainText());
+    BrowserBuff.append(str);
+    hexBrowserBuff.clear();
+    hexBrowserBuff.append(toHexDisplay(str.toLocal8Bit()));
 }
 
 void MainWindow::on_actionSendFile_triggered()
@@ -2027,8 +2028,11 @@ void MainWindow::on_actionSendFile_triggered()
             ui->textBrowser->append("One pack size: "+QString::number(PACKSIZE)+" Byte");
             ui->textBrowser->append("Total packs: "+QString::number(SendFileBuff.size())+" packs");
             ui->textBrowser->append("Elapsed time: "+QString::number(time)+" ms\n");
+            QString str = ui->textBrowser->document()->toPlainText();
             BrowserBuff.clear();
-            BrowserBuff.append(ui->textBrowser->document()->toPlainText());
+            BrowserBuff.append(str);
+            hexBrowserBuff.clear();
+            hexBrowserBuff.append(toHexDisplay(str.toLocal8Bit()));
             serial.write(SendFileBuff.at(SendFileBuffIndex++));//后续缓冲的发送在串口发送完成的槽里
         }
         else

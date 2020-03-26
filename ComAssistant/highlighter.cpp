@@ -105,10 +105,29 @@ Highlighter::Highlighter(QTextDocument *parent)
         highlightingRules.append(rule);
     }
 
+    //hex数字匹配
+    keywordPatterns.clear();
+    keywordPatterns << "[0-9a-fA-F]{2}";
+    keywordFormat.setFontWeight(QFont::Normal);
+    keywordFormat.setForeground(Qt::darkMagenta);
+    foreach (const QString &pattern, keywordPatterns) {
+        rule.pattern = QRegularExpression(pattern);
+        rule.format = keywordFormat;
+        highlightingRules.append(rule);
+    }
+
     //时间戳高亮，放在后面以便覆盖重复的匹配字符
     keywordPatterns.clear();
     keywordPatterns << "\\[\\d{2}:\\d{2}:\\d{2}\\.\\d{3}\\]Rx<-";
     keywordFormat.setForeground(Qt::darkGreen);
+    foreach (const QString &pattern, keywordPatterns) {
+        rule.pattern = QRegularExpression(pattern);
+        rule.format = keywordFormat;
+        highlightingRules.append(rule);
+    }
+    keywordPatterns.clear();
+    keywordPatterns << "\\[\\d{2}:\\d{2}:\\d{2}\\.\\d{3}\\]Tx->";
+    keywordFormat.setForeground(Qt::green);
     foreach (const QString &pattern, keywordPatterns) {
         rule.pattern = QRegularExpression(pattern);
         rule.format = keywordFormat;
