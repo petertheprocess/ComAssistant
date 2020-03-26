@@ -78,26 +78,6 @@ Highlighter::Highlighter(QTextDocument *parent)
         highlightingRules.append(rule);
     }
 
-    //数字匹配
-    keywordPatterns.clear();
-    keywordPatterns << "[\\+-]?\\d+\\.?\\d*";
-    keywordFormat.setForeground(Qt::darkMagenta);
-    foreach (const QString &pattern, keywordPatterns) {
-        rule.pattern = QRegularExpression(pattern);
-        rule.format = keywordFormat;
-        highlightingRules.append(rule);
-    }
-
-    //时间戳高亮，放在后面以便覆盖重复的匹配字符
-    keywordPatterns.clear();
-    keywordPatterns << "\\[\\d{2}:\\d{2}:\\d{2}\\.\\d{3}\\][TR]x[-<>]{2}";
-    keywordFormat.setForeground(Qt::darkGreen);
-    foreach (const QString &pattern, keywordPatterns) {
-        rule.pattern = QRegularExpression(pattern);
-        rule.format = keywordFormat;
-        highlightingRules.append(rule);
-    }
-
     //引用字符串高亮
     quotationFormat.setForeground(Qt::darkYellow);
     rule.pattern = QRegularExpression(QStringLiteral("\".*\""));
@@ -114,29 +94,22 @@ Highlighter::Highlighter(QTextDocument *parent)
     rule.format = singleLineCommentFormat;
     highlightingRules.append(rule);
 
-    //函数高亮
-    functionFormat.setFontItalic(true);
-    functionFormat.setForeground(Qt::blue);
-    rule.pattern = QRegularExpression(QStringLiteral("\\b[A-Za-z0-9_]+(?=\\()"));
-    rule.format = functionFormat;
-    highlightingRules.append(rule);
+    //数字匹配
+    keywordPatterns.clear();
+    keywordPatterns << "[\\+-]?\\d+\\.?\\d*";
+    keywordFormat.setFontWeight(QFont::Normal);
+    keywordFormat.setForeground(Qt::darkMagenta);
+    foreach (const QString &pattern, keywordPatterns) {
+        rule.pattern = QRegularExpression(pattern);
+        rule.format = keywordFormat;
+        highlightingRules.append(rule);
+    }
 
-    //C关键字高亮
-    keywordFormat.setForeground(Qt::darkBlue);
-    keywordFormat.setFontWeight(QFont::Bold);
-    keywordPatterns.append({
-        QStringLiteral("\\bchar\\b"), QStringLiteral("\\bclass\\b"), QStringLiteral("\\bconst\\b"),
-        QStringLiteral("\\bdouble\\b"), QStringLiteral("\\benum\\b"), QStringLiteral("\\bexplicit\\b"),
-        QStringLiteral("\\bfriend\\b"), QStringLiteral("\\binline\\b"), QStringLiteral("\\bint\\b"),
-        QStringLiteral("\\blong\\b"), QStringLiteral("\\bnamespace\\b"), QStringLiteral("\\boperator\\b"),
-        QStringLiteral("\\bprivate\\b"), QStringLiteral("\\bprotected\\b"), QStringLiteral("\\bpublic\\b"),
-        QStringLiteral("\\bshort\\b"), QStringLiteral("\\bsignals\\b"), QStringLiteral("\\bsigned\\b"),
-        QStringLiteral("\\bslots\\b"), QStringLiteral("\\bstatic\\b"), QStringLiteral("\\bstruct\\b"),
-        QStringLiteral("\\btemplate\\b"), QStringLiteral("\\btypedef\\b"), QStringLiteral("\\btypename\\b"),
-        QStringLiteral("\\bunion\\b"), QStringLiteral("\\bunsigned\\b"), QStringLiteral("\\bvirtual\\b"),
-        QStringLiteral("\\bvoid\\b"), QStringLiteral("\\bvolatile\\b"), QStringLiteral("\\bbool\\b")
-    });
-    for (const QString &pattern : keywordPatterns) {
+    //时间戳高亮，放在后面以便覆盖重复的匹配字符
+    keywordPatterns.clear();
+    keywordPatterns << "\\[\\d{2}:\\d{2}:\\d{2}\\.\\d{3}\\]Rx<-";
+    keywordFormat.setForeground(Qt::darkGreen);
+    foreach (const QString &pattern, keywordPatterns) {
         rule.pattern = QRegularExpression(pattern);
         rule.format = keywordFormat;
         highlightingRules.append(rule);
