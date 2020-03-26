@@ -196,7 +196,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&autoSubcontractTimer, SIGNAL(timeout()), this, SLOT(autoSubcontractTimerSlot()));
     connect(&secTimer, SIGNAL(timeout()), this, SLOT(secTimerSlot()));
     connect(&cycleReadTimer, SIGNAL(timeout()), this, SLOT(cycleReadTimerSlot()));
-    cycleReadTimer.start(100);
 //    connect(&serial, SIGNAL(readyRead()), this, SLOT(readSerialPort()));
     connect(&serial, SIGNAL(bytesWritten(qint64)), this, SLOT(serialBytesWritten(qint64)));
     connect(ui->textBrowser->verticalScrollBar(),SIGNAL(actionTriggered(int)),this,SLOT(verticalScrollBarActionTriggered(int)));
@@ -261,13 +260,14 @@ MainWindow::MainWindow(QWidget *parent) :
     //搜寻可用串口
     on_refreshCom_clicked();
 
-    //初始化秒定时器
-    secTimer.start(1000);
-
     //提交使用统计任务
     httpTaskVector.push_back(PostStatic);
     httpTaskVector.push_back(DownloadADs);
     httpTaskVector.push_back(BackStageGetVersion);
+
+    //启动定时器
+    secTimer.start(1000);
+    cycleReadTimer.start(5);
 }
 
 void MainWindow::secTimerSlot()
@@ -323,6 +323,8 @@ void MainWindow::secTimerSlot()
 
     secCnt++;
     currentRunTime++;
+
+//    qDebug()<<ui->textBrowser->document()->pageSize().width()/7.8534;
 }
 
 void MainWindow::debugTimerSlot()
@@ -593,7 +595,7 @@ void MainWindow::readSerialPort()
 //        timer.start();
         printToTextBrowser();
 //        tt1 = timer.elapsed();
-//        qDebug()<<tt<<tt1;
+//        qDebug()<<"printToTextBrowser"<<tt1;
 
         //更新收发统计
         statusStatisticLabel->setText(serial.getTxRxString());
@@ -1941,10 +1943,10 @@ void MainWindow::on_actionUsageStatistic_triggered()
     totalRunTimeStr = days + "天 " + hou + "小时 " + min + "分钟 " + sec + "秒";
     //上屏显示
     ui->textBrowser->clear();
-    ui->textBrowser->append("<h2>软件版本：</h2>"+Config::getVersion());
-    ui->textBrowser->append("<h2>设备信息：</h2>");
+    ui->textBrowser->append("<h2>软件版本："+Config::getVersion()+"</h2>");
+    ui->textBrowser->append("\n<h2>设备信息：</h2>");
     ui->textBrowser->append("MAC地址："+getHostMacAddress());
-    ui->textBrowser->append("<h2>软件使用统计</h2>");
+    ui->textBrowser->append("\n<h2>软件使用统计</h2>");
     ui->textBrowser->append("<h3>自本次启动软件以来，您：</h3>");
     ui->textBrowser->append("共发送数据："+QString::number(currentTx,'f',2)+currentTxUnit);
     ui->textBrowser->append("共接收数据："+QString::number(currentRx,'f',2)+currentRxUnit);
@@ -1954,14 +1956,14 @@ void MainWindow::on_actionUsageStatistic_triggered()
     ui->textBrowser->append("共接收数据："+QString::number(totalRx,'f',2)+totalRxUnit);
     ui->textBrowser->append("共运行本软件："+totalRunTimeStr);
     ui->textBrowser->append("共启动本软件："+QString::number(Config::getTotalRunCnt().toInt()+1)+"次");
-    ui->textBrowser->append("<h2>隐私声明</h2>");
+    ui->textBrowser->append("\n<h2>隐私声明</h2>");
     ui->textBrowser->append("以上统计信息可能会被上传至服务器用于统计。");
     ui->textBrowser->append("其他任何信息均不会被上传。");
     ui->textBrowser->append("如您不同意本声明，可通过系统防火墙阻断本软件的网络请求或者您应该停止使用本软件。");
-    ui->textBrowser->append("<h2>感谢您的使用</h2>");
+    ui->textBrowser->append("\n<h2>感谢您的使用</h2>");
     ui->textBrowser->append("<p>");
     BrowserBuff.clear();
-    BrowserBuff.append(ui->textBrowser->document()->toHtml());
+    BrowserBuff.append(ui->textBrowser->document()->toPlainText());
 }
 
 void MainWindow::on_actionSendFile_triggered()

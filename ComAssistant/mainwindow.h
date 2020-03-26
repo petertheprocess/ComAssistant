@@ -47,7 +47,7 @@
 #include "about_me_dialog.h"
 #include "settings_dialog.h"
 
-#define PAGING_SIZE 4096 //TextBrowser分页显示大小
+#define PAGING_SIZE 4068 //TextBrowser分页显示大小，这个值正好满屏显示
 
 namespace Ui {
 class MainWindow;
@@ -100,21 +100,21 @@ private slots:
 
     void on_actionCOM_Config_triggered();
 
-    void on_baudrateList_currentTextChanged(const QString &arg1);
-
-    void on_comList_currentTextChanged(const QString &arg1);
-
     void on_actionSaveShowedData_triggered();
 
     void on_actionUpdate_triggered();
 
-    void on_sendInterval_textChanged(const QString &arg1);
-
     void on_actionSTM32_ISP_triggered();
 
-    void on_multiString_itemDoubleClicked(QListWidgetItem *item);
-
     void on_actionMultiString_triggered(bool checked);
+
+    void on_baudrateList_currentTextChanged(const QString &arg1);
+
+    void on_comList_currentTextChanged(const QString &arg1);
+
+    void on_sendInterval_textChanged(const QString &arg1);
+
+    void on_multiString_itemDoubleClicked(QListWidgetItem *item);
 
     void on_multiString_customContextMenuRequested(const QPoint &pos);
     void editSeedSlot();

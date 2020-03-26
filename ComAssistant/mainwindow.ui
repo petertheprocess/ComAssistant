@@ -414,7 +414,6 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionManual"/>
     <addaction name="actionUpdate"/>
     <addaction name="actionUsageStatistic"/>
-    <addaction name="actiondebug"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="file">
@@ -460,6 +459,8 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionPlotterSwitch"/>
     <addaction name="menu_3"/>
     <addaction name="menu_4"/>
+    <addaction name="separator"/>
+    <addaction name="actiondebug"/>
    </widget>
    <addaction name="file"/>
    <addaction name="function"/>
