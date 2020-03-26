@@ -927,8 +927,15 @@ void MainWindow::on_actionSaveOriginData_triggered()
         file.write(RxBuff);//不用DataStream写入非文本文件，它会额外添加4个字节作为文件头
         file.flush();
         file.close();
-//        ui->textBrowser->append("Total saved "+QString::number(RxBuff.size())+" Bytes in "+savePath);
-        BrowserBuff.append("\nTotal saved "+QString::number(RxBuff.size())+" Bytes in "+savePath + "\n");
+
+        QString enter;
+        if(ui->action_winLikeEnter->isChecked())
+            enter = "\r\n";
+        else
+            enter = "\n";
+        QString str = enter + "Total saved "+QString::number(RxBuff.size())+" Bytes in "+savePath + enter;
+        BrowserBuff.append(str);
+        hexBrowserBuff.append(toHexDisplay(str.toLocal8Bit()));
         printToTextBrowser();
     }
 }
@@ -1090,6 +1097,15 @@ void MainWindow::on_actionSaveShowedData_triggered()
             stream<<BrowserBuff;
         }
         file.close();
+        QString enter;
+        if(ui->action_winLikeEnter->isChecked())
+            enter = "\r\n";
+        else
+            enter = "\n";
+        QString str = enter + "Total saved "+QString::number(stream.string()->size())+" Bytes in "+savePath + enter;
+        BrowserBuff.append(str);
+        hexBrowserBuff.append(toHexDisplay(str.toLocal8Bit()));
+        printToTextBrowser();
     }
 }
 
@@ -1672,23 +1688,44 @@ void MainWindow::on_actionSavePlotData_triggered()
                                                     lastFileDialogPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".xlsx",
                                                     "XLSX File(*.xlsx);;CSV File(*.csv);;TXT File(*.txt);;All File(*.*)");
     //检查路径格式
-    if(!savePath.endsWith(".xlsx") && !savePath.endsWith(".csv")&& !savePath.endsWith(".txt")){
+    if(!savePath.endsWith(".xlsx") &&
+       !savePath.endsWith(".csv") &&
+       !savePath.endsWith(".txt")){
         if(!savePath.isEmpty())
             QMessageBox::information(this,"提示","尚未支持的文件格式。请选择xlsx或者csv或者txt格式文件。");
         return;
     }
-    if(savePath.endsWith(".xlsx")){
-        if(!MyXlsx::write(ui->customPlot, savePath))
-            QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
-    }else if(savePath.endsWith(".csv")){
-        if(!saveGraphAsTxt(savePath,','))
-            QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
-    }else if(savePath.endsWith(".txt")){
-        if(!saveGraphAsTxt(savePath,' '))
-            QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
-    }
+
+    //记录路径
     lastFileDialogPath = savePath;
     lastFileDialogPath = lastFileDialogPath.mid(0, lastFileDialogPath.lastIndexOf('/')+1);
+
+    bool ok = false;
+    if(savePath.endsWith(".xlsx")){
+        if(MyXlsx::write(ui->customPlot, savePath))
+            ok = true;
+    }else if(savePath.endsWith(".csv")){
+        if(saveGraphAsTxt(savePath,','))
+            ok = true;
+    }else if(savePath.endsWith(".txt")){
+        if(saveGraphAsTxt(savePath,' '))
+            ok = true;
+    }
+
+    if(ok){
+        QString enter;
+        if(ui->action_winLikeEnter->isChecked())
+            enter = "\r\n";
+        else
+            enter = "\n";
+        QString str = enter + "Save successful in "+savePath + "!" + enter;
+        BrowserBuff.append(str);
+        hexBrowserBuff.append(toHexDisplay(str.toLocal8Bit()));
+        printToTextBrowser();
+    }else{
+        QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
+    }
+
 }
 
 void MainWindow::on_actionSavePlotAsPicture_triggered()
@@ -1710,26 +1747,38 @@ void MainWindow::on_actionSavePlotAsPicture_triggered()
     //记录上次路径
     lastFileDialogPath = savePath;
     lastFileDialogPath = lastFileDialogPath.mid(0, lastFileDialogPath.lastIndexOf('/')+1);
+
     //保存
+    bool ok = false;
     if(savePath.endsWith(".jpg")){
-        if(!ui->customPlot->saveJpg(savePath,0,0,1,100))
-            QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
-        return;
+        if(ui->customPlot->saveJpg(savePath,0,0,1,100))
+            ok = true;
     }
     if(savePath.endsWith(".bmp")){
-        if(!ui->customPlot->saveBmp(savePath))
-            QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
-        return;
+        if(ui->customPlot->saveBmp(savePath))
+            ok = true;
     }
     if(savePath.endsWith(".png")){
-        if(!ui->customPlot->savePng(savePath,0,0,1,100))
-            QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
-        return;
+        if(ui->customPlot->savePng(savePath,0,0,1,100))
+            ok = true;
     }
     if(savePath.endsWith(".pdf")){
-        if(!ui->customPlot->savePdf(savePath))
-            QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
-        return;
+        if(ui->customPlot->savePdf(savePath))
+            ok = true;
+    }
+
+    if(ok){
+        QString enter;
+        if(ui->action_winLikeEnter->isChecked())
+            enter = "\r\n";
+        else
+            enter = "\n";
+        QString str = enter + "Save successful in "+savePath + "!" + enter;
+        BrowserBuff.append(str);
+        hexBrowserBuff.append(toHexDisplay(str.toLocal8Bit()));
+        printToTextBrowser();
+    }else{
+        QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
     }
 }
 

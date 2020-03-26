@@ -96,18 +96,9 @@ Highlighter::Highlighter(QTextDocument *parent)
 
     //数字匹配
     keywordPatterns.clear();
-    keywordPatterns << "[\\+-]?\\d+\\.?\\d*";
-    keywordFormat.setFontWeight(QFont::Normal);
-    keywordFormat.setForeground(Qt::darkMagenta);
-    foreach (const QString &pattern, keywordPatterns) {
-        rule.pattern = QRegularExpression(pattern);
-        rule.format = keywordFormat;
-        highlightingRules.append(rule);
-    }
-
-    //hex数字匹配
-    keywordPatterns.clear();
-    keywordPatterns << "[0-9a-fA-F]{2}";
+    keywordPatterns << "\\b[\\+-]?\\d+\\.?\\d*\\b"
+                    << "\\b0x[0-9a-fA-F]{2}\\b"
+                    << "\\b0X[0-9a-fA-F]{2}\\b";
     keywordFormat.setFontWeight(QFont::Normal);
     keywordFormat.setForeground(Qt::darkMagenta);
     foreach (const QString &pattern, keywordPatterns) {
