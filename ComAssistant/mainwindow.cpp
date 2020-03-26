@@ -323,8 +323,6 @@ void MainWindow::secTimerSlot()
 
     secCnt++;
     currentRunTime++;
-
-//    qDebug()<<ui->textBrowser->document()->pageSize().width()/7.8534;
 }
 
 void MainWindow::debugTimerSlot()
@@ -337,7 +335,7 @@ void MainWindow::debugTimerSlot()
     num3 = qCos(count)*1.5-qSin(count/0.4364)*0.5;
 
     if(ui->actionAscii->isChecked()){
-        tmp = "{:" + QString::number(num1,'f') + "," + QString::number(num2,'f') + "," + QString::number(num3,'f') + "}\r\n";
+        tmp = "{"+QString::number(static_cast<int>(count*10))+":" + QString::number(num1,'f') + "," + QString::number(num2,'f') + "," + QString::number(num3,'f') + "}\r\n";
 //        tmp = QDateTime::currentDateTime().toString("{yyyyMMddhhmmsszzz}");
 //        tmp = "{:" + QString::number(num1) + "," + QString::number(num2) + "," + QString::number(num3) + "}\r\n";//这样可以生成一些错误数据
     }
@@ -604,6 +602,13 @@ void MainWindow::readSerialPort()
 
 void MainWindow::printToTextBrowser()
 {
+    int HH = static_cast<int>(ui->textBrowser->height()/19.2);
+    int WW = static_cast<int>(ui->textBrowser->width()/9.38);
+    PAGING_SIZE = static_cast<int>(HH*WW*1.25);
+    if(PAGING_SIZE > PAGEING_SIZE_MAX)
+        PAGING_SIZE = PAGEING_SIZE_MAX;
+//    qDebug()<<HH<<WW<<HH*WW<<PAGING_SIZE;
+
     //打印数据
     if(BrowserBuff.size()<PAGING_SIZE){
         ui->textBrowser->setText(BrowserBuff);

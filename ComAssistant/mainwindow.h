@@ -47,7 +47,8 @@
 #include "about_me_dialog.h"
 #include "settings_dialog.h"
 
-#define PAGING_SIZE 4068 //TextBrowser分页显示大小，这个值正好满屏显示
+#define PAGEING_SIZE_MAX 4068
+static int PAGING_SIZE = 4068; //TextBrowser分页显示大小，这个值正好满屏显示
 
 namespace Ui {
 class MainWindow;

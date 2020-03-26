@@ -95,7 +95,8 @@ void DataProtocol::extractPacks(const QByteArray &inputArray, QByteArray &restAr
         //:后，数据与逗号作为一个组，这个组至少出现一次
         //其中，组中的逗号出现0次或1次
         //组中的数据：符号出现或者不出现，整数部分出现至少1次，小数点与小数作为整体，可不出现或者1次
-        reg.setPattern("\\{[{:]*:(([+-]?\\d+(\\.\\d+)?)?,?)+\\}");
+//        reg.setPattern("\\{[{:]*:(([+-]?\\d+(\\.\\d+)?)?,?)+\\}");
+        reg.setPattern("\\{[^{:]*:(([+-]?\\d+(\\.\\d+)?)?,?)+\\}");
         reg.setPatternOptions(QRegularExpression::InvertedGreedinessOption);//设置为非贪婪模式匹配
         do {
                 QByteArray tmp;
@@ -113,7 +114,7 @@ void DataProtocol::extractPacks(const QByteArray &inputArray, QByteArray &restAr
                     }
                     if(!tmp.isEmpty())
                         packsBuff << tmp;
-//                    qDebug()<<"match"<<match.captured(0);
+                    qDebug()<<"match"<<match.captured(0);
                 }
                 else{
     //                qDebug()<<"no match";
@@ -151,6 +152,8 @@ DataProtocol::RowData_t DataProtocol::extractRowData(const Pack_t &pack)
     RowData_t rowData;
     if(pack.isEmpty())
         return rowData;
+    //把数据部分提取出来
+    Pack_t dataPack = pack.mid(pack.indexOf(':'));
 
     if(protocolType == Ascii){
 
@@ -159,7 +162,7 @@ DataProtocol::RowData_t DataProtocol::extractRowData(const Pack_t &pack)
         int index = 0;
         reg.setPattern("[\\+-]?\\d+\\.?\\d*");//匹配实数 符号出现0、1次，数字至少1次，小数点0、1次，小数不出现或出现多次
         do {
-                match = reg.match(pack, index);
+                match = reg.match(dataPack, index);
                 if(match.hasMatch()) {
                     index = match.capturedEnd();
                     rowData << match.captured(0).toDouble();
@@ -169,15 +172,14 @@ DataProtocol::RowData_t DataProtocol::extractRowData(const Pack_t &pack)
     //                qDebug()<<"no match";
                     break;
                 }
-        } while(index < pack.length());
+        } while(index < dataPack.length());
 
 
     }else if(protocolType == Float){
-        Pack_t tmpPack = pack;
-        while (tmpPack.size()>0) {
+        while (dataPack.size()>0) {
             float tmp;
-            if(packToFloat(tmpPack, tmp)){
-                tmpPack = tmpPack.mid(4);
+            if(packToFloat(dataPack, tmp)){
+                dataPack = dataPack.mid(4);
                 rowData << static_cast<double>(tmp);
 //                qDebug("tmp:%f",tmp);
             }else{
