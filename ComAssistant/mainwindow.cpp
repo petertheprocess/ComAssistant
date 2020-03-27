@@ -723,8 +723,8 @@ void MainWindow::on_sendButton_clicked()
         timeString = "["+timeString+"]Tx-> ";
         //如果hex发送则把显示在接收区的发送数据转为hex模式
         if(ui->hexSend->isChecked()){
-            //当前是hex数据
-            hexBrowserBuff.append(enter + timeString + ui->textEdit->toPlainText() + enter);
+            //hex数据
+            hexBrowserBuff.append(enter + timeString + toHexDisplay(sendArr) + enter);
             BrowserBuff.append(enter + timeString + sendArr + enter);
         }else{
             //ascii数据
