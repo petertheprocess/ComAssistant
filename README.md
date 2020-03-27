@@ -1,6 +1,13 @@
 # QT串口调试助手
   一个基于QT的串口调试助手，实现了基本收发功能、绘图功能、数据保存、关键字高亮等功能，并支持STM32F1和F4系列的自动下载。
 
+绘图协议：
+
+```c
+//几条曲线就几个变量。
+printf("{:%f,%f}\r\n", data1, data2);
+```
+
 ![demo](screenshoot/demo.gif)
 ![mainwindow](screenshoot/mainwindow.png)
 ![graphwindow](screenshoot/graphwindow.png)
@@ -17,4 +24,4 @@
   - 串口热插拔检测。
 
 # 临时记录
-  - YModen协议支持
+  - XYZModen协议支持?
