@@ -698,19 +698,22 @@ void MainWindow::on_sendButton_clicked()
     }
 
     //十六进制检查
-    if(false == ui->hexSend->isChecked()){
-        //utf8编码
-        serial.write(tmp);
-    }else {
+//    QByteArray dataFlowInHex;
+    QByteArray sendArr; //真正发送出去的数据
+    if(ui->hexSend->isChecked()){
         //以hex发送数据
         //HexStringToByteArray函数必须传入格式化后的字符串，如"02 31"
         bool ok;
-        QByteArray tmp2 = HexStringToByteArray(tmp,ok);
+        sendArr = HexStringToByteArray(tmp,ok); //hex转发送数据流
         if(ok){
-            serial.write(tmp2);
+            serial.write(sendArr);
         }else{
-            QMessageBox::information(this,"提示","文本输入区数据转换失败");
+            ui->statusBar->showMessage("文本输入区数据转换失败，放弃此次发送！", 2000);
         }
+    }else {
+        sendArr = tmp;
+        //utf8编码
+        serial.write(sendArr);
     }
 
     //若添加了时间戳则把发送的数据也显示在接收区
@@ -719,9 +722,17 @@ void MainWindow::on_sendButton_clicked()
         timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
         timeString = "["+timeString+"]Tx-> ";
         //如果hex发送则把显示在接收区的发送数据转为hex模式
-        hexBrowserBuff.append(enter + timeString + ui->textEdit->toPlainText() + enter);
-        BrowserBuff.append(enter + timeString + tmp + enter);
+        if(ui->hexSend->isChecked()){
+            //当前是hex数据
+            hexBrowserBuff.append(enter + timeString + ui->textEdit->toPlainText() + enter);
+            BrowserBuff.append(enter + timeString + sendArr + enter);
+        }else{
+            //ascii数据
+            hexBrowserBuff.append(enter + timeString + toHexDisplay(sendArr) + enter);
+            BrowserBuff.append(enter + timeString + QString::fromLocal8Bit(sendArr) + enter);
+        }
 
+        qDebug()<<sendArr<<tmp;
         //打印数据
         printToTextBrowser();
     }
