@@ -732,7 +732,6 @@ void MainWindow::on_sendButton_clicked()
             BrowserBuff.append(enter + timeString + QString::fromLocal8Bit(sendArr) + enter);
         }
 
-        qDebug()<<sendArr<<tmp;
         //打印数据
         printToTextBrowser();
     }
