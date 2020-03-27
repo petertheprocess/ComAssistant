@@ -45,6 +45,8 @@
 #define KEY_PLOTTERSTATE        QString("PlotterState")
 #define KEY_PROTOCOLTYPE        QString("ProtocolType")
 #define KEY_GRAPHNAME           QString("GraphName")
+#define KEY_XAXISNAME           QString("XAxisName")
+#define KEY_YAXISNAME           QString("YAxisName")
 //#define KEY_LINETYPE            QString("LineType")
 //#define KEY_XRANGELENGH         QString("xRangeLength")
 
@@ -128,6 +130,7 @@ public:
     static QString getTextSendArea();
     static void setLastFileDialogPath(QString str);
     static QString getLastFileDialogPath();
+
     //plotter
     static void setPlotterState(bool checked);
     static bool getPlotterState();
@@ -135,6 +138,11 @@ public:
     static ProtocolType_e getPlotterType();
     static void setPlotterGraphNames(QVector<QString> names);
     static QVector<QString> getPlotterGraphNames(int maxValidGraphNumber);
+    static void setXAxisName(QString str);
+    static QString getXAxisName();
+    static void setYAxisName(QString str);
+    static QString getYAxisName();
+
     //static
     static void setStartTime(QString time);
     static QString getStartTime(void);

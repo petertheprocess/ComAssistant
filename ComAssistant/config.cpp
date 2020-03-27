@@ -28,6 +28,8 @@ void Config::writeDefault(){
     iniFile->setValue(SECTION_PLOTTER+KEY_PLOTTERSTATE, false);
     iniFile->setValue(SECTION_PLOTTER+KEY_PROTOCOLTYPE, ProtocolType_e::Ascii);
     iniFile->setValue(SECTION_PLOTTER+KEY_GRAPHNAME, defualtGraphName);
+    iniFile->setValue(SECTION_PLOTTER+KEY_XAXISNAME, "Point Number");
+    iniFile->setValue(SECTION_PLOTTER+KEY_YAXISNAME, "Value");
 
     //统计信息
 //    iniFile->setValue(SECTION_PLOTTER+KEY_STARTTIME, QDateTime::currentDateTime().toString("yyyyMMddhhmmss"));
@@ -381,6 +383,32 @@ QVector<QString> Config::getPlotterGraphNames(int maxValidGraphNumber){
     delete iniFile;
 //    qDebug()<<"getPlotterGraphNames:"<<newValue;
     return newValue;
+}
+
+void Config::setXAxisName(QString str){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_PLOTTER+KEY_XAXISNAME, str);
+    delete iniFile;
+}
+QString Config::getXAxisName(){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    QString value = iniFile->value(SECTION_PLOTTER+KEY_XAXISNAME, "Point Number").toString();
+    delete iniFile;
+    return value;
+}
+
+void Config::setYAxisName(QString str){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_PLOTTER+KEY_YAXISNAME, str);
+    delete iniFile;
+}
+QString Config::getYAxisName(){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    QString value = iniFile->value(SECTION_PLOTTER+KEY_YAXISNAME, "Value").toString();
+    delete iniFile;
+    return value;
 }
 
 //static

@@ -181,6 +181,8 @@ void MainWindow::readConfig()
         ui->actionAscii->setChecked(false);
         ui->actionFloat->setChecked(true);
     }
+    ui->customPlot->xAxis->setLabel(Config::getXAxisName());
+    ui->customPlot->yAxis->setLabel(Config::getYAxisName());
     //图像名字集
     plotControl.setNameSet(ui->customPlot, Config::getPlotterGraphNames(plotControl.getMaxValidGraphNumber()));
 }
@@ -360,6 +362,7 @@ MainWindow::~MainWindow()
         }else if(ui->action_unixLikeEnter->isChecked()){
             Config::setEnterStyle(EnterStyle_e::UnixStyle);
         }
+
         //global
         Config::setHexSendState(ui->hexSend->isChecked());
         Config::setHexShowState(ui->hexDisplay->isChecked());
@@ -375,12 +378,14 @@ MainWindow::~MainWindow()
         }
         Config::setMultiString(multi);
         Config::setLastFileDialogPath(lastFileDialogPath);
+
         //serial
         Config::setBaudrate(serial.baudRate());
         Config::setDataBits(serial.dataBits());
         Config::setStopBits(serial.stopBits());
         Config::setParity(serial.parity());
         Config::setFlowControl(serial.flowControl());
+
         //plotter
         Config::setPlotterState(ui->actionPlotterSwitch->isChecked());
         if(ui->actionAscii->isChecked())
@@ -388,6 +393,9 @@ MainWindow::~MainWindow()
         else
             Config::setPlotterType(ProtocolType_e::Float);
         Config::setPlotterGraphNames(plotControl.getNameSet());
+        Config::setXAxisName(ui->customPlot->xAxis->label());
+        Config::setYAxisName(ui->customPlot->yAxis->label());
+
         //static
         Config::setLastRunTime(currentRunTime);
         Config::setTotalRunTime(currentRunTime);
@@ -1162,23 +1170,25 @@ void MainWindow::on_multiString_customContextMenuRequested(const QPoint &pos)
     QMenu *popMenu = new QMenu( this );
     //添加右键菜单
     if( curItem != nullptr ){
-        editSeed = new QAction(tr("编辑"), this);
+        editSeed = new QAction("编辑当前条目", this);
         popMenu->addAction( editSeed );
         connect( editSeed, SIGNAL(triggered() ), this, SLOT( editSeedSlot()) );
 
-        deleteSeed = new QAction(tr("删除"), this);
+        popMenu->addSeparator();
+
+        deleteSeed = new QAction("删除当前条目", this);
         popMenu->addAction( deleteSeed );
         connect( deleteSeed, SIGNAL(triggered() ), this, SLOT( deleteSeedSlot()) );
+
+        popMenu->addSeparator();
     }
-    clearSeeds = new QAction(tr("清除"), this);
+    clearSeeds = new QAction("清空所有条目", this);
     popMenu->addAction( clearSeeds );
     connect( clearSeeds, SIGNAL(triggered() ), this, SLOT( clearSeedsSlot()) );
     popMenu->exec( QCursor::pos() );
-
     delete popMenu;
     delete clearSeeds;
     delete deleteSeed;
-
 }
 
 /*
@@ -1192,7 +1202,8 @@ void MainWindow::editSeedSlot()
 
     int curIndex = ui->multiString->row(item);
     bool ok = false;
-    QString newStr = QInputDialog::getText(this,"编辑条目","新的文本：", QLineEdit::Normal, ui->multiString->item(curIndex)->text(), &ok);
+    QString newStr = QInputDialog::getText(this,"编辑条目","新的文本：", QLineEdit::Normal,
+                                           ui->multiString->item(curIndex)->text(), &ok,Qt::WindowCloseButtonHint);
     if(ok == true)
         ui->multiString->item(curIndex)->setText(newStr);
 }
@@ -1313,7 +1324,8 @@ void MainWindow::axisLabelDoubleClick(QCPAxis *axis, QCPAxis::SelectablePart par
   if (part == QCPAxis::spAxisLabel) // only react when the actual axis label is clicked, not tick label or axis backbone
   {
     bool ok;
-    QString newLabel = QInputDialog::getText(this, "更改轴标签", "新的轴标签：", QLineEdit::Normal, axis->label(), &ok);
+    QString newLabel = QInputDialog::getText(this, "更改轴标签", "新的轴标签：",
+                                             QLineEdit::Normal, axis->label(), &ok, Qt::WindowCloseButtonHint);
     if (ok)
     {
       axis->setLabel(newLabel);
@@ -1330,7 +1342,8 @@ void MainWindow::legendDoubleClick(QCPLegend *legend, QCPAbstractLegendItem *ite
   {
     QCPPlottableLegendItem *plItem = qobject_cast<QCPPlottableLegendItem*>(item);
     bool ok;
-    QString newName = QInputDialog::getText(this, "更改曲线名称", "新的曲线名称", QLineEdit::Normal, plItem->plottable()->name(), &ok);
+    QString newName = QInputDialog::getText(this, "更改曲线名称", "新的曲线名称",
+                                            QLineEdit::Normal, plItem->plottable()->name(), &ok, Qt::WindowCloseButtonHint);
     if (ok)
     {
       plItem->plottable()->setName(newName);
@@ -1723,7 +1736,7 @@ void MainWindow::on_actionSavePlotData_triggered()
     }
 
     if(ok){
-        QString str = enter + "Save successful in "+savePath + "!" + enter;
+        QString str = enter + "Save successful in "+savePath + enter;
         BrowserBuff.append(str);
         hexBrowserBuff.append(toHexDisplay(str.toLocal8Bit()));
         printToTextBrowser();
@@ -1773,7 +1786,7 @@ void MainWindow::on_actionSavePlotAsPicture_triggered()
     }
 
     if(ok){
-        QString str = enter + "Save successful in "+savePath + "!" + enter;
+        QString str = enter + "Save successful in "+savePath + enter;
         BrowserBuff.append(str);
         hexBrowserBuff.append(toHexDisplay(str.toLocal8Bit()));
         printToTextBrowser();
@@ -1923,11 +1936,11 @@ void MainWindow::on_actionUsageStatistic_triggered()
         nest++;
     }
     switch(nest){
-        case 0:totalTxUnit = "B";break;
-        case 1:totalTxUnit = "KB";break;
-        case 2:totalTxUnit = "MB";break;
-        case 3:totalTxUnit = "GB";break;
-        case 4:totalTxUnit = "TB";break;
+        case 0:totalTxUnit = " B";break;
+        case 1:totalTxUnit = " KB";break;
+        case 2:totalTxUnit = " MB";break;
+        case 3:totalTxUnit = " GB";break;
+        case 4:totalTxUnit = " TB";break;
     }
     //单位换算
     nest = 0;
@@ -1936,11 +1949,11 @@ void MainWindow::on_actionUsageStatistic_triggered()
         nest++;
     }
     switch(nest){
-        case 0:totalRxUnit = "B";break;
-        case 1:totalRxUnit = "KB";break;
-        case 2:totalRxUnit = "MB";break;
-        case 3:totalRxUnit = "GB";break;
-        case 4:totalRxUnit = "TB";break;
+        case 0:totalRxUnit = " B";break;
+        case 1:totalRxUnit = " KB";break;
+        case 2:totalRxUnit = " MB";break;
+        case 3:totalRxUnit = " GB";break;
+        case 4:totalRxUnit = " TB";break;
     }
     //单位换算
     nest = 0;
@@ -1949,11 +1962,11 @@ void MainWindow::on_actionUsageStatistic_triggered()
         nest++;
     }
     switch(nest){
-        case 0:currentTxUnit = "B";break;
-        case 1:currentTxUnit = "KB";break;
-        case 2:currentTxUnit = "MB";break;
-        case 3:currentTxUnit = "GB";break;
-        case 4:currentTxUnit = "TB";break;
+        case 0:currentTxUnit = " B";break;
+        case 1:currentTxUnit = " KB";break;
+        case 2:currentTxUnit = " MB";break;
+        case 3:currentTxUnit = " GB";break;
+        case 4:currentTxUnit = " TB";break;
     }
     //单位换算
     nest = 0;
@@ -1962,11 +1975,11 @@ void MainWindow::on_actionUsageStatistic_triggered()
         nest++;
     }
     switch(nest){
-        case 0:currentRxUnit = "B";break;
-        case 1:currentRxUnit = "KB";break;
-        case 2:currentRxUnit = "MB";break;
-        case 3:currentRxUnit = "GB";break;
-        case 4:currentRxUnit = "TB";break;
+        case 0:currentRxUnit = " B";break;
+        case 1:currentRxUnit = " KB";break;
+        case 2:currentRxUnit = " MB";break;
+        case 3:currentRxUnit = " GB";break;
+        case 4:currentRxUnit = " TB";break;
     }
     //时间常数
     int mi = 60;
@@ -1982,7 +1995,7 @@ void MainWindow::on_actionUsageStatistic_triggered()
     hou = QString::number(hour,10);
     min = QString::number(minute,10);
     sec = QString::number(second,10);
-    currentRunTimeStr = days + "天 " + hou + "小时 " + min + "分钟 " + sec + "秒";
+    currentRunTimeStr = days + " 天 " + hou + " 小时 " + min + " 分钟 " + sec + " 秒";
     //时间换算
     day = static_cast<long>(totalRunTime / dd);
     hour = static_cast<long>((totalRunTime - day * dd) / hh);
@@ -1993,28 +2006,33 @@ void MainWindow::on_actionUsageStatistic_triggered()
     hou = QString::number(hour,10);
     min = QString::number(minute,10);
     sec = QString::number(second,10);
-    totalRunTimeStr = days + "天 " + hou + "小时 " + min + "分钟 " + sec + "秒";
+    totalRunTimeStr = days + " 天 " + hou + " 小时 " + min + " 分钟 " + sec + " 秒";
     //上屏显示
     ui->textBrowser->clear();
-    ui->textBrowser->append("<h2>软件版本："+Config::getVersion()+"</h2>");
-    ui->textBrowser->append("\n<h2>设备信息：</h2>");
-    ui->textBrowser->append("MAC地址："+getHostMacAddress());
-    ui->textBrowser->append("\n<h2>软件使用统计</h2>");
-    ui->textBrowser->append("<h3>自本次启动软件以来，您：</h3>");
-    ui->textBrowser->append("共发送数据："+QString::number(currentTx,'f',2)+currentTxUnit);
-    ui->textBrowser->append("共接收数据："+QString::number(currentRx,'f',2)+currentRxUnit);
-    ui->textBrowser->append("共运行本软件："+currentRunTimeStr);
-    ui->textBrowser->append("<h3>自首次启动软件以来，您：</h3>");
-    ui->textBrowser->append("共发送数据："+QString::number(totalTx,'f',2)+totalTxUnit);
-    ui->textBrowser->append("共接收数据："+QString::number(totalRx,'f',2)+totalRxUnit);
-    ui->textBrowser->append("共运行本软件："+totalRunTimeStr);
-    ui->textBrowser->append("共启动本软件："+QString::number(Config::getTotalRunCnt().toInt()+1)+"次");
-    ui->textBrowser->append("\n<h2>隐私声明</h2>");
-    ui->textBrowser->append("以上统计信息可能会被上传至服务器用于统计。");
-    ui->textBrowser->append("其他任何信息均不会被上传。");
-    ui->textBrowser->append("如您不同意本声明，可通过系统防火墙阻断本软件的网络请求或者您应该停止使用本软件。");
-    ui->textBrowser->append("\n<h2>感谢您的使用</h2>");
-    ui->textBrowser->append("<p>");
+    ui->textBrowser->append("软件版本："+Config::getVersion());
+    ui->textBrowser->append("");
+    ui->textBrowser->append("【设备信息】");
+    ui->textBrowser->append("   MAC地址："+getHostMacAddress());
+    ui->textBrowser->append("");
+    ui->textBrowser->append("【软件使用统计】");
+    ui->textBrowser->append("   自本次启动软件以来，您：");
+    ui->textBrowser->append("   - 共发送数据："+QString::number(currentTx,'f',2)+currentTxUnit);
+    ui->textBrowser->append("   - 共接收数据："+QString::number(currentRx,'f',2)+currentRxUnit);
+    ui->textBrowser->append("   - 共运行本软件："+currentRunTimeStr);
+    ui->textBrowser->append("   自首次启动软件以来，您：");
+    ui->textBrowser->append("   - 共发送数据："+QString::number(totalTx,'f',2)+totalTxUnit);
+    ui->textBrowser->append("   - 共接收数据："+QString::number(totalRx,'f',2)+totalRxUnit);
+    ui->textBrowser->append("   - 共运行本软件："+totalRunTimeStr);
+    ui->textBrowser->append("   - 共启动本软件："+QString::number(Config::getTotalRunCnt().toInt()+1)+" 次");
+    ui->textBrowser->append("");
+    ui->textBrowser->append("【隐私声明】");
+    ui->textBrowser->append("  - 以上统计信息可能会被上传至服务器用于统计。");
+    ui->textBrowser->append("  - 其他任何信息均不会被上传。");
+    ui->textBrowser->append("  - 如您不同意本声明，可阻断本软件的网络请求或者您应该停止使用本软件。");
+    ui->textBrowser->append("");
+    ui->textBrowser->append("感谢您的使用");
+    ui->textBrowser->append("");
+
     QString str = ui->textBrowser->document()->toPlainText();
     BrowserBuff.clear();
     BrowserBuff.append(str);
