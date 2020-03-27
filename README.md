@@ -2,7 +2,7 @@
   一个基于QT的串口调试助手，实现了基本收发功能、绘图功能、数据保存、关键字高亮等功能，并支持STM32F1和F4系列的自动下载。
 
 ![demo](demo.gif)
-![demo](screenshoot\demo.gif)
+![demo](screenshoot/demo.gif)
 ![mainwindow](screenshoot\mainwindow.png)
 ![graphwindow](screenshoot\graphwindow.png)
 ![scatterline](screenshoot\scatterline.png)
