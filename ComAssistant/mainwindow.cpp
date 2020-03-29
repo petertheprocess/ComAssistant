@@ -588,12 +588,12 @@ void MainWindow::readSerialPort()
         }
 //            ui->textBrowser->insertPlainText(timeString + QString::fromLocal8Bit(tmpReadBuff));
         //hex解析
-        hexBrowserBuff.append(timeString + toHexDisplay(tmpReadBuff).toLatin1());
+        hexBrowserBuff.append(timeString + toHexDisplay(tmpReadBuff).toLatin1() + "\n");//显示在浏览器的数据一律用\n换行
         //asic解析，显示的数据一律不要\r
         while(tmpReadBuff.indexOf("\r\n")!=-1){
             tmpReadBuff.replace("\r\n","\n");
         }
-        BrowserBuff.append(timeString + QString::fromLocal8Bit(tmpReadBuff));
+        BrowserBuff.append(timeString + QString::fromLocal8Bit(tmpReadBuff) + "\n");
         //自动分包定时器
         autoSubcontractTimer.start(10);
         autoSubcontractTimer.setSingleShot(true);
@@ -754,6 +754,10 @@ void MainWindow::on_sendButton_clicked()
         serial.write(sendArr);
     }
 
+    //周期发送开启则立刻发送
+    if(ui->cycleSendCheck->isChecked())
+        serial.flush();
+
     //若添加了时间戳则把发送的数据也显示在接收区
     if(ui->timeStampCheckBox->isChecked()){
         QString timeString;
@@ -762,12 +766,12 @@ void MainWindow::on_sendButton_clicked()
         //如果hex发送则把显示在接收区的发送数据转为hex模式
         if(ui->hexSend->isChecked()){
             //hex数据
-            hexBrowserBuff.append(enter + timeString + toHexDisplay(sendArr) + enter);
-            BrowserBuff.append(enter + timeString + sendArr + enter);
+            hexBrowserBuff.append(timeString + toHexDisplay(sendArr) + "\n"); //显示在浏览器的数据一律用\n换行
+            BrowserBuff.append(timeString + sendArr + "\n");
         }else{
             //ascii数据
-            hexBrowserBuff.append(enter + timeString + toHexDisplay(sendArr) + enter);
-            BrowserBuff.append(enter + timeString + QString::fromLocal8Bit(sendArr) + enter);
+            hexBrowserBuff.append(timeString + toHexDisplay(sendArr) + "\n");
+            BrowserBuff.append(timeString + QString::fromLocal8Bit(sendArr) + "\n");
         }
 
         //打印数据
@@ -843,6 +847,7 @@ void MainWindow::on_cycleSendCheck_clicked(bool checked)
     //启停定时器
     if(checked){
         ui->cycleSendCheck->setChecked(true);
+        cycleSendTimer.setTimerType(Qt::PreciseTimer);
         cycleSendTimer.start(ui->sendInterval->text().toInt());
     }
     else {
