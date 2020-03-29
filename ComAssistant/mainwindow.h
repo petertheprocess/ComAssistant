@@ -62,7 +62,11 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+signals:
+    void paraseFileSignal();
 private slots:
+    void paraseFileSlot();
+
     void on_refreshCom_clicked();
 
     void on_comSwitch_clicked(bool checked);
@@ -179,7 +183,10 @@ private:
     mySerialPort serial;
 
     QLabel *statusSpeedLabel, *statusStatisticLabel, *statusAdLabel;
-    bool paraseFromRxBuff = false;
+
+    bool paraseFile = false;
+    QByteArrayList paraseFileBuff;    //解析文件分包缓冲
+    int paraseFileBuffIndex = 0;
 
     QByteArray RxBuff, TxBuff; //原始数据的收发缓冲
     QByteArray hexBrowserBuff; //十六进制格式的浏览器缓冲

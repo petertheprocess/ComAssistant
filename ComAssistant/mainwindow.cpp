@@ -194,6 +194,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    connect(this, SIGNAL(paraseFileSignal()),this,SLOT(paraseFileSlot()));
+
     //槽
     connect(&cycleSendTimer, SIGNAL(timeout()), this, SLOT(cycleSendTimerSlot()));
     connect(&autoSubcontractTimer, SIGNAL(timeout()), this, SLOT(autoSubcontractTimerSlot()));
@@ -485,8 +487,9 @@ void MainWindow::readSerialPort()
 {
     QByteArray tmpReadBuff;
 
-    if(paraseFromRxBuff){
-        tmpReadBuff = RxBuff;
+    if(paraseFile){
+        tmpReadBuff = paraseFileBuff.at(paraseFileBuffIndex++);
+        RxBuff.append(tmpReadBuff);
     }
     else{
         if(serial.isOpen()){
@@ -495,6 +498,7 @@ void MainWindow::readSerialPort()
         }else
             return;
     }
+
     if(tmpReadBuff.isEmpty())//tmpReadBuff可能为空。
         return;
 
@@ -509,8 +513,14 @@ void MainWindow::readSerialPort()
         //绘图器解析
         protocol->parase(tmpReadBuff);
         while(protocol->parasedBuffSize()>0){
-            if(false == plotControl.displayToPlotter(ui->customPlot, protocol->popOneRowData()))
-                ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
+            //文件解析可能有大量数据，因此关闭刷新，提高解析速度
+            if(paraseFile){
+                if(false == plotControl.displayToPlotter(ui->customPlot, protocol->popOneRowData(), false))
+                    ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
+            }else{
+                if(false == plotControl.displayToPlotter(ui->customPlot, protocol->popOneRowData()))
+                    ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
+            }
         }
     }
 
@@ -577,17 +587,25 @@ void MainWindow::readSerialPort()
             timeString = "["+timeString+"]Rx<- ";
         }
 //            ui->textBrowser->insertPlainText(timeString + QString::fromLocal8Bit(tmpReadBuff));
-        BrowserBuff.append(timeString + QString::fromLocal8Bit(tmpReadBuff));
         //hex解析
         hexBrowserBuff.append(timeString + toHexDisplay(tmpReadBuff).toLatin1());
+        //asic解析，显示的数据一律不要\r
+        while(tmpReadBuff.indexOf("\r\n")!=-1){
+            tmpReadBuff.replace("\r\n","\n");
+        }
+        BrowserBuff.append(timeString + QString::fromLocal8Bit(tmpReadBuff));
         //自动分包定时器
         autoSubcontractTimer.start(10);
         autoSubcontractTimer.setSingleShot(true);
     }else{
 //            ui->textBrowser->insertPlainText(QString::fromLocal8Bit(tmpReadBuff));
-        BrowserBuff.append(QString::fromLocal8Bit(tmpReadBuff));
         //hex解析
         hexBrowserBuff.append(toHexDisplay(tmpReadBuff).toLatin1());
+        //asic解析，显示的数据一律不要\r
+        while(tmpReadBuff.indexOf("\r\n")!=-1){
+            tmpReadBuff.replace("\r\n","\n");
+        }
+        BrowserBuff.append(QString::fromLocal8Bit(tmpReadBuff));
     }
 
     //打印数据
@@ -595,6 +613,25 @@ void MainWindow::readSerialPort()
 
     //更新收发统计
     statusStatisticLabel->setText(serial.getTxRxString());
+}
+
+void MainWindow::paraseFileSlot()
+{
+    readSerialPort();
+    qApp->processEvents();
+    ui->customPlot->replot();
+//    qDebug()<<tt<<tt1<<paraseFileBuffIndex/paraseFileBuff.size();
+    if(paraseFileBuffIndex!=paraseFileBuff.size()){
+        ui->statusBar->showMessage("解析进度："+QString::number(static_cast<int>(100.0*(paraseFileBuffIndex+1.0)/paraseFileBuff.size()))+"%",1000);
+        emit paraseFileSignal();
+    }else{
+        paraseFile = false;
+        paraseFileBuffIndex = 0;
+        paraseFileBuff.clear();
+        ui->sendButton->setEnabled(true);
+        ui->multiString->setEnabled(true);
+        ui->cycleSendCheck->setEnabled(true);
+    }
 }
 
 void MainWindow::printToTextBrowser()
@@ -649,7 +686,8 @@ void MainWindow::serialBytesWritten(qint64 bytes)
 
 void MainWindow::cycleReadTimerSlot()
 {
-    readSerialPort();
+    if(paraseFile == false)
+        readSerialPort();
 }
 
 /*
@@ -773,6 +811,8 @@ void MainWindow::on_clearWindows_clicked()
     //清空文件缓冲
     SendFileBuff.clear();
     SendFileBuffIndex = 0;
+    paraseFileBuff.clear();
+    paraseFileBuffIndex = 0;
 
     //绘图器相关
     protocol->clearBuff();
@@ -780,6 +820,8 @@ void MainWindow::on_clearWindows_clicked()
     while(ui->customPlot->graphCount()>1){
         ui->customPlot->removeGraph(ui->customPlot->graphCount()-1);
     }
+    ui->customPlot->yAxis->setRange(0,5);
+    ui->customPlot->xAxis->setRange(0, plotControl.getXAxisLength(), Qt::AlignRight);
     ui->customPlot->replot();
 
     //更新收发统计
@@ -985,27 +1027,46 @@ void MainWindow::on_actionReadOriginData_triggered()
         while(lastFileName.indexOf('/')!=-1){
             lastFileName = lastFileName.mid(lastFileName.indexOf('/')+1);
         }
+        on_clearWindows_clicked();
         RxBuff.clear();
         RxBuff = file.readAll();
         file.close();
 
+        //文件分包
+        #define PACKSIZE 4096
+        QElapsedTimer timer;
+        long long time;
+        paraseFileBuffIndex = 0;
+        paraseFileBuff.clear();
+        timer.start();
+        while(RxBuff.size()>PACKSIZE){
+            paraseFileBuff.append(RxBuff.mid(0,PACKSIZE));
+            RxBuff.remove(0,PACKSIZE);
+        }
+        paraseFileBuff.append(RxBuff); //一定会有一个元素
+        time = timer.elapsed();
+        RxBuff.clear();
+        if(paraseFileBuff.size()<1){
+            return;
+        }
+
         ui->textBrowser->clear();
         ui->textBrowser->append("File size: "+QString::number(file.size())+" Byte");
-        ui->textBrowser->append("Read size: "+QString::number(RxBuff.size())+" Byte");
-        ui->textBrowser->append("Read containt:\n");
+        ui->textBrowser->append("Read containt:"+enter);
         BrowserBuff.clear();
         BrowserBuff.append(ui->textBrowser->document()->toPlainText());
 
-        //readSerialPort不能处理空数据
-        if(RxBuff.isEmpty()){
-            return;
-        }
-//        qDebug()<<"Read:"<<RxBuff;
+        //关闭不必要的控件
+        ui->sendButton->setEnabled(false);
+        ui->multiString->setEnabled(false);
+        cycleSendTimer.stop();
+        ui->cycleSendCheck->setEnabled(false);
+        ui->cycleSendCheck->setChecked(false);
+
         // 解析读取的数据
-        paraseFromRxBuff = true;
+        paraseFile = true;
         unshowedRxBuff.clear();
-        readSerialPort();
-        paraseFromRxBuff = false;
+        emit paraseFileSignal();
     }else{
         QMessageBox::information(this,"提示","文件打开失败。");
         lastFileName.clear();
@@ -2081,6 +2142,7 @@ void MainWindow::on_actionSendFile_triggered()
         TxBuff = file.readAll();
         file.close();
 
+        //文件分包
         #define PACKSIZE 512
         QElapsedTimer timer;
         long long time;
@@ -2094,7 +2156,6 @@ void MainWindow::on_actionSendFile_triggered()
         SendFileBuff.append(TxBuff); //一定会有一个元素
         time = timer.elapsed();
         TxBuff.clear();
-
         if(SendFileBuff.size()<1){
             return;
         }

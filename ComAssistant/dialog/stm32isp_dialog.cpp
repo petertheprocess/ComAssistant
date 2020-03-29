@@ -200,7 +200,7 @@ void STM32ISP_Dialog::on_download_clicked()
     //路径如果带中文也无法正常启动
     path="-path:"+ui->fileaddr->text();
     comPort="-com:"+ui->com->currentText().mid(0,ui->com->currentText().indexOf('('));
-    CMD="-download";
+    CMD="-download -ADC";
     QStringList cmdLine;
     cmdLine.append("/c "+CLIToolPath+" "+path+" "+comPort+" "+CMD);
     qDebug()<<cmdLine;

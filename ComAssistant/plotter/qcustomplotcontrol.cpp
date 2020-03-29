@@ -74,6 +74,11 @@ int QCustomPlotControl::getMaxValidGraphNumber()
     return colorSet.size();
 }
 
+double QCustomPlotControl::getXAxisLength()
+{
+    return xRange.upper - xRange.lower;
+}
+
 QVector<QString> QCustomPlotControl::getNameSet()
 {
     nameSet.clear();
@@ -149,7 +154,7 @@ void QCustomPlotControl::adjustXRange(QCustomPlot* customPlot, const QCPRange& q
 /*
  * Function:把数据取出来显示到绘图器上
 */
-bool QCustomPlotControl::displayToPlotter(QCustomPlot* customPlot, QVector<double> rowData)
+bool QCustomPlotControl::displayToPlotter(QCustomPlot* customPlot, const QVector<double>& rowData, bool refresh)
 {
     if(rowData.size() <= 0 || rowData.size()>colorSet.size())
         return false;
@@ -162,10 +167,11 @@ bool QCustomPlotControl::displayToPlotter(QCustomPlot* customPlot, QVector<doubl
     }
 
     //填充数据
-    int minCnt = colorSet.size()>rowData.size()?rowData.size():colorSet.size();    
+    int minCnt = colorSet.size()>rowData.size()?rowData.size():colorSet.size();
     for(int i = 0; i < minCnt; i++){
         customPlot->graph(i)->addData(xAxisCnt, rowData.at(i)); 
     }
+
     //重算Y轴范围
     customPlot->rescaleAxes(true);
 
@@ -178,8 +184,12 @@ bool QCustomPlotControl::displayToPlotter(QCustomPlot* customPlot, QVector<doubl
 //    customPlot->xAxis->setRange(xAxisCnt, 200, Qt::AlignRight);
     customPlot->xAxis->setRange(xAxisCnt, xRange.upper - xRange.lower, Qt::AlignRight);
 
-    customPlot->replot();
+    //刷新操作很耗时，因此添加开关
+    if(refresh)
+        customPlot->replot();
+
     xAxisCnt++;
+
     return true;
 }
 

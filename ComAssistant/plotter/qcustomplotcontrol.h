@@ -30,7 +30,7 @@ public:
     void adjustXRange(QCustomPlot* customPlot, const QCPRange& qcpRange);
     void adjustXRange(QCustomPlot* customPlot, bool enlarge);
     //把数据显示到绘图器上
-    bool displayToPlotter(QCustomPlot* customPlot, QVector<double> rowData);
+    bool displayToPlotter(QCustomPlot* customPlot, const QVector<double>& rowData, bool refresh = true);
     //设置笔宽度
     void setupPenWidth(QCustomPlot* customPlot, double width = 1.5);
     //设置轴间距
@@ -58,7 +58,8 @@ public:
     void setNameSet(QCustomPlot* customPlot, QVector<QString> names);
     //最大图像数量
     int getMaxValidGraphNumber();
-
+    //返回横坐标长度
+    double getXAxisLength();
 private:
     QCustomPlot* customPlot;
     QVector<QColor> colorSet;
