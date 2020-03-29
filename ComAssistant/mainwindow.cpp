@@ -763,16 +763,9 @@ void MainWindow::on_sendButton_clicked()
         QString timeString;
         timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
         timeString = "["+timeString+"]Tx-> ";
-        //如果hex发送则把显示在接收区的发送数据转为hex模式
-        if(ui->hexSend->isChecked()){
-            //hex数据
-            hexBrowserBuff.append(timeString + toHexDisplay(sendArr) + "\n"); //显示在浏览器的数据一律用\n换行
-            BrowserBuff.append(timeString + sendArr + "\n");
-        }else{
-            //ascii数据
-            hexBrowserBuff.append(timeString + toHexDisplay(sendArr) + "\n");
-            BrowserBuff.append(timeString + QString::fromLocal8Bit(sendArr) + "\n");
-        }
+
+        hexBrowserBuff.append(timeString + toHexDisplay(sendArr) + "\n");
+        BrowserBuff.append(timeString + QString::fromLocal8Bit(sendArr) + "\n");
 
         //打印数据
         printToTextBrowser();
