@@ -351,9 +351,10 @@ void MainWindow::debugTimerSlot()
 
     if(ui->actionAscii->isChecked()){
         QString tmp;
-        tmp = "{"+QString::number(static_cast<int>(count*10))+":" + QString::number(static_cast<double>(num1),'f') + "," + QString::number(static_cast<double>(num2),'f') + "," + QString::number(static_cast<double>(num3),'f') + "}" + enter;
-//        tmp = QDateTime::currentDateTime().toString("{yyyyMMddhhmmsszzz}");
-//        tmp = "{:" + QString::number(num1) + "," + QString::number(num2) + "," + QString::number(num3) + "}" + enter;//这样可以生成一些错误数据
+        tmp = "{"+QString::number(static_cast<int>(count*10))+":" +
+                  QString::number(static_cast<double>(num1),'f') + "," +
+                  QString::number(static_cast<double>(num2),'f') + "," +
+                  QString::number(static_cast<double>(num3),'f') + "}" + enter;
         if(serial.isOpen()){
             serial.write(tmp.toLocal8Bit());
         }

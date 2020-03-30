@@ -14,16 +14,14 @@ printf("{:%f,%f}\r\n", data1, data2);
 ![scatterline](screenshoot/scatterline.png)
 ![multistring](screenshoot/multistring.png)
 
-# 已知问题
+# 工作清单
   - 代码重构/优化/注释
-
-# 拟增功能
-  - 多语言支持。
-  - 图像Y轴只按显示的区域最大值调整
-  - 自动滚屏开关？
-  - 串口热插拔检测。
   - 测试stm32a07版本是否正常
   - ISP Tool测试自动下载电路 -ADC
 
-# 临时记录
+# 考虑中的功能
+  - 多语言支持？
+  - 图像Y轴只按显示的区域最大值调整
+  - 自动滚屏开关
+  - 串口热插拔检测。（需要WinAPI）
   - XYZModen协议支持?
