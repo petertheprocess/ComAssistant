@@ -175,9 +175,11 @@ void MainWindow::readConfig()
     else
         ui->customPlot->close();
     if(Config::getPlotterType()==ProtocolType_e::Ascii){
+        protocol->setProtocolType(DataProtocol::Ascii);
         ui->actionAscii->setChecked(true);
         ui->actionFloat->setChecked(false);
-    }else{
+    }else if(Config::getPlotterType()==ProtocolType_e::Float){
+        protocol->setProtocolType(DataProtocol::Float);
         ui->actionAscii->setChecked(false);
         ui->actionFloat->setChecked(true);
     }
@@ -249,7 +251,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //初始化协议栈
     protocol = new DataProtocol;
-    protocol->setProtocolType(DataProtocol::Ascii);
 
     //初始化绘图器
     plotControl.setupPlotter(ui->customPlot);
@@ -332,23 +333,45 @@ void MainWindow::secTimerSlot()
 
 void MainWindow::debugTimerSlot()
 {
-    QString tmp;
+//    #define BYTE0(dwTemp)       (*reinterpret_cast<char *>(&dwTemp))
+//    #define BYTE1(dwTemp)       (*reinterpret_cast<char *>((&dwTemp)) + 1)
+//    #define BYTE2(dwTemp)       (*reinterpret_cast<char *>((&dwTemp)) + 2)
+//    #define BYTE3(dwTemp)       (*reinterpret_cast<char *>((&dwTemp)) + 3)
+
+    #define BYTE0(dwTemp)       static_cast<char>((*reinterpret_cast<char *>(&dwTemp)))
+    #define BYTE1(dwTemp)       static_cast<char>((*(reinterpret_cast<char *>(&dwTemp) + 1)))
+    #define BYTE2(dwTemp)       static_cast<char>((*(reinterpret_cast<char *>(&dwTemp) + 2)))
+    #define BYTE3(dwTemp)       static_cast<char>((*(reinterpret_cast<char *>(&dwTemp) + 3)))
+
     static double count;
-    double num1, num2, num3;
-    num1 = qCos(count)+qSin(count/0.4364)*2.5;
-    num2 = qSin(count)+qrand()/static_cast<double>(RAND_MAX)*1*qSin(count/0.3843);
-    num3 = qCos(count)*1.5-qSin(count/0.4364)*0.5;
+    float num1, num2, num3;
+    num1 = static_cast<float>(qCos(count)+qSin(count/0.4364)*2.5);
+    num2 = static_cast<float>(qSin(count)+qrand()/static_cast<double>(RAND_MAX)*1*qSin(count/0.3843));
+    num3 = static_cast<float>(qCos(count)*1.5-qSin(count/0.4364)*0.5);
 
     if(ui->actionAscii->isChecked()){
-        tmp = "{"+QString::number(static_cast<int>(count*10))+":" + QString::number(num1,'f') + "," + QString::number(num2,'f') + "," + QString::number(num3,'f') + "}" + enter;
+        QString tmp;
+        tmp = "{"+QString::number(static_cast<int>(count*10))+":" + QString::number(static_cast<double>(num1),'f') + "," + QString::number(static_cast<double>(num2),'f') + "," + QString::number(static_cast<double>(num3),'f') + "}" + enter;
 //        tmp = QDateTime::currentDateTime().toString("{yyyyMMddhhmmsszzz}");
 //        tmp = "{:" + QString::number(num1) + "," + QString::number(num2) + "," + QString::number(num3) + "}" + enter;//这样可以生成一些错误数据
+        if(serial.isOpen()){
+            serial.write(tmp.toLocal8Bit());
+        }
+    }else if(ui->actionFloat->isChecked()){
+        QByteArray tmp;
+        tmp.append(BYTE0(num1));tmp.append(BYTE1(num1));tmp.append(BYTE2(num1));tmp.append(BYTE3(num1));
+        tmp.append(BYTE0(num2));tmp.append(BYTE1(num2));tmp.append(BYTE2(num2));tmp.append(BYTE3(num2));
+        tmp.append(BYTE0(num3));tmp.append(BYTE1(num3));tmp.append(BYTE2(num3));tmp.append(BYTE3(num3));
+        tmp.append(static_cast<char>(0x00));tmp.append(static_cast<char>(0x00));tmp.append(static_cast<char>(0x80));tmp.append(static_cast<char>(0x7F));
+        if(serial.isOpen()){
+            serial.write(tmp);
+        }
     }
 
-    if(serial.isOpen()){
-        serial.write(tmp.toLocal8Bit());
+    if(ui->actionPlotterSwitch->isChecked()){
+
+        count = count + 0.1;
     }
-    count = count + 0.1;
 }
 
 MainWindow::~MainWindow()
@@ -502,15 +525,17 @@ void MainWindow::readSerialPort()
     if(tmpReadBuff.isEmpty())//tmpReadBuff可能为空。
         return;
 
-    //读取数据并衔接到上次未处理完的数据后面
-    tmpReadBuff = unshowedRxBuff + tmpReadBuff;
-    unshowedRxBuff.clear();
-
-    //速度统计
+    //速度统计，不能和下面的互换，否则不准确
     statisticRxByteCnt += tmpReadBuff.size();
 
+    //读取数据并衔接到上次未处理完的数据后面，原始流画图时不做任何处理
+    if(protocol->getProtocolType()!=DataProtocol::Float){
+        tmpReadBuff = unshowedRxBuff + tmpReadBuff;
+        unshowedRxBuff.clear();
+    }
+
+    //绘图器解析
     if(ui->actionPlotterSwitch->isChecked()){
-        //绘图器解析
         protocol->parase(tmpReadBuff);
         while(protocol->parasedBuffSize()>0){
             //文件解析可能有大量数据，因此关闭刷新，提高解析速度
@@ -1032,17 +1057,13 @@ void MainWindow::on_actionReadOriginData_triggered()
 
         //文件分包
         #define PACKSIZE 4096
-        QElapsedTimer timer;
-        long long time;
         paraseFileBuffIndex = 0;
         paraseFileBuff.clear();
-        timer.start();
         while(RxBuff.size()>PACKSIZE){
             paraseFileBuff.append(RxBuff.mid(0,PACKSIZE));
             RxBuff.remove(0,PACKSIZE);
         }
         paraseFileBuff.append(RxBuff); //一定会有一个元素
-        time = timer.elapsed();
         RxBuff.clear();
         if(paraseFileBuff.size()<1){
             return;
@@ -1317,11 +1338,13 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 
 void MainWindow::on_actionAscii_triggered(bool checked)
 {
+    protocol->setProtocolType(DataProtocol::Ascii);
     ui->actionFloat->setChecked(!checked);
 }
 
 void MainWindow::on_actionFloat_triggered(bool checked)
 {
+    protocol->setProtocolType(DataProtocol::Float);
     ui->actionAscii->setChecked(!checked);
 }
 

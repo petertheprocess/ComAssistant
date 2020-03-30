@@ -128,7 +128,10 @@ void DataProtocol::extractPacks(const QByteArray &inputArray, QByteArray &restAr
         while (tmpArray.indexOf(MAXDATA_AS_END)!=-1) {
             QByteArray before = tmpArray.mid(0,tmpArray.indexOf(MAXDATA_AS_END));
             tmpArray = tmpArray.mid(tmpArray.indexOf(MAXDATA_AS_END)+MAXDATA_AS_END.size());
-            packsBuff << before;
+            if(before.size()%4==0)
+                packsBuff << before;
+            else
+                qDebug()<<"丢弃数据（长度不是4的倍数）："<<before.toHex().toUpper();
         }
         restArray = tmpArray;
     }
@@ -149,12 +152,14 @@ DataProtocol::RowData_t DataProtocol::extractRowData(const Pack_t &pack)
 {
 
     RowData_t rowData;
+    Pack_t dataPack;
+
     if(pack.isEmpty())
         return rowData;
-    //把数据部分提取出来
-    Pack_t dataPack = pack.mid(pack.indexOf(':'));
 
     if(protocolType == Ascii){
+        //把数据部分提取出来
+        Pack_t dataPack = pack.mid(pack.indexOf(':'));
 
         QRegularExpression reg;
         QRegularExpressionMatch match;
@@ -175,6 +180,7 @@ DataProtocol::RowData_t DataProtocol::extractRowData(const Pack_t &pack)
 
 
     }else if(protocolType == Float){
+        dataPack = pack;
         while (dataPack.size()>0) {
             float tmp;
             if(packToFloat(dataPack, tmp)){
@@ -197,7 +203,7 @@ void DataProtocol::addToDataPool(const RowData_t& rowData)
 
 bool DataProtocol::byteArrayToFloat(const QByteArray& array, float& result)
 {
-    if(array.size()<3)
+    if(array.size()<4)
         return false;
 
     char num[4];
