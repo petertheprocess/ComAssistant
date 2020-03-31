@@ -171,6 +171,7 @@ QString toHexDisplay(QByteArray const &data)
 {
     QString res;
     res = ByteArrayToHexString(data);
+//    qDebug()<<"toHexDisplay"<<res.toLocal8Bit().toHex().toUpper();
     return res;
 }
 

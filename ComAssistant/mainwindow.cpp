@@ -510,6 +510,7 @@ void MainWindow::on_comSwitch_clicked(bool checked)
 void MainWindow::readSerialPort()
 {
     QByteArray tmpReadBuff;
+    QByteArray floatParaseBuff;//用于绘图协议解析的缓冲。其中float协议不处理中文
 
     if(paraseFile){
         tmpReadBuff = paraseFileBuff.at(paraseFileBuffIndex++);
@@ -529,15 +530,23 @@ void MainWindow::readSerialPort()
     //速度统计，不能和下面的互换，否则不准确
     statisticRxByteCnt += tmpReadBuff.size();
 
-    //读取数据并衔接到上次未处理完的数据后面，原始流画图时不做任何处理
-    if(protocol->getProtocolType()!=DataProtocol::Float){
-        tmpReadBuff = unshowedRxBuff + tmpReadBuff;
-        unshowedRxBuff.clear();
+    //float绘图协议不处理中文
+    if(protocol->getProtocolType()==DataProtocol::Float){
+        floatParaseBuff = tmpReadBuff;
     }
+
+    //读取数据并衔接到上次未处理完的数据后面
+    tmpReadBuff = unshowedRxBuff + tmpReadBuff;
+    unshowedRxBuff.clear();
 
     //绘图器解析
     if(ui->actionPlotterSwitch->isChecked()){
-        protocol->parase(tmpReadBuff);
+        //根据协议选择不同的缓冲
+        if(protocol->getProtocolType()==DataProtocol::Ascii)
+            protocol->parase(tmpReadBuff);
+        else if(protocol->getProtocolType()==DataProtocol::Float)
+            protocol->parase(floatParaseBuff);
+
         while(protocol->parasedBuffSize()>0){
             //文件解析可能有大量数据，因此关闭刷新，提高解析速度
             if(paraseFile){
@@ -665,10 +674,19 @@ void MainWindow::printToTextBrowser()
     //估计当前窗口可显示多少字符
     int HH = static_cast<int>(ui->textBrowser->height()/19.2);
     int WW = static_cast<int>(ui->textBrowser->width()/9.38);
-    PAGING_SIZE = static_cast<int>(HH*WW*1.25); //1.25冗余
+    PAGING_SIZE = static_cast<int>(HH*WW*1.25); //冗余
+    //不超过最大值
     if(PAGING_SIZE > PAGEING_SIZE_MAX)
         PAGING_SIZE = PAGEING_SIZE_MAX;
-//    qDebug()<<HH<<WW<<HH*WW<<PAGING_SIZE;
+    //且满足gbk/utf8编码长度的倍数
+    if(ui->actionGBK->isChecked()){
+        while(PAGING_SIZE%2!=0)
+            PAGING_SIZE--;
+    }else if(ui->actionUTF8->isChecked()){
+        while(PAGING_SIZE%3!=0)
+            PAGING_SIZE--;
+    }
+//    qDebug()<<"printToTextBrowser"<<HH<<WW<<HH*WW<<PAGING_SIZE;
 
     //打印数据
     if(ui->hexDisplay->isChecked()){
@@ -2165,18 +2183,14 @@ void MainWindow::on_actionSendFile_triggered()
         file.close();
 
         //文件分包
-        #define PACKSIZE 512
-        QElapsedTimer timer;
-        long long time;
+        #define PACKSIZE_SENDFILE 256
         SendFileBuffIndex = 0;
         SendFileBuff.clear();
-        timer.start();
-        while(TxBuff.size()>PACKSIZE){
-            SendFileBuff.append(TxBuff.mid(0,PACKSIZE));
-            TxBuff.remove(0,PACKSIZE);
+        while(TxBuff.size()>PACKSIZE_SENDFILE){
+            SendFileBuff.append(TxBuff.mid(0,PACKSIZE_SENDFILE));
+            TxBuff.remove(0,PACKSIZE_SENDFILE);
         }
         SendFileBuff.append(TxBuff); //一定会有一个元素
-        time = timer.elapsed();
         TxBuff.clear();
         if(SendFileBuff.size()<1){
             return;
@@ -2184,10 +2198,10 @@ void MainWindow::on_actionSendFile_triggered()
 
         if(serial.isOpen()){
             ui->textBrowser->clear();
-            ui->textBrowser->append("File size: "+QString::number(file.size())+" Byte");
-            ui->textBrowser->append("One pack size: "+QString::number(PACKSIZE)+" Byte");
+            ui->textBrowser->append("File size: "+QString::number(file.size())+" Bytes");
+            ui->textBrowser->append("One pack size: "+QString::number(PACKSIZE_SENDFILE)+" Bytes");
             ui->textBrowser->append("Total packs: "+QString::number(SendFileBuff.size())+" packs");
-            ui->textBrowser->append("Elapsed time: "+QString::number(time)+" ms\n");
+            ui->textBrowser->append("");
             QString str = ui->textBrowser->document()->toPlainText();
             BrowserBuff.clear();
             BrowserBuff.append(str);

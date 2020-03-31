@@ -124,6 +124,11 @@ bool QCustomPlotControl::addGraph(QCustomPlot* customPlot, int num)
     for(int i = 0; i < min; i++){
         customPlot->addGraph();
     }
+
+    //设置自适应采样，提高大数据性能
+    for(int i = 0; i < customPlot->graphCount(); i++){
+        customPlot->graph(i)->setAdaptiveSampling(true);
+    }
     //设置画笔
     setupPenWidth(customPlot);
 
