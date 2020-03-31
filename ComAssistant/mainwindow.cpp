@@ -1176,11 +1176,11 @@ void MainWindow::on_baudrateList_currentTextChanged(const QString &arg1)
 */
 void MainWindow::on_comList_textActivated(const QString &arg1)
 {
-    static int lastIndex = -1;
+//    static QString lastIndex = 0;
 
-    //激活的文本编号没有变动不做处理。（只能用编号因为文本内容可能会变）
-    if(lastIndex == ui->comList->currentIndex())
-        return;
+//    //激活的文本编号没有变动不做处理。（只能用编号因为文本内容可能会变）
+//    if(lastIndex == ui->comList->currentIndex())
+//        return;
 
     //关闭自动发送功能
     if(ui->cycleSendCheck->isChecked()){
@@ -1194,12 +1194,12 @@ void MainWindow::on_comList_textActivated(const QString &arg1)
     QString unused = arg1;//屏蔽警告
     //重新打开串口
     if(serial.isOpen()){
-        ui->statusBar->showMessage("重新启动串口",1000);
         on_comSwitch_clicked(false);
         on_comSwitch_clicked(true);
+        ui->statusBar->showMessage("已重新启动串口",1000);
     }
 
-    lastIndex = ui->comList->currentIndex();
+//    lastIndex = ui->comList->currentIndex();
 }
 
 void MainWindow::on_actionSaveShowedData_triggered()
