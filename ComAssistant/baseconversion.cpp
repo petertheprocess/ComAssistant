@@ -171,6 +171,10 @@ QString toHexDisplay(QByteArray const &data)
 {
     QString res;
     res = ByteArrayToHexString(data);
+    //感觉操作频繁的时候会出现空格开头的字符串，不知道为什么
+    if(res.startsWith(' ')){
+        res.remove(0,1);
+    }
 //    qDebug()<<"toHexDisplay"<<res.toLocal8Bit().toHex().toUpper();
     return res;
 }

@@ -263,8 +263,9 @@ MainWindow::MainWindow(QWidget *parent) :
     serial.resetCnt();
     statusStatisticLabel->setText(serial.getTxRxString());
 
-    //搜寻可用串口
+    //搜寻可用串口，并尝试打开
     on_refreshCom_clicked();
+    tryOpenSerialIfOnlyOne();
 
     //提交使用统计任务
     httpTaskVector.push_back(PostStatic);
@@ -333,11 +334,6 @@ void MainWindow::secTimerSlot()
 
 void MainWindow::debugTimerSlot()
 {
-//    #define BYTE0(dwTemp)       (*reinterpret_cast<char *>(&dwTemp))
-//    #define BYTE1(dwTemp)       (*reinterpret_cast<char *>((&dwTemp)) + 1)
-//    #define BYTE2(dwTemp)       (*reinterpret_cast<char *>((&dwTemp)) + 2)
-//    #define BYTE3(dwTemp)       (*reinterpret_cast<char *>((&dwTemp)) + 3)
-
     #define BYTE0(dwTemp)       static_cast<char>((*reinterpret_cast<char *>(&dwTemp)))
     #define BYTE1(dwTemp)       static_cast<char>((*(reinterpret_cast<char *>(&dwTemp) + 1)))
     #define BYTE2(dwTemp)       static_cast<char>((*(reinterpret_cast<char *>(&dwTemp) + 2)))
@@ -439,30 +435,38 @@ MainWindow::~MainWindow()
 }
 
 /*
- * Function:刷新串口按下
+ * Function:刷新串口按下。不知道为什么打开串口后再调用该函数就崩溃
 */
 void MainWindow::on_refreshCom_clicked()
 {
+    //测试更新下拉列表
+    mySerialPort *testSerial = new mySerialPort;
     QList<QString> tmp;
-    //清空下拉列表
-    ui->comList->clear();
 
-    //搜索串口
-    tmp = serial.refreshSerialPort();
+    tmp = testSerial->refreshSerialPort();
+    ui->comList->clear();
     foreach(const QString &info, tmp)
     {
         ui->comList->addItem(info);
     }
-
     if(ui->comList->count() == 0)
         ui->comList->addItem("未找到可用串口!");
+    delete testSerial;
+}
 
-    //只存在一个串口时自动打开
-    if(ui->comList->count()==1 && ui->comList->currentText()!="未找到可用串口!"){
+/*
+ * Function:在只有一个串口设备时且未被占用时尝试打开
+*/
+bool MainWindow::tryOpenSerialIfOnlyOne()
+{
+    //只存在一个串口时且串口未被占用时自动打开
+    if(ui->comList->count()==1 && ui->comList->currentText().indexOf("占用")==-1 && ui->comList->currentText()!="未找到可用串口!"){
         ui->refreshCom->setChecked(false);
         ui->comSwitch->setChecked(true);
         on_comSwitch_clicked(true);
-    }
+        return true;
+    }else
+        return false;
 }
 
 //串口开关
@@ -482,7 +486,11 @@ void MainWindow::on_comSwitch_clicked(bool checked)
             ui->comSwitch->setText("打开串口");
             ui->comSwitch->setChecked(false);
             ui->refreshCom->setEnabled(true);
-            QString msg = "请检查下列情况后重新打开串口：\n\n# USB线缆是否松动？\n# 是否选择了正确的串口设备？\n# 该串口是否被其他程序占用？\n# 是否设置了过高的波特率？\n";
+            QString msg = "请检查下列情况后重新打开串口：\n\n"
+                          "# USB线缆是否松动？\n"
+                          "# 是否选择了正确的串口设备？\n"
+                          "# 该串口是否被其他程序占用？\n"
+                          "# 是否设置了过高的波特率？\n";
             QMessageBox::critical(this, "串口打开失败!", msg, QMessageBox::Ok);
         }
     }
@@ -502,6 +510,8 @@ void MainWindow::on_comSwitch_clicked(bool checked)
         ui->comSwitch->setChecked(false);
         ui->refreshCom->setEnabled(true);
     }
+    //刷新串口状态
+    on_refreshCom_clicked();
 }
 
 /*
@@ -676,8 +686,9 @@ void MainWindow::printToTextBrowser()
     int WW = static_cast<int>(ui->textBrowser->width()/9.38);
     PAGING_SIZE = static_cast<int>(HH*WW*1.25); //冗余
     //不超过最大值
-    if(PAGING_SIZE > PAGEING_SIZE_MAX)
+    if(PAGING_SIZE > PAGEING_SIZE_MAX){
         PAGING_SIZE = PAGEING_SIZE_MAX;
+    }
     //且满足gbk/utf8编码长度的倍数
     if(ui->actionGBK->isChecked()){
         while(PAGING_SIZE%2!=0)
@@ -1161,10 +1172,16 @@ void MainWindow::on_baudrateList_currentTextChanged(const QString &arg1)
 }
 
 /*
- * Function:端口号文本变化，重新打开串口
+ * Function:选择了新的端口号，重新打开串口
 */
-void MainWindow::on_comList_currentTextChanged(const QString &arg1)
+void MainWindow::on_comList_textActivated(const QString &arg1)
 {
+    static int lastIndex = -1;
+
+    //激活的文本编号没有变动不做处理。（只能用编号因为文本内容可能会变）
+    if(lastIndex == ui->comList->currentIndex())
+        return;
+
     //关闭自动发送功能
     if(ui->cycleSendCheck->isChecked()){
         on_cycleSendCheck_clicked(false);
@@ -1181,8 +1198,9 @@ void MainWindow::on_comList_currentTextChanged(const QString &arg1)
         on_comSwitch_clicked(false);
         on_comSwitch_clicked(true);
     }
-}
 
+    lastIndex = ui->comList->currentIndex();
+}
 
 void MainWindow::on_actionSaveShowedData_triggered()
 {
@@ -2216,4 +2234,3 @@ void MainWindow::on_actionSendFile_triggered()
         lastFileName.clear();
     }
 }
-

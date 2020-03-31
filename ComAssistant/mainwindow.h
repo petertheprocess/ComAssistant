@@ -68,6 +68,7 @@ private slots:
     void paraseFileSlot();
 
     void on_refreshCom_clicked();
+    bool tryOpenSerialIfOnlyOne();
 
     void on_comSwitch_clicked(bool checked);
 
@@ -115,7 +116,7 @@ private slots:
 
     void on_baudrateList_currentTextChanged(const QString &arg1);
 
-    void on_comList_currentTextChanged(const QString &arg1);
+    void on_comList_textActivated(const QString &arg1);
 
     void on_sendInterval_textChanged(const QString &arg1);
 
