@@ -62,7 +62,30 @@ QList<QString> mySerialPort::refreshSerialPort()
         }
     }
 
-    return tmp;
+    //排序
+    QList<QString> sorted;
+    if(false == tmp.isEmpty()){
+        QList<QString> tmp2;//用于存放COM0-COM9的条目
+        QList<QString> tmp3;//用于存放COM10-COM99的条目
+        for(int i = 0; i < tmp.size(); i++){
+            //COM号在0-9
+            if(tmp.at(i).indexOf("(")==4){
+                tmp2.append(tmp.at(i));
+            }
+            else if(tmp.at(i).indexOf("(")==5){
+                tmp3.append(tmp.at(i));
+            }
+
+        }
+        tmp2.sort();
+        tmp3.sort();
+        sorted.append(tmp2);
+        sorted.append(tmp3);
+    }else{
+        sorted = tmp;
+    }
+
+    return sorted;
 }
 
 /*

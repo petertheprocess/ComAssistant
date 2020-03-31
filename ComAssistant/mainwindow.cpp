@@ -273,6 +273,8 @@ MainWindow::MainWindow(QWidget *parent) :
     httpTaskVector.push_back(BackStageGetVersion);
 
     //启动定时器
+    secTimer.setTimerType(Qt::PreciseTimer);
+    cycleReadTimer.setTimerType(Qt::PreciseTimer);
     secTimer.start(1000);
     cycleReadTimer.start(5);
 }
@@ -438,12 +440,16 @@ MainWindow::~MainWindow()
  * Function:刷新串口按下。不知道为什么打开串口后再调用该函数就崩溃
 */
 void MainWindow::on_refreshCom_clicked()
-{
+{   
     //测试更新下拉列表
     mySerialPort *testSerial = new mySerialPort;
     QList<QString> tmp;
 
     tmp = testSerial->refreshSerialPort();
+    //刷新串口状态，需要记录当前选择的条目用于刷新后恢复
+    int index = ui->comList->currentIndex();
+    if(index == -1)//如果没有条目被选中，默认选择第一个
+        index = 0;
     ui->comList->clear();
     foreach(const QString &info, tmp)
     {
@@ -451,6 +457,8 @@ void MainWindow::on_refreshCom_clicked()
     }
     if(ui->comList->count() == 0)
         ui->comList->addItem("未找到可用串口!");
+    ui->comList->setCurrentIndex(index);
+
     delete testSerial;
 }
 
@@ -510,7 +518,7 @@ void MainWindow::on_comSwitch_clicked(bool checked)
         ui->comSwitch->setChecked(false);
         ui->refreshCom->setEnabled(true);
     }
-    //刷新串口状态
+
     on_refreshCom_clicked();
 }
 
@@ -521,6 +529,13 @@ void MainWindow::readSerialPort()
 {
     QByteArray tmpReadBuff;
     QByteArray floatParaseBuff;//用于绘图协议解析的缓冲。其中float协议不处理中文
+
+    //先获取时间，避免解析数据导致时间消耗的影响
+    QString timeString;
+    if(!autoSubcontractTimer.isActive()){
+        timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
+        timeString = "["+timeString+"]Rx<- ";
+    }
 
     if(paraseFile){
         tmpReadBuff = paraseFileBuff.at(paraseFileBuffIndex++);
@@ -626,11 +641,6 @@ void MainWindow::readSerialPort()
 
     //时间戳选项
     if(ui->timeStampCheckBox->isChecked()){
-        QString timeString;
-        if(!autoSubcontractTimer.isActive()){
-            timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
-            timeString = "["+timeString+"]Rx<- ";
-        }
 //            ui->textBrowser->insertPlainText(timeString + QString::fromLocal8Bit(tmpReadBuff));
         //hex解析
         hexBrowserBuff.append(timeString + toHexDisplay(tmpReadBuff).toLatin1() + "\n");//显示在浏览器的数据一律用\n换行
@@ -1375,14 +1385,18 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 
 void MainWindow::on_actionAscii_triggered(bool checked)
 {
+    checked = !!checked;
     protocol->setProtocolType(DataProtocol::Ascii);
-    ui->actionFloat->setChecked(!checked);
+    ui->actionAscii->setChecked(true);
+    ui->actionFloat->setChecked(false);
 }
 
 void MainWindow::on_actionFloat_triggered(bool checked)
 {
+    checked = !!checked;
     protocol->setProtocolType(DataProtocol::Float);
-    ui->actionAscii->setChecked(!checked);
+    ui->actionAscii->setChecked(false);
+    ui->actionFloat->setChecked(true);
 }
 
 void MainWindow::on_actiondebug_triggered(bool checked)
