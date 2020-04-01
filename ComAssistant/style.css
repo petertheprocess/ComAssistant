@@ -1,0 +1,14 @@
+QPushButton#comSwitch{  
+    border: 2px solid rgb(235, 70, 70);  
+    width: 93px;
+    height: 30px;
+}    
+QPushButton#comSwitch:hover{     
+    border: 2px solid rgb(235, 150, 70);
+}  
+QPushButton#comSwitch:pressed{  
+    border: 2px solid rgb(210, 235, 70);  
+}
+QPushButton#comSwitch:checked{  
+  border: 2px solid rgb(75, 220, 65);   
+}  

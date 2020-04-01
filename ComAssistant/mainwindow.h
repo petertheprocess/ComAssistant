@@ -82,8 +82,6 @@ private slots:
     void cycleSendTimerSlot();
     void cycleReadTimerSlot();
 
-    void autoSubcontractTimerSlot();
-
     void on_cycleSendCheck_clicked(bool checked);
 
     void on_textEdit_textChanged();
@@ -199,7 +197,6 @@ private:
     int SendFileBuffIndex = 0; //
     QByteArray unshowedRxBuff;    //未上屏的接收缓冲
     QTimer cycleSendTimer; //循环发送定时器
-    QTimer autoSubcontractTimer; //自动分包定时器
     QTimer debugTimer; //调试定时器
     QTimer secTimer;  //秒定时器
     QTimer cycleReadTimer; //

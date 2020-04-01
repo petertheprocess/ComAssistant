@@ -189,6 +189,7 @@ void MainWindow::readConfig()
     plotControl.setNameSet(ui->customPlot, Config::getPlotterGraphNames(plotControl.getMaxValidGraphNumber()));
 }
 
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -196,11 +197,16 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    //加载样式表
+    QFile file("style.css");
+    file.open(QFile::ReadOnly);
+    this->setStyleSheet(file.readAll());
+    file.close();
+
     connect(this, SIGNAL(paraseFileSignal()),this,SLOT(paraseFileSlot()));
 
     //槽
     connect(&cycleSendTimer, SIGNAL(timeout()), this, SLOT(cycleSendTimerSlot()));
-    connect(&autoSubcontractTimer, SIGNAL(timeout()), this, SLOT(autoSubcontractTimerSlot()));
     connect(&secTimer, SIGNAL(timeout()), this, SLOT(secTimerSlot()));
     connect(&cycleReadTimer, SIGNAL(timeout()), this, SLOT(cycleReadTimerSlot()));
 //    connect(&serial, SIGNAL(readyRead()), this, SLOT(readSerialPort()));
@@ -532,10 +538,10 @@ void MainWindow::readSerialPort()
 
     //先获取时间，避免解析数据导致时间消耗的影响
     QString timeString;
-    if(!autoSubcontractTimer.isActive()){
-        timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
-        timeString = "["+timeString+"]Rx<- ";
-    }
+    static bool needEnter = false;
+    static bool needTimeString = true;
+    timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
+    timeString = "["+timeString+"]Rx<- ";
 
     if(paraseFile){
         tmpReadBuff = paraseFileBuff.at(paraseFileBuffIndex++);
@@ -549,8 +555,30 @@ void MainWindow::readSerialPort()
             return;
     }
 
-    if(tmpReadBuff.isEmpty())//tmpReadBuff可能为空。
+    //tmpReadBuff可能为空。
+    if(tmpReadBuff.isEmpty()){
+        //如果开启时间戳轮询到空数据，说明没有数据了，可以补回车换行了
+        if(ui->timeStampCheckBox->isChecked()){
+            if(needEnter){
+                hexBrowserBuff.append("\n");
+                BrowserBuff.append("\n");
+                needEnter = false;
+                needTimeString = true;
+            }
+        }
+        //其他的解析没必要进行，直接返回
         return;
+    }else{
+        //如果开启时间戳，又多次轮询到了数据，则只需要显示一次时间戳，并置位需要回车标志，下次轮询到空数据时可以追加回车
+        if(ui->timeStampCheckBox->isChecked()){
+            if(needTimeString){
+                needTimeString = false;
+            }else{
+                timeString.clear();
+            }
+            needEnter = true;
+        }
+    }
 
     //速度统计，不能和下面的互换，否则不准确
     statisticRxByteCnt += tmpReadBuff.size();
@@ -641,19 +669,14 @@ void MainWindow::readSerialPort()
 
     //时间戳选项
     if(ui->timeStampCheckBox->isChecked()){
-//            ui->textBrowser->insertPlainText(timeString + QString::fromLocal8Bit(tmpReadBuff));
         //hex解析
-        hexBrowserBuff.append(timeString + toHexDisplay(tmpReadBuff).toLatin1() + "\n");//显示在浏览器的数据一律用\n换行
+        hexBrowserBuff.append(timeString + toHexDisplay(tmpReadBuff).toLatin1());//换行符在前面判断没有数据时自动追加一次
         //asic解析，显示的数据一律不要\r
         while(tmpReadBuff.indexOf("\r\n")!=-1){
             tmpReadBuff.replace("\r\n","\n");
         }
-        BrowserBuff.append(timeString + QString::fromLocal8Bit(tmpReadBuff) + "\n");
-        //自动分包定时器
-        autoSubcontractTimer.start(10);
-        autoSubcontractTimer.setSingleShot(true);
+        BrowserBuff.append(timeString + QString::fromLocal8Bit(tmpReadBuff));//换行符在前面判断没有数据时自动追加一次
     }else{
-//            ui->textBrowser->insertPlainText(QString::fromLocal8Bit(tmpReadBuff));
         //hex解析
         hexBrowserBuff.append(toHexDisplay(tmpReadBuff).toLatin1());
         //asic解析，显示的数据一律不要\r
@@ -668,6 +691,7 @@ void MainWindow::readSerialPort()
 
     //更新收发统计
     statusStatisticLabel->setText(serial.getTxRxString());
+
 }
 
 void MainWindow::paraseFileSlot()
@@ -764,13 +788,6 @@ void MainWindow::cycleSendTimerSlot()
 }
 
 /*
- * Function:自动分包定时器槽
-*/
-void MainWindow::autoSubcontractTimerSlot()
-{
-}
-
-/*
  * Function:发送数据
 */
 void MainWindow::on_sendButton_clicked()
@@ -801,7 +818,6 @@ void MainWindow::on_sendButton_clicked()
     }
 
     //十六进制检查
-//    QByteArray dataFlowInHex;
     QByteArray sendArr; //真正发送出去的数据
     if(ui->hexSend->isChecked()){
         //以hex发送数据
@@ -1186,12 +1202,6 @@ void MainWindow::on_baudrateList_currentTextChanged(const QString &arg1)
 */
 void MainWindow::on_comList_textActivated(const QString &arg1)
 {
-//    static QString lastIndex = 0;
-
-//    //激活的文本编号没有变动不做处理。（只能用编号因为文本内容可能会变）
-//    if(lastIndex == ui->comList->currentIndex())
-//        return;
-
     //关闭自动发送功能
     if(ui->cycleSendCheck->isChecked()){
         on_cycleSendCheck_clicked(false);
@@ -1206,10 +1216,11 @@ void MainWindow::on_comList_textActivated(const QString &arg1)
     if(serial.isOpen()){
         on_comSwitch_clicked(false);
         on_comSwitch_clicked(true);
-        ui->statusBar->showMessage("已重新启动串口",1000);
+        if(serial.isOpen())
+            ui->statusBar->showMessage("已重新启动串口",1000);
+        else
+            ui->statusBar->showMessage("串口重启失败",1000);
     }
-
-//    lastIndex = ui->comList->currentIndex();
 }
 
 void MainWindow::on_actionSaveShowedData_triggered()
