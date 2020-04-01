@@ -1276,9 +1276,18 @@ void MainWindow::on_actionSTM32_ISP_triggered()
     bool serialState = ui->comSwitch->isChecked();
     if(serialState)
         on_comSwitch_clicked(false);
+
+    QFile file;
+    file.copy(":/stm32isp.exe","stm32isp.exe");
+    file.setFileName("stm32isp.exe");
+    file.setPermissions(QFile::ReadOwner|QFileDevice::WriteOwner|QFileDevice::ExeOwner);
+
     STM32ISP_Dialog *p = new STM32ISP_Dialog(this);
     p->exec();
     delete p;
+
+    file.remove();
+
     if(serialState)
         on_comSwitch_clicked(true);
 }

@@ -70,9 +70,8 @@ STM32ISP_Dialog::STM32ISP_Dialog(QWidget *parent) :
                 tr("点击Download下载文件\r\n")+
                 tr("点击GetChipInfo获取芯片信息\r\n")+
                 tr("--------------------------------------------------\r\n")+
-                tr("文件路径请避免空格和中文，本上位机未作特别处理，可能导致问题。\r\n")+
-                tr("确保STM32已经进入ISP Bootloader(或者BT0被置高后并复位)。\r\n")+
-                tr("本程序调用stm32isp.exe实现ISP升级。\r\n")
+                tr("- 文件路径请避免空格和中文，本上位机未作特别处理，可能导致问题。\r\n")+
+                tr("- 【确保STM32已经进入ISP Bootloader(或者BT0被置高后并复位)。】\r\n")
                 );
     ui->browser->append("STM32F1/F4系列可使用以下函数跳转至ISP Bootloader：\n");
     ui->browser->append(
@@ -111,11 +110,11 @@ STM32ISP_Dialog::STM32ISP_Dialog(QWidget *parent) :
                         );
     ui->browser->append("欢迎访问：<a href=\"https://shop490276933.taobao.com\">https://shop490276933.taobao.com</a>\r\n");
 
-        QLabel *permanent1=new QLabel(this);
-        permanent1->setText(tr("<a href=\"https://shop490276933.taobao.com\">淘宝店铺</a>"));
-        permanent1->setOpenExternalLinks(true);//设置可以打开网站链接
-        ui->statusBar->addPermanentWidget(permanent1);//显示永久信息
-        ui->statusBar->show();
+    QLabel *permanent1=new QLabel(this);
+    permanent1->setText(tr("<a href=\"https://shop490276933.taobao.com\">淘宝店铺</a>"));
+    permanent1->setOpenExternalLinks(true);//设置可以打开网站链接
+    ui->statusBar->addPermanentWidget(permanent1);//显示永久信息
+    ui->statusBar->show();
 }
 
 STM32ISP_Dialog::~STM32ISP_Dialog()
@@ -181,7 +180,7 @@ void STM32ISP_Dialog::on_refresh_clicked()
 }
 
 //路径不允许有空格，否则要加双引号！
-static QString CLIToolPath=":/stm32isp.exe";
+static QString CLIToolPath="stm32isp.exe";
 //下载按钮
 void STM32ISP_Dialog::on_download_clicked()
 {
@@ -205,7 +204,10 @@ void STM32ISP_Dialog::on_download_clicked()
     cmdLine.append("/c "+CLIToolPath+" "+path+" "+comPort+" "+CMD);
     qDebug()<<cmdLine;
 
-    process->start("cmd",cmdLine);
+//    process->start("cmd",cmdLine);
+    process->setProgram(CLIToolPath);
+    process->setArguments(QStringList()<<path<<comPort<<CMD);
+    process->start();
 }
 
 //获取信息
@@ -228,5 +230,9 @@ void STM32ISP_Dialog::on_getchipinfo_clicked()
     QStringList cmdLine;
     cmdLine.append("/c "+CLIToolPath+" "+comPort+" "+CMD);
     qDebug()<<cmdLine;
-    process->start("cmd",cmdLine);
+
+//    process->start("cmd",cmdLine);
+    process->setProgram(CLIToolPath);
+    process->setArguments(QStringList()<<comPort<<CMD);
+    process->start();
 }

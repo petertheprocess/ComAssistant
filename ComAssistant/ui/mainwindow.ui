@@ -549,6 +549,9 @@ p, li { white-space: pre-wrap; }
    </property>
   </action>
   <action name="actionSTM32_ISP">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>STM32-ISP</string>
    </property>
