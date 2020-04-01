@@ -1,6 +1,6 @@
 QPushButton#comSwitch{  
     border: 2px solid rgb(235, 70, 70);  
-    width: 93px;
+    width: 93px; 
     height: 30px;
 }    
 QPushButton#comSwitch:hover{     

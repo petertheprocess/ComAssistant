@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>manual.html</file>
+        <file>style.css</file>
+        <file>stm32isp.exe</file>
+    </qresource>
+</RCC>

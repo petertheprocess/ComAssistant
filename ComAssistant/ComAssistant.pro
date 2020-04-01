@@ -63,20 +63,20 @@ SOURCES += \
     QXlsx/source/xlsxworksheet.cpp \
     QXlsx/source/xlsxzipreader.cpp \
     QXlsx/source/xlsxzipwriter.cpp \
-        baseconversion.cpp \
-        config.cpp \
-        dialog/about_me_dialog.cpp \
-        dialog/settings_dialog.cpp \
-        dialog/stm32isp_dialog.cpp \
-        highlighter.cpp \
-        main.cpp \
-        mainwindow.cpp \
-        myserialport.cpp \
-        plotter/axistag.cpp \
-        plotter/dataprotocol.cpp \
+    baseconversion.cpp \
+    config.cpp \
+    dialog/about_me_dialog.cpp \
+    dialog/settings_dialog.cpp \
+    dialog/stm32isp_dialog.cpp \
+    highlighter.cpp \
+    main.cpp \
+    mainwindow.cpp \
+    myserialport.cpp \
+    plotter/axistag.cpp \
+    plotter/dataprotocol.cpp \
     plotter/mytracer.cpp \
-        plotter/qcustomplot.cpp \
-        plotter/qcustomplotcontrol.cpp \
+    plotter/qcustomplot.cpp \
+    plotter/qcustomplotcontrol.cpp \
 
 HEADERS += \
     QXlsx/header/xlsxabstractooxmlfile.h \
@@ -127,19 +127,19 @@ HEADERS += \
     QXlsx/header/xlsxzipreader_p.h \
     QXlsx/header/xlsxzipwriter_p.h \
     QXlsx/myxlsx.h \
-        baseconversion.h \
-        config.h \
-        dialog/about_me_dialog.h \
-        dialog/settings_dialog.h \
-        dialog/stm32isp_dialog.h \
-        highlighter.h \
-        mainwindow.h \
-        myserialport.h \
-        plotter/axistag.h \
-        plotter/dataprotocol.h \
+    baseconversion.h \
+    config.h \
+    dialog/about_me_dialog.h \
+    dialog/settings_dialog.h \
+    dialog/stm32isp_dialog.h \
+    highlighter.h \
+    mainwindow.h \
+    myserialport.h \
+    plotter/axistag.h \
+    plotter/dataprotocol.h \
     plotter/mytracer.h \
-        plotter/qcustomplot.h \
-        plotter/qcustomplotcontrol.h \
+    plotter/qcustomplot.h \
+    plotter/qcustomplotcontrol.h \
 
 FORMS += \
         about_me_dialog.ui \
@@ -166,3 +166,8 @@ INCLUDEPATH += $$PWD/QXlsx/header/
 
 # 支持QCustomPlot
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
+
+RESOURCES += \
+    resources/resources.qrc
+
+DISTFILES +=

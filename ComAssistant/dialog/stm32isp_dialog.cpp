@@ -181,7 +181,7 @@ void STM32ISP_Dialog::on_refresh_clicked()
 }
 
 //路径不允许有空格，否则要加双引号！
-static QString CLIToolPath="stm32isp.exe";
+static QString CLIToolPath=":/stm32isp.exe";
 //下载按钮
 void STM32ISP_Dialog::on_download_clicked()
 {

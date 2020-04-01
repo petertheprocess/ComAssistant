@@ -198,7 +198,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     //加载样式表
-    QFile file("style.css");
+    QFile file(":/style.css");
     file.open(QFile::ReadOnly);
     this->setStyleSheet(file.readAll());
     file.close();
@@ -1799,7 +1799,7 @@ void MainWindow::on_actionResetDefaultConfig_triggered(bool checked)
 
 void MainWindow::on_actionManual_triggered()
 {
-    QFile file("manual.html");
+    QFile file(":/manual.html");
     QString html;
     if(file.exists()){
         if(file.open(QFile::ReadOnly)){
