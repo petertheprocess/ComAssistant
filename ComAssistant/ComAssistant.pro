@@ -142,10 +142,10 @@ HEADERS += \
     plotter/qcustomplotcontrol.h \
 
 FORMS += \
-        about_me_dialog.ui \
-        mainwindow.ui \
-        settings_dialog.ui \
-        stm32isp_dialog.ui
+        ui/about_me_dialog.ui \
+        ui/mainwindow.ui \
+        ui/settings_dialog.ui \
+        ui/stm32isp_dialog.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

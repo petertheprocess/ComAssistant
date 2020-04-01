@@ -1,14 +1,19 @@
+/* 串口开关样式 */
 QPushButton#comSwitch{  
-    border: 2px solid rgb(235, 70, 70);  
+    border: 2px solid rgb(200, 50, 50);  
+    color: rgb(200, 50, 50);
     width: 93px; 
     height: 30px;
 }    
 QPushButton#comSwitch:hover{     
     border: 2px solid rgb(235, 150, 70);
+    color: rgb(235, 150, 70);
 }  
 QPushButton#comSwitch:pressed{  
-    border: 2px solid rgb(210, 235, 70);  
+    border: 2px solid rgb(160, 180, 30);  
+    color: rgb(160, 180, 30);
 }
 QPushButton#comSwitch:checked{  
-  border: 2px solid rgb(75, 220, 65);   
+  border: 2px solid rgb(40, 160, 40);   
+  color: rgb(40, 160, 40);
 }  
