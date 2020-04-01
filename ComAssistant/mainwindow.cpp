@@ -2075,6 +2075,7 @@ void MainWindow::on_actionUsageStatistic_triggered()
     double totalTx = Config::getTotalTxCnt().toUInt() + currentTx;
     double totalRx = Config::getTotalRxCnt().toUInt() + currentRx;
     double totalRunTime = Config::getTotalRunTime().toUInt() + currentRunTime_f;
+    double totalTxRx_MB = totalTx/1024/1024 + totalRx/1024/1024;
     //单位
     QString totalTxUnit;
     QString totalRxUnit;
@@ -2170,6 +2171,26 @@ void MainWindow::on_actionUsageStatistic_triggered()
     min = QString::number(minute,10);
     sec = QString::number(second,10);
     totalRunTimeStr = days + " 天 " + hou + " 小时 " + min + " 分钟 " + sec + " 秒";
+
+    QString rankStr;
+    if(totalTxRx_MB<100){
+        rankStr = "恭喜您，获得了【青铜码农】的称号！请再接再厉！";
+    }else if(totalTxRx_MB<200){
+        rankStr = "恭喜您，获得了【白银码农】的称号！请再接再厉！";
+    }else if(totalTxRx_MB<400){
+        rankStr = "恭喜您，获得了【黄金码农】的称号！请再接再厉！";
+    }else if(totalTxRx_MB<800){
+        rankStr = "恭喜您，获得了【铂金码农】的称号！请再接再厉！";
+    }else if(totalTxRx_MB<1600){
+        rankStr = "恭喜您，获得了【星钻码农】的称号！请再接再厉！";
+    }else if(totalTxRx_MB<3200){
+        rankStr = "恭喜您，获得了【皇冠码农】的称号！请再接再厉！";
+    }else if(totalTxRx_MB<6400){
+        rankStr = "恭喜您，获得了【王牌码农】的称号！请再接再厉！";
+    }else{
+        rankStr = "荣誉只是浮云。";
+    }
+
     //上屏显示
     ui->textBrowser->clear();
     ui->textBrowser->append("软件版本："+Config::getVersion());
@@ -2187,6 +2208,8 @@ void MainWindow::on_actionUsageStatistic_triggered()
     ui->textBrowser->append("   - 共接收数据："+QString::number(totalRx,'f',2)+totalRxUnit);
     ui->textBrowser->append("   - 共运行本软件："+totalRunTimeStr);
     ui->textBrowser->append("   - 共启动本软件："+QString::number(Config::getTotalRunCnt().toInt()+1)+" 次");
+    ui->textBrowser->append("");
+    ui->textBrowser->append("   "+rankStr);
     ui->textBrowser->append("");
     ui->textBrowser->append("【隐私声明】");
     ui->textBrowser->append("  - 以上统计信息可能会被上传至服务器用于统计。");
