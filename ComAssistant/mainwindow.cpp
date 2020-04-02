@@ -1355,8 +1355,8 @@ void MainWindow::on_multiString_itemDoubleClicked(QListWidgetItem *item)
 void MainWindow::on_actionMultiString_triggered(bool checked)
 {
     if(checked){
-        ui->splitter->setStretchFactor(0,78);
-        ui->splitter->setStretchFactor(1,22);
+        ui->splitter->setStretchFactor(0,22);
+        ui->splitter->setStretchFactor(1,78);
         ui->multiString->show();
         ui->multiString->setAlternatingRowColors(true);
     }else {
@@ -1446,8 +1446,8 @@ void MainWindow::clearSeedsSlot()
 void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 {
     if(checked){
-//        ui->splitter_3->setStretchFactor(0,1);
-//        ui->splitter_3->setStretchFactor(1,15);
+        ui->splitter_3->setStretchFactor(0,1);
+        ui->splitter_3->setStretchFactor(1,15);
         ui->customPlot->show();
     }else{
         ui->customPlot->close();
