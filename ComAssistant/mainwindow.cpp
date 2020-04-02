@@ -168,25 +168,31 @@ void MainWindow::readConfig()
     ui->textEdit->setText(Config::getTextSendArea());
     ui->textEdit->moveCursor(QTextCursor::End);
 
-    //绘图器
+    //绘图器开关
     ui->actionPlotterSwitch->setChecked(Config::getPlotterState());
-    if(ui->actionPlotterSwitch->isChecked())
+    if(ui->actionPlotterSwitch->isChecked()){
         ui->customPlot->show();
-    else
-        ui->customPlot->close();
-    if(Config::getPlotterType()==ProtocolType_e::Ascii){
-        ui->actionHidePlotData->setEnabled(true);
-        protocol->setProtocolType(DataProtocol::Ascii);
-        ui->actionAscii->setChecked(true);
-        ui->actionFloat->setChecked(false);
-    }else if(Config::getPlotterType()==ProtocolType_e::Float){
-        ui->actionHidePlotData->setEnabled(false);
-        protocol->setProtocolType(DataProtocol::Float);
-        ui->actionAscii->setChecked(false);
-        ui->actionFloat->setChecked(true);
     }
+    else{
+        ui->customPlot->close();
+    }
+    //协议类型
+    if(Config::getPlotterType()==ProtocolType_e::Ascii){
+        on_actionAscii_triggered(true);
+    }else if(Config::getPlotterType()==ProtocolType_e::Float){
+        on_actionFloat_triggered(true);
+    }
+    //轴标签
     ui->customPlot->xAxis->setLabel(Config::getXAxisName());
     ui->customPlot->yAxis->setLabel(Config::getYAxisName());
+    //数值显示器
+    ui->actionValueDisplay->setChecked(Config::getValueDisplayState());
+    if(ui->actionValueDisplay->isChecked()){
+        on_actionValueDisplay_triggered(true);
+    }
+    else{
+        on_actionValueDisplay_triggered(false);
+    }
     //图像名字集
     plotControl.setNameSet(ui->customPlot, Config::getPlotterGraphNames(plotControl.getMaxValidGraphNumber()));
 }
@@ -274,6 +280,11 @@ MainWindow::MainWindow(QWidget *parent) :
     //搜寻可用串口，并尝试打开
     on_refreshCom_clicked();
     tryOpenSerialIfOnlyOne();
+
+    //数值显示器初始化
+    ui->tableWidget->setColumnCount(2);
+    ui->tableWidget->setHorizontalHeaderItem(0,new QTableWidgetItem("名称"));
+    ui->tableWidget->setHorizontalHeaderItem(1,new QTableWidgetItem("值"));
 
     //提交使用统计任务
     httpTaskVector.push_back(PostStatic);
@@ -375,8 +386,7 @@ void MainWindow::debugTimerSlot()
         }
     }
 
-    if(ui->actionPlotterSwitch->isChecked()){
-
+    if(ui->actionPlotterSwitch->isChecked()||ui->actionValueDisplay->isChecked()){
         count = count + 0.1;
     }
 }
@@ -427,6 +437,7 @@ MainWindow::~MainWindow()
         Config::setPlotterGraphNames(plotControl.getNameSet());
         Config::setXAxisName(ui->customPlot->xAxis->label());
         Config::setYAxisName(ui->customPlot->yAxis->label());
+        Config::setValueDisplayState(ui->actionValueDisplay->isChecked());
 
         //static
         Config::setLastRunTime(currentRunTime);
@@ -594,29 +605,48 @@ void MainWindow::readSerialPort()
     tmpReadBuff = unshowedRxBuff + tmpReadBuff;
     unshowedRxBuff.clear();
 
-    //绘图器解析
-    if(ui->actionPlotterSwitch->isChecked()){
+    //绘图器与数值显示器解析
+    if(ui->actionPlotterSwitch->isChecked() || ui->actionValueDisplay->isChecked()){
         //根据协议选择不同的缓冲
         if(protocol->getProtocolType()==DataProtocol::Ascii){
             protocol->parase(tmpReadBuff);
-            QByteArray unMatched;
-            protocol->paraseUnMatched(tmpReadBuff,unMatched);
-            if(ui->actionHidePlotData->isChecked()){
-                tmpReadBuff = unMatched;
-            }
         }
         else if(protocol->getProtocolType()==DataProtocol::Float){
             protocol->parase(floatParaseBuff);
         }
 
         while(protocol->parasedBuffSize()>0){
-            //文件解析可能有大量数据，因此关闭刷新，提高解析速度
-            if(paraseFile){
-                if(false == plotControl.displayToPlotter(ui->customPlot, protocol->popOneRowData(), false))
-                    ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
-            }else{
-                if(false == plotControl.displayToPlotter(ui->customPlot, protocol->popOneRowData()))
-                    ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
+            QVector<double> oneRowData;
+            oneRowData = protocol->popOneRowData();
+            //绘图显示器
+            if(ui->actionPlotterSwitch->isChecked()){
+                //文件解析可能有大量数据，因此关闭刷新，提高解析速度
+                if(paraseFile){
+                    if(false == plotControl.displayToPlotter(ui->customPlot, oneRowData, false))
+                        ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
+                }else{
+                    if(false == plotControl.displayToPlotter(ui->customPlot, oneRowData))
+                        ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
+                }
+            }
+
+            //数值显示器
+            if(ui->actionValueDisplay->isChecked()){
+                //判断是否添加行
+                if(ui->tableWidget->rowCount() < oneRowData.size()){
+                    //设置行
+                    ui->tableWidget->setRowCount(oneRowData.size());
+                    //设置列，固定的
+                    ui->tableWidget->setColumnCount(2);
+                    ui->tableWidget->setHorizontalHeaderItem(0,new QTableWidgetItem("名称"));
+                    ui->tableWidget->setHorizontalHeaderItem(1,new QTableWidgetItem("值"));
+                }
+                //添加数据
+                int min = oneRowData.size() < plotControl.getNameSet().size() ? oneRowData.size() : plotControl.getNameSet().size();
+                for(int i=0; i < min; i++){
+                    ui->tableWidget->setItem(i,0,new QTableWidgetItem(plotControl.getNameSet().at(i)));
+                    ui->tableWidget->setItem(i,1,new QTableWidgetItem(QString::number(oneRowData.at(i),'f')));
+                }
             }
         }
     }
@@ -914,6 +944,10 @@ void MainWindow::on_clearWindows_clicked()
     ui->customPlot->yAxis->setRange(0,5);
     ui->customPlot->xAxis->setRange(0, plotControl.getXAxisLength(), Qt::AlignRight);
     ui->customPlot->replot();
+
+    //数值显示器
+    while(ui->tableWidget->rowCount()>0)
+        ui->tableWidget->removeRow(0);
 
     //更新收发统计
     statusStatisticLabel->setText(serial.getTxRxString());
@@ -1321,6 +1355,8 @@ void MainWindow::on_multiString_itemDoubleClicked(QListWidgetItem *item)
 void MainWindow::on_actionMultiString_triggered(bool checked)
 {
     if(checked){
+        ui->splitter->setStretchFactor(0,78);
+        ui->splitter->setStretchFactor(1,22);
         ui->multiString->show();
         ui->multiString->setAlternatingRowColors(true);
     }else {
@@ -1410,6 +1446,8 @@ void MainWindow::clearSeedsSlot()
 void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 {
     if(checked){
+//        ui->splitter_3->setStretchFactor(0,1);
+//        ui->splitter_3->setStretchFactor(1,15);
         ui->customPlot->show();
     }else{
         ui->customPlot->close();
@@ -1419,7 +1457,6 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 void MainWindow::on_actionAscii_triggered(bool checked)
 {
     checked = !!checked;
-    ui->actionHidePlotData->setEnabled(true);
     protocol->setProtocolType(DataProtocol::Ascii);
     ui->actionAscii->setChecked(true);
     ui->actionFloat->setChecked(false);
@@ -1428,8 +1465,6 @@ void MainWindow::on_actionAscii_triggered(bool checked)
 void MainWindow::on_actionFloat_triggered(bool checked)
 {
     checked = !!checked;
-    ui->actionHidePlotData->setChecked(false);
-    ui->actionHidePlotData->setEnabled(false);
 
     protocol->setProtocolType(DataProtocol::Float);
     ui->actionAscii->setChecked(false);
@@ -2310,5 +2345,18 @@ void MainWindow::on_actionSendFile_triggered()
     }else{
         QMessageBox::information(this,"提示","文件打开失败。");
         lastFileName.clear();
+    }
+}
+
+void MainWindow::on_actionValueDisplay_triggered(bool checked)
+{
+    if(checked){
+        ui->splitter_2->setStretchFactor(0,61);
+        ui->splitter_2->setStretchFactor(1,10);
+//        ui->tableWidget->setVisible(true);
+        ui->tableWidget->show();
+    }else{
+//        ui->tableWidget->setVisible(false);
+        ui->tableWidget->close();
     }
 }

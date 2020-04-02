@@ -30,6 +30,7 @@ void Config::writeDefault(){
     iniFile->setValue(SECTION_PLOTTER+KEY_GRAPHNAME, defualtGraphName);
     iniFile->setValue(SECTION_PLOTTER+KEY_XAXISNAME, "Point Number");
     iniFile->setValue(SECTION_PLOTTER+KEY_YAXISNAME, "Value");
+    iniFile->setValue(SECTION_PLOTTER+KEY_VALUEDISPLAYSTATE, false);
 
     //统计信息
 //    iniFile->setValue(SECTION_PLOTTER+KEY_STARTTIME, QDateTime::currentDateTime().toString("yyyyMMddhhmmss"));
@@ -407,6 +408,19 @@ void Config::setYAxisName(QString str){
 QString Config::getYAxisName(){
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
     QString value = iniFile->value(SECTION_PLOTTER+KEY_YAXISNAME, "Value").toString();
+    delete iniFile;
+    return value;
+}
+
+void Config::setValueDisplayState(bool isOn){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_PLOTTER+KEY_VALUEDISPLAYSTATE, isOn);
+    delete iniFile;
+}
+bool Config::getValueDisplayState(){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    bool value = iniFile->value(SECTION_PLOTTER+KEY_VALUEDISPLAYSTATE, false).toBool();
     delete iniFile;
     return value;
 }

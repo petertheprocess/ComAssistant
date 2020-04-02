@@ -15,7 +15,7 @@ extern QString hexFormater(QString const &data); //在哪用了？
 //显示模式转换
 extern QString toHexDisplay(QByteArray const &data);
 extern QString toHexDisplay(bool needConvert, QByteArray const &data);
-extern QString toStringDisplay(QString &hexString, bool &isOK);
+extern QString toAsciiDisplay(QString &hexString, bool &isOK);
 
 //hex与bytearray互转
 extern QString ByteArrayToHexString(const QByteArray &data);

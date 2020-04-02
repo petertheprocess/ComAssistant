@@ -175,6 +175,8 @@ private slots:
 
     void on_actionGBK_triggered(bool checked);
 
+    void on_actionValueDisplay_triggered(bool checked);
+
 private:
     bool needSaveConfig = true;
     void readConfig();

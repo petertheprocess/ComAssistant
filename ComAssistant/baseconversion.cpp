@@ -190,7 +190,7 @@ QString toHexDisplay(bool needConvert, QByteArray const &data)
         return data;
 }
 
-QString toStringDisplay(QString &hexString, bool &isOK)
+QString toAsciiDisplay(QString &hexString, bool &isOK)
 {
     return HexStringToByteArray(hexString,isOK);
 }

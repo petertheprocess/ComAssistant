@@ -47,6 +47,7 @@
 #define KEY_GRAPHNAME           QString("GraphName")
 #define KEY_XAXISNAME           QString("XAxisName")
 #define KEY_YAXISNAME           QString("YAxisName")
+#define KEY_VALUEDISPLAYSTATE   QString("ValueDisplayState")
 //#define KEY_LINETYPE            QString("LineType")
 //#define KEY_XRANGELENGH         QString("xRangeLength")
 
@@ -142,6 +143,8 @@ public:
     static QString getXAxisName();
     static void setYAxisName(QString str);
     static QString getYAxisName();
+    static void setValueDisplayState(bool isOn);
+    static bool getValueDisplayState();
 
     //static
     static void setStartTime(QString time);
