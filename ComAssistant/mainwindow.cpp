@@ -1457,6 +1457,7 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 void MainWindow::on_actionAscii_triggered(bool checked)
 {
     checked = !!checked;
+    protocol->clearBuff();
     protocol->setProtocolType(DataProtocol::Ascii);
     ui->actionAscii->setChecked(true);
     ui->actionFloat->setChecked(false);
@@ -1465,7 +1466,7 @@ void MainWindow::on_actionAscii_triggered(bool checked)
 void MainWindow::on_actionFloat_triggered(bool checked)
 {
     checked = !!checked;
-
+    protocol->clearBuff();
     protocol->setProtocolType(DataProtocol::Float);
     ui->actionAscii->setChecked(false);
     ui->actionFloat->setChecked(true);
