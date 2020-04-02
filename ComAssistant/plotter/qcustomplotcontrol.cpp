@@ -177,17 +177,14 @@ bool QCustomPlotControl::displayToPlotter(QCustomPlot* customPlot, const QVector
         customPlot->graph(i)->addData(xAxisCnt, rowData.at(i)); 
     }
 
-    //重算Y轴范围
-    customPlot->rescaleAxes(true);
-
     //Graph1的动态标签
 //    double graph1Value = customPlot->graph(0)->dataMainValue(customPlot->graph(0)->dataCount()-1);
 //    mTag1->updatePosition(graph1Value);
 //    mTag1->setText(QString::number(graph1Value, 'f', 2));
 
     // make key axis range scroll with the data (at a constant range size of 200):
-//    customPlot->xAxis->setRange(xAxisCnt, 200, Qt::AlignRight);
     customPlot->xAxis->setRange(xAxisCnt, xRange.upper - xRange.lower, Qt::AlignRight);
+    customPlot->yAxis->rescale(true);
 
     //刷新操作很耗时，因此添加开关
     if(refresh)

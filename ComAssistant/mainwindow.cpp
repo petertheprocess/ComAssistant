@@ -1619,6 +1619,7 @@ void MainWindow::removeSelectedGraph()
     if (ui->customPlot->selectedGraphs().size() > 0)
     {
         ui->customPlot->removeGraph(ui->customPlot->selectedGraphs().first());
+        ui->customPlot->rescaleAxes(true);
         ui->customPlot->replot();
     }
 }
@@ -1635,6 +1636,8 @@ void MainWindow::removeAllGraphs()
     while(ui->customPlot->graphCount()>1){
         ui->customPlot->removeGraph(ui->customPlot->graphCount()-1);
     }
+    ui->customPlot->yAxis->setRange(0,5);
+    ui->customPlot->xAxis->setRange(0, plotControl.getXAxisLength(), Qt::AlignRight);
     ui->customPlot->replot();
 }
 
@@ -1658,7 +1661,8 @@ void MainWindow::hideSelectedGraph()
             ui->customPlot->selectedGraphs().first()->setVisible(true);
             ui->customPlot->legend->item(index)->setTextColor(Qt::black);
         }
-      ui->customPlot->replot();
+        ui->customPlot->rescaleAxes(true);
+        ui->customPlot->replot();
     }
 }
 
