@@ -175,10 +175,12 @@ void MainWindow::readConfig()
     else
         ui->customPlot->close();
     if(Config::getPlotterType()==ProtocolType_e::Ascii){
+        ui->actionHidePlotData->setEnabled(true);
         protocol->setProtocolType(DataProtocol::Ascii);
         ui->actionAscii->setChecked(true);
         ui->actionFloat->setChecked(false);
     }else if(Config::getPlotterType()==ProtocolType_e::Float){
+        ui->actionHidePlotData->setEnabled(false);
         protocol->setProtocolType(DataProtocol::Float);
         ui->actionAscii->setChecked(false);
         ui->actionFloat->setChecked(true);
@@ -595,10 +597,17 @@ void MainWindow::readSerialPort()
     //绘图器解析
     if(ui->actionPlotterSwitch->isChecked()){
         //根据协议选择不同的缓冲
-        if(protocol->getProtocolType()==DataProtocol::Ascii)
+        if(protocol->getProtocolType()==DataProtocol::Ascii){
             protocol->parase(tmpReadBuff);
-        else if(protocol->getProtocolType()==DataProtocol::Float)
+            QByteArray unMatched;
+            protocol->paraseUnMatched(tmpReadBuff,unMatched);
+            if(ui->actionHidePlotData->isChecked()){
+                tmpReadBuff = unMatched;
+            }
+        }
+        else if(protocol->getProtocolType()==DataProtocol::Float){
             protocol->parase(floatParaseBuff);
+        }
 
         while(protocol->parasedBuffSize()>0){
             //文件解析可能有大量数据，因此关闭刷新，提高解析速度
@@ -611,6 +620,10 @@ void MainWindow::readSerialPort()
             }
         }
     }
+
+    //如果开启隐藏绘图数据，绘图器可能会删除数据
+    if(tmpReadBuff.isEmpty())
+        return;
 
     //'\r'若单独结尾则可能被误切断，放到下一批数据中
     if(tmpReadBuff.endsWith('\r')){
@@ -1406,6 +1419,7 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 void MainWindow::on_actionAscii_triggered(bool checked)
 {
     checked = !!checked;
+    ui->actionHidePlotData->setEnabled(true);
     protocol->setProtocolType(DataProtocol::Ascii);
     ui->actionAscii->setChecked(true);
     ui->actionFloat->setChecked(false);
@@ -1414,6 +1428,9 @@ void MainWindow::on_actionAscii_triggered(bool checked)
 void MainWindow::on_actionFloat_triggered(bool checked)
 {
     checked = !!checked;
+    ui->actionHidePlotData->setChecked(false);
+    ui->actionHidePlotData->setEnabled(false);
+
     protocol->setProtocolType(DataProtocol::Float);
     ui->actionAscii->setChecked(false);
     ui->actionFloat->setChecked(true);

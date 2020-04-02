@@ -465,6 +465,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionPlotterSwitch"/>
     <addaction name="menu_3"/>
     <addaction name="menu_4"/>
+    <addaction name="actionHidePlotData"/>
     <addaction name="separator"/>
     <addaction name="actiondebug"/>
    </widget>
@@ -680,6 +681,14 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>GBK</string>
+   </property>
+  </action>
+  <action name="actionHidePlotData">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>隐藏绘图数据</string>
    </property>
   </action>
  </widget>

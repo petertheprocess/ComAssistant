@@ -41,6 +41,7 @@ public:
     void parase(QByteArray inputArray);
     void setProtocolType(ProtocolType_e type, bool clearbuff=true);
     ProtocolType_e getProtocolType();
+    void paraseUnMatched(const QByteArray &inputArray, QByteArray &unMatched);
 
 private:
     //从输入参数1中提取所有pack包流进packsBuff缓存中

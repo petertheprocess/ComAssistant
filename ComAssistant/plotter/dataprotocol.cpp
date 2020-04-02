@@ -84,6 +84,38 @@ void DataProtocol::parase(QByteArray inputArray)
 
 }
 
+//匹配不满足绘图协议的数据,仅支持ASCII协议
+void DataProtocol::paraseUnMatched(const QByteArray &inputArray, QByteArray &unMatched)
+{
+    if(protocolType == Ascii){
+        unMatched = inputArray;
+        QRegularExpression reg;
+        QRegularExpressionMatch match;
+        int index = 0;
+        //匹配{}间的数据。
+        //{:之间不允许再出现{:
+        //:后，数据与逗号作为一个组，这个组至少出现一次。
+        //其中，组中的逗号出现0次或1次，组开头允许有空白字符\\s
+        //组中的数据：符号出现或者不出现，整数部分出现至少1次，小数点与小数作为整体，可不出现或者1次
+        reg.setPattern("\\{[^{:]*:(\\s*([+-]?\\d+(\\.\\d+)?)?,?)+\\}");
+        reg.setPatternOptions(QRegularExpression::InvertedGreedinessOption);//设置为非贪婪模式匹配
+        do {
+                match = reg.match(inputArray, index);
+                if(match.hasMatch()) {
+                    index = match.capturedEnd();
+                    unMatched.remove(unMatched.indexOf(match.captured(0).toLocal8Bit()),match.captured(0).toLocal8Bit().size());
+//                    unMatched.append(match.captured(0).toLocal8Bit());
+//                    qDebug()<<"match"<<match.captured(0)<<unMatched;
+                }
+                else{
+//                    qDebug()<<"no match";
+                    break;
+                }
+        } while(index < inputArray.length());
+//        qDebug()<<unMatched<<unMatched.size();
+    }
+}
+
 void DataProtocol::extractPacks(const QByteArray &inputArray, QByteArray &restArray)
 {
     if(protocolType == Ascii){
@@ -116,7 +148,7 @@ void DataProtocol::extractPacks(const QByteArray &inputArray, QByteArray &restAr
 //                    qDebug()<<"match"<<match.captured(0);
                 }
                 else{
-    //                qDebug()<<"no match";
+//                    qDebug()<<"no match";
                     break;
                 }
         } while(index < inputArray.length());
