@@ -296,7 +296,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->customPlot->yAxis2->setSelectedTickLabelFont(font);
     ui->customPlot->yAxis2->setSelectedLabelFont(font);
     ui->customPlot->yAxis2->setLabelFont(font);
-//    ui->customPlot->
+    m_Tracer->setLabelFont(font);
 
     //提交使用统计任务
     httpTaskVector.push_back(PostStatic);

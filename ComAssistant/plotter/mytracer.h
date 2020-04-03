@@ -21,6 +21,7 @@ public:
     explicit MyTracer(QCustomPlot *_plot,QCPGraph *_graph, TracerType _type);//这里与原贴不同，按照原贴构造总是过不去
     ~MyTracer();
 
+    void setLabelFont(QFont font);
     void setPen(const QPen &pen);
     void setBrush(const QBrush &brush);
     void setText(const QString &text);

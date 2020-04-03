@@ -85,6 +85,11 @@ MyTracer::~MyTracer()
         plot->removeItem(label);
 }
 
+void MyTracer::setLabelFont(QFont font)
+{
+    label->setFont(font);
+}
+
 void MyTracer::setPen(const QPen &pen)
 {
     tracer->setPen(pen);
