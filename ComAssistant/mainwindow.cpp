@@ -276,6 +276,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableWidget->setColumnCount(2);
     ui->tableWidget->setHorizontalHeaderItem(0,new QTableWidgetItem("名称"));
     ui->tableWidget->setHorizontalHeaderItem(1,new QTableWidgetItem("值"));
+    ui->tableWidget->horizontalHeader()->setSectionResizeMode(0,QHeaderView::Stretch);
+    ui->tableWidget->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
+    ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
 
     //提交使用统计任务
     httpTaskVector.push_back(PostStatic);
@@ -631,12 +634,19 @@ void MainWindow::readSerialPort()
                     ui->tableWidget->setColumnCount(2);
                     ui->tableWidget->setHorizontalHeaderItem(0,new QTableWidgetItem("名称"));
                     ui->tableWidget->setHorizontalHeaderItem(1,new QTableWidgetItem("值"));
+                    ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
+                    ui->tableWidget->horizontalHeader()->setSectionResizeMode(0,QHeaderView::Stretch);
+                    ui->tableWidget->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
                 }
                 //添加数据
                 int min = oneRowData.size() < plotControl.getNameSet().size() ? oneRowData.size() : plotControl.getNameSet().size();
                 for(int i=0; i < min; i++){
+                    //这里会重复new对象导致内存溢出吗
                     ui->tableWidget->setItem(i,0,new QTableWidgetItem(plotControl.getNameSet().at(i)));
                     ui->tableWidget->setItem(i,1,new QTableWidgetItem(QString::number(oneRowData.at(i),'f')));
+                    //不可编辑
+                    ui->tableWidget->item(i,0)->setFlags(ui->tableWidget->item(i,0)->flags() & (~Qt::ItemIsEditable));
+                    ui->tableWidget->item(i,1)->setFlags(ui->tableWidget->item(i,1)->flags() & (~Qt::ItemIsEditable));
                 }
             }
         }
@@ -1351,7 +1361,7 @@ void MainWindow::on_actionMultiString_triggered(bool checked)
         widthList << static_cast<int>(width*0.78) << static_cast<int>(width*0.22);
         ui->splitter->setSizes(widthList);
     }else {
-        ui->multiString->close();
+        ui->multiString->hide();
     }
 }
 
@@ -1444,7 +1454,7 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
         heightList << static_cast<int>(height*0.8) << static_cast<int>(height*0.2);
         ui->splitter_3->setSizes(heightList);
     }else{
-        ui->customPlot->close();
+        ui->customPlot->hide();
     }
 }
 
@@ -2359,10 +2369,10 @@ void MainWindow::on_actionValueDisplay_triggered(bool checked)
         //设置宽度
         QList<int> widthList;
         int width = ui->splitter_2->width();
-        widthList << static_cast<int>(width*0.78) << static_cast<int>(width*0.22);
+        widthList << static_cast<int>(width*0.75) << static_cast<int>(width*0.25);
         ui->splitter_2->setSizes(widthList);
     }else{
-        ui->tableWidget->close();
+        ui->tableWidget->hide();
     }
 }
 
@@ -2432,3 +2442,4 @@ void MainWindow::deleteValueDisplaySlot()
         ui->tableWidget->removeRow(0);
     }
 }
+
