@@ -17,3 +17,60 @@ QPushButton#comSwitch:checked{
   border: 2px solid rgb(40, 160, 40);   
   color: rgb(40, 160, 40);
 }  
+
+/* 点按交互区域 */
+QPushButton{
+  font-family: Microsoft YaHei UI;
+}
+QCheckBox{
+  font-family: Microsoft YaHei UI;
+}
+QComboBox{
+  font-family: Microsoft YaHei UI;
+}
+QMessageBox{
+  font-family: Microsoft YaHei UI;
+}
+QInputDialog{
+  font-family: Consolas, Microsoft YaHei UI;
+}
+QLineEdit{
+  font-family: Consolas, Microsoft YaHei UI;
+}
+
+/* 菜单栏 */
+QMenuBar{
+  font-family: Microsoft YaHei UI;
+}
+QMenu{
+  font-family: Microsoft YaHei UI;
+}
+QAction{
+  font-family: Microsoft YaHei UI;
+}
+
+/* 状态栏 */
+QStatusBar{
+  font-family: Microsoft YaHei UI;
+}
+QLabel{
+  font-family: Microsoft YaHei UI;
+}
+
+/* 显示区 */
+QListWidget{
+  font-family: Consolas, Microsoft YaHei UI;
+  font-size: 10pt;
+}
+QTextEdit{
+  font-family: Consolas, Microsoft YaHei UI;
+  font-size: 10pt;
+}
+QTextBrowser{
+  font-family: Consolas, Microsoft YaHei UI;
+  font-size: 10pt;
+}
+QTableWidget{
+  font-family: Consolas, Microsoft YaHei UI;
+  font-size: 10pt;
+}

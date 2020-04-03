@@ -168,7 +168,7 @@
      </layout>
     </item>
     <item row="2" column="0">
-     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="10,1,1">
+     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="75,10,25">
       <item>
        <widget class="QTextEdit" name="textEdit">
         <property name="font">
@@ -339,7 +339,7 @@ p, li { white-space: pre-wrap; }
          </size>
         </property>
        </widget>
-       <widget class="QTableWidget" name="tableWidget">
+       <widget class="QTableWidget" name="valueDisplay">
         <property name="contextMenuPolicy">
          <enum>Qt::CustomContextMenu</enum>
         </property>

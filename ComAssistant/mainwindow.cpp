@@ -196,12 +196,6 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    //加载样式表
-    QFile file(":/style.css");
-    file.open(QFile::ReadOnly);
-    this->setStyleSheet(file.readAll());
-    file.close();
-
     connect(this, SIGNAL(paraseFileSignal()),this,SLOT(paraseFileSlot()));
 
     //槽
@@ -273,12 +267,35 @@ MainWindow::MainWindow(QWidget *parent) :
     tryOpenSerialIfOnlyOne();
 
     //数值显示器初始化
-    ui->tableWidget->setColumnCount(2);
-    ui->tableWidget->setHorizontalHeaderItem(0,new QTableWidgetItem("名称"));
-    ui->tableWidget->setHorizontalHeaderItem(1,new QTableWidgetItem("值"));
-    ui->tableWidget->horizontalHeader()->setSectionResizeMode(0,QHeaderView::Stretch);
-    ui->tableWidget->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
-    ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
+    ui->valueDisplay->setColumnCount(2);
+    ui->valueDisplay->setHorizontalHeaderItem(0,new QTableWidgetItem("名称"));
+    ui->valueDisplay->setHorizontalHeaderItem(1,new QTableWidgetItem("值"));
+    ui->valueDisplay->horizontalHeader()->setSectionResizeMode(0,QHeaderView::Stretch);
+    ui->valueDisplay->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
+    ui->valueDisplay->horizontalHeader()->setStretchLastSection(true);
+
+    //加载样式表
+    QFile file(":/style.css");
+    file.open(QFile::ReadOnly);
+    QString style = file.readAll();
+    file.close();
+    this->setStyleSheet(style);
+    QFont font = QFont("Consolas",10);
+    ui->customPlot->legend->setFont(font);
+    ui->customPlot->legend->setSelectedFont(font);
+    ui->customPlot->xAxis->setTickLabelFont(font);
+    ui->customPlot->xAxis->setSelectedTickLabelFont(font);
+    ui->customPlot->xAxis->setSelectedLabelFont(font);
+    ui->customPlot->xAxis->setLabelFont(font);
+    ui->customPlot->yAxis->setTickLabelFont(font);
+    ui->customPlot->yAxis->setSelectedTickLabelFont(font);
+    ui->customPlot->yAxis->setSelectedLabelFont(font);
+    ui->customPlot->yAxis->setLabelFont(font);
+    ui->customPlot->yAxis2->setTickLabelFont(font);
+    ui->customPlot->yAxis2->setSelectedTickLabelFont(font);
+    ui->customPlot->yAxis2->setSelectedLabelFont(font);
+    ui->customPlot->yAxis2->setLabelFont(font);
+
 
     //提交使用统计任务
     httpTaskVector.push_back(PostStatic);
@@ -627,26 +644,26 @@ void MainWindow::readSerialPort()
             //数值显示器
             if(ui->actionValueDisplay->isChecked()){
                 //判断是否添加行
-                if(ui->tableWidget->rowCount() < oneRowData.size()){
+                if(ui->valueDisplay->rowCount() < oneRowData.size()){
                     //设置行
-                    ui->tableWidget->setRowCount(oneRowData.size());
+                    ui->valueDisplay->setRowCount(oneRowData.size());
                     //设置列，固定的
-                    ui->tableWidget->setColumnCount(2);
-                    ui->tableWidget->setHorizontalHeaderItem(0,new QTableWidgetItem("名称"));
-                    ui->tableWidget->setHorizontalHeaderItem(1,new QTableWidgetItem("值"));
-                    ui->tableWidget->horizontalHeader()->setStretchLastSection(true);
-                    ui->tableWidget->horizontalHeader()->setSectionResizeMode(0,QHeaderView::Stretch);
-                    ui->tableWidget->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
+                    ui->valueDisplay->setColumnCount(2);
+                    ui->valueDisplay->setHorizontalHeaderItem(0,new QTableWidgetItem("名称"));
+                    ui->valueDisplay->setHorizontalHeaderItem(1,new QTableWidgetItem("值"));
+                    ui->valueDisplay->horizontalHeader()->setStretchLastSection(true);
+                    ui->valueDisplay->horizontalHeader()->setSectionResizeMode(0,QHeaderView::Stretch);
+                    ui->valueDisplay->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
                 }
                 //添加数据
                 int min = oneRowData.size() < plotControl.getNameSet().size() ? oneRowData.size() : plotControl.getNameSet().size();
                 for(int i=0; i < min; i++){
                     //这里会重复new对象导致内存溢出吗
-                    ui->tableWidget->setItem(i,0,new QTableWidgetItem(plotControl.getNameSet().at(i)));
-                    ui->tableWidget->setItem(i,1,new QTableWidgetItem(QString::number(oneRowData.at(i),'f')));
+                    ui->valueDisplay->setItem(i,0,new QTableWidgetItem(plotControl.getNameSet().at(i)));
+                    ui->valueDisplay->setItem(i,1,new QTableWidgetItem(QString::number(oneRowData.at(i),'f')));
                     //不可编辑
-                    ui->tableWidget->item(i,0)->setFlags(ui->tableWidget->item(i,0)->flags() & (~Qt::ItemIsEditable));
-                    ui->tableWidget->item(i,1)->setFlags(ui->tableWidget->item(i,1)->flags() & (~Qt::ItemIsEditable));
+                    ui->valueDisplay->item(i,0)->setFlags(ui->valueDisplay->item(i,0)->flags() & (~Qt::ItemIsEditable));
+                    ui->valueDisplay->item(i,1)->setFlags(ui->valueDisplay->item(i,1)->flags() & (~Qt::ItemIsEditable));
                 }
             }
         }
@@ -2365,14 +2382,14 @@ void MainWindow::on_actionSendFile_triggered()
 void MainWindow::on_actionValueDisplay_triggered(bool checked)
 {
     if(checked){
-        ui->tableWidget->show();
+        ui->valueDisplay->show();
         //设置宽度
         QList<int> widthList;
         int width = ui->splitter_2->width();
         widthList << static_cast<int>(width*0.75) << static_cast<int>(width*0.25);
         ui->splitter_2->setSizes(widthList);
     }else{
-        ui->tableWidget->hide();
+        ui->valueDisplay->hide();
     }
 }
 
@@ -2403,9 +2420,9 @@ void MainWindow::clearTextBrowserSlot()
     unshowedRxBuff.clear();
 }
 
-void MainWindow::on_tableWidget_customContextMenuRequested(const QPoint &pos)
+void MainWindow::on_valueDisplay_customContextMenuRequested(const QPoint &pos)
 {
-    QList<QTableWidgetItem*> selectedItems = ui->tableWidget->selectedItems();
+    QList<QTableWidgetItem*> selectedItems = ui->valueDisplay->selectedItems();
     QAction *deleteValueDisplayRow = nullptr;
     QAction *deleteValueDisplay = nullptr;
     QMenu *popMenu = new QMenu( this );
@@ -2428,18 +2445,18 @@ void MainWindow::on_tableWidget_customContextMenuRequested(const QPoint &pos)
 
 void MainWindow::deleteValueDisplayRowSlot()
 {
-    QList<QTableWidgetItem*> selectedItems = ui->tableWidget->selectedItems();
+    QList<QTableWidgetItem*> selectedItems = ui->valueDisplay->selectedItems();
 
     while(selectedItems.size()){
-        ui->tableWidget->removeRow(selectedItems.at(0)->row());
+        ui->valueDisplay->removeRow(selectedItems.at(0)->row());
         selectedItems.pop_front();
     }
 }
 
 void MainWindow::deleteValueDisplaySlot()
 {
-    while(ui->tableWidget->rowCount()>0){
-        ui->tableWidget->removeRow(0);
+    while(ui->valueDisplay->rowCount()>0){
+        ui->valueDisplay->removeRow(0);
     }
 }
 
