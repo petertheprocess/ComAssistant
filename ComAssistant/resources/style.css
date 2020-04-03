@@ -1,3 +1,5 @@
+/* QCustomPlot控件相关的风格不受本文件控制 */
+
 /* 串口开关样式 */
 QPushButton#comSwitch{  
     border: 2px solid rgb(200, 50, 50);  
