@@ -54,7 +54,7 @@ public:
     //设置绘图器（总设置）
     void setupPlotter(QCustomPlot* customPlot);
     //读写名字集
-    QVector<QString> getNameSet();
+    QVector<QString> getNameSetsFromPlot();
     void setNameSet(QCustomPlot* customPlot, QVector<QString> names);
     //最大图像数量
     int getMaxValidGraphNumber();

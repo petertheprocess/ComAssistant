@@ -89,7 +89,7 @@ bool QCustomPlotControl::setXAxisLength(double length)
     return true;
 }
 
-QVector<QString> QCustomPlotControl::getNameSet()
+QVector<QString> QCustomPlotControl::getNameSetsFromPlot()
 {
     nameSet.clear();
     //从plot控件中读取名字

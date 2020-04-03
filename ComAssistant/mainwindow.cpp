@@ -280,7 +280,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QString style = file.readAll();
     file.close();
     this->setStyleSheet(style);
-    QFont font = QFont("Consolas",10);
+    QFont font = QFont("Courier New",10);
+    font.setFamilies(QStringList()<<"Courier New"<<"Consolas"<<"Microsoft YaHei UI");
     ui->customPlot->legend->setFont(font);
     ui->customPlot->legend->setSelectedFont(font);
     ui->customPlot->xAxis->setTickLabelFont(font);
@@ -295,7 +296,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->customPlot->yAxis2->setSelectedTickLabelFont(font);
     ui->customPlot->yAxis2->setSelectedLabelFont(font);
     ui->customPlot->yAxis2->setLabelFont(font);
-
+//    ui->customPlot->
 
     //提交使用统计任务
     httpTaskVector.push_back(PostStatic);
@@ -445,7 +446,7 @@ MainWindow::~MainWindow()
             Config::setPlotterType(ProtocolType_e::Ascii);
         else
             Config::setPlotterType(ProtocolType_e::Float);
-        Config::setPlotterGraphNames(plotControl.getNameSet());
+        Config::setPlotterGraphNames(plotControl.getNameSetsFromPlot());
         Config::setXAxisName(ui->customPlot->xAxis->label());
         Config::setYAxisName(ui->customPlot->yAxis->label());
         Config::setValueDisplayState(ui->actionValueDisplay->isChecked());
@@ -656,10 +657,10 @@ void MainWindow::readSerialPort()
                     ui->valueDisplay->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
                 }
                 //添加数据
-                int min = oneRowData.size() < plotControl.getNameSet().size() ? oneRowData.size() : plotControl.getNameSet().size();
+                int min = oneRowData.size() < plotControl.getNameSetsFromPlot().size() ? oneRowData.size() : plotControl.getNameSetsFromPlot().size();
                 for(int i=0; i < min; i++){
                     //这里会重复new对象导致内存溢出吗
-                    ui->valueDisplay->setItem(i,0,new QTableWidgetItem(plotControl.getNameSet().at(i)));
+                    ui->valueDisplay->setItem(i,0,new QTableWidgetItem(plotControl.getNameSetsFromPlot().at(i)));
                     ui->valueDisplay->setItem(i,1,new QTableWidgetItem(QString::number(oneRowData.at(i),'f')));
                     //不可编辑
                     ui->valueDisplay->item(i,0)->setFlags(ui->valueDisplay->item(i,0)->flags() & (~Qt::ItemIsEditable));
@@ -1597,6 +1598,7 @@ void MainWindow::legendDoubleClick(QCPLegend *legend, QCPAbstractLegendItem *ite
     if (ok)
     {
       plItem->plottable()->setName(newName);
+      plotControl.getNameSetsFromPlot();
       ui->customPlot->replot();
     }
   }

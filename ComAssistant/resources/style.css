@@ -32,10 +32,10 @@ QMessageBox{
   font-family: Microsoft YaHei UI;
 }
 QInputDialog{
-  font-family: Consolas, Microsoft YaHei UI;
+  font-family: Courier New, Consolas, Microsoft YaHei UI;
 }
 QLineEdit{
-  font-family: Consolas, Microsoft YaHei UI;
+  font-family: Courier New, Consolas, Microsoft YaHei UI;
 }
 
 /* 菜单栏 */
@@ -59,18 +59,18 @@ QLabel{
 
 /* 显示区 */
 QListWidget{
-  font-family: Consolas, Microsoft YaHei UI;
+  font-family: Courier New, Consolas, Microsoft YaHei UI;
   font-size: 10pt;
 }
 QTextEdit{
-  font-family: Consolas, Microsoft YaHei UI;
+  font-family: Courier New, Consolas, Microsoft YaHei UI;
   font-size: 10pt;
 }
 QTextBrowser{
-  font-family: Consolas, Microsoft YaHei UI;
+  font-family: Courier New, Consolas, Microsoft YaHei UI;
   font-size: 10pt;
 }
 QTableWidget{
-  font-family: Consolas, Microsoft YaHei UI;
+  font-family: Courier New, Consolas, Microsoft YaHei UI;
   font-size: 10pt;
 }
