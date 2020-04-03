@@ -27,8 +27,8 @@ public:
     //清除指定曲线，-1清除所有曲线
     void clearPlotter(QCustomPlot* customPlot, int index);
     //调整x轴范围
-    void adjustXRange(QCustomPlot* customPlot, const QCPRange& qcpRange);
-    void adjustXRange(QCustomPlot* customPlot, bool enlarge);
+//    void adjustXRange(QCustomPlot* customPlot, const QCPRange& qcpRange);
+//    void adjustXRange(QCustomPlot* customPlot, bool enlarge);
     //把数据显示到绘图器上
     bool displayToPlotter(QCustomPlot* customPlot, const QVector<double>& rowData, bool refresh = true);
     //设置笔宽度
@@ -60,12 +60,12 @@ public:
     int getMaxValidGraphNumber();
     //返回横坐标长度
     double getXAxisLength();
+    bool setXAxisLength(double length);
 private:
     QCustomPlot* customPlot;
     QVector<QColor> colorSet;
     QVector<QString> nameSet;
-    QCPRange xRange; //xRange的下限为xAxisCnt，上限为xRangeLengh
-    int xRangeLengh = 200;
+    QCPRange xRange; //
     const double zoomScale = 0.2;
     QVector<QCPScatterStyle::ScatterShape> scatterShapeSet;
 //    AxisTag *mTag1;   //动态标签

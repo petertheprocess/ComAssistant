@@ -170,12 +170,8 @@ void MainWindow::readConfig()
 
     //绘图器开关
     ui->actionPlotterSwitch->setChecked(Config::getPlotterState());
-    if(ui->actionPlotterSwitch->isChecked()){
-        ui->customPlot->show();
-    }
-    else{
-        ui->customPlot->close();
-    }
+    on_actionPlotterSwitch_triggered(Config::getPlotterState());
+
     //协议类型
     if(Config::getPlotterType()==ProtocolType_e::Ascii){
         on_actionAscii_triggered(true);
@@ -187,12 +183,7 @@ void MainWindow::readConfig()
     ui->customPlot->yAxis->setLabel(Config::getYAxisName());
     //数值显示器
     ui->actionValueDisplay->setChecked(Config::getValueDisplayState());
-    if(ui->actionValueDisplay->isChecked()){
-        on_actionValueDisplay_triggered(true);
-    }
-    else{
-        on_actionValueDisplay_triggered(false);
-    }
+    on_actionValueDisplay_triggered(Config::getValueDisplayState());
     //图像名字集
     plotControl.setNameSet(ui->customPlot, Config::getPlotterGraphNames(plotControl.getMaxValidGraphNumber()));
 }
@@ -922,11 +913,8 @@ void MainWindow::on_clearWindows_clicked()
     RxBuff.clear();
     hexBrowserBuff.clear();
     hexBrowserBuffIndex = 0;
-
     BrowserBuff.clear();
     BrowserBuffIndex = 0;
-
-    //对象缓存
     unshowedRxBuff.clear();
 
     //清空文件缓冲
@@ -946,8 +934,7 @@ void MainWindow::on_clearWindows_clicked()
     ui->customPlot->replot();
 
     //数值显示器
-    while(ui->tableWidget->rowCount()>0)
-        ui->tableWidget->removeRow(0);
+    deleteValueDisplaySlot();
 
     //更新收发统计
     statusStatisticLabel->setText(serial.getTxRxString());
@@ -1355,10 +1342,14 @@ void MainWindow::on_multiString_itemDoubleClicked(QListWidgetItem *item)
 void MainWindow::on_actionMultiString_triggered(bool checked)
 {
     if(checked){
-        ui->splitter->setStretchFactor(0,22);
-        ui->splitter->setStretchFactor(1,78);
         ui->multiString->show();
+        //设置颜色交错
         ui->multiString->setAlternatingRowColors(true);
+        //设置高度
+        QList<int> widthList;
+        int width = ui->splitter->width();
+        widthList << static_cast<int>(width*0.78) << static_cast<int>(width*0.22);
+        ui->splitter->setSizes(widthList);
     }else {
         ui->multiString->close();
     }
@@ -1446,9 +1437,12 @@ void MainWindow::clearSeedsSlot()
 void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 {
     if(checked){
-        ui->splitter_3->setStretchFactor(0,1);
-        ui->splitter_3->setStretchFactor(1,15);
         ui->customPlot->show();
+        //设置高度
+        QList<int> heightList;
+        int height = ui->splitter_3->height();
+        heightList << static_cast<int>(height*0.8) << static_cast<int>(height*0.2);
+        ui->splitter_3->setSizes(heightList);
     }else{
         ui->customPlot->close();
     }
@@ -1547,6 +1541,19 @@ void MainWindow::axisLabelDoubleClick(QCPAxis *axis, QCPAxis::SelectablePart par
       axis->setLabel(newLabel);
       ui->customPlot->replot();
     }
+  }else if(part == QCPAxis::spAxis){
+      if(axis==ui->customPlot->yAxis||axis==ui->customPlot->yAxis2){
+         ui->statusBar->showMessage("Y轴无法手动调整");
+         return;
+      }
+      bool ok;
+      double newLength = QInputDialog::getDouble(this, "更改X轴长度", "新的X轴长度：",plotControl.getXAxisLength(),
+                                                 0, 10000, 1, &ok, Qt::WindowCloseButtonHint);
+      if (ok)
+      {
+        plotControl.setXAxisLength(newLength);
+        ui->customPlot->replot();
+      }
   }
 }
 
@@ -1631,8 +1638,6 @@ void MainWindow::mouseWheel()
 
   if (ui->customPlot->xAxis->selectedParts().testFlag(QCPAxis::spAxis)){
     ui->customPlot->axisRect()->setRangeZoom(ui->customPlot->xAxis->orientation());
-    QCPRange range = ui->customPlot->axisRect()->axis(QCPAxis::atBottom, 0)->range();
-    plotControl.adjustXRange(ui->customPlot, range);
   }
   else if (ui->customPlot->yAxis->selectedParts().testFlag(QCPAxis::spAxis)){
     ui->customPlot->axisRect()->setRangeZoom(ui->customPlot->yAxis->orientation());
@@ -1640,8 +1645,6 @@ void MainWindow::mouseWheel()
   else{
     //只调X轴
     ui->customPlot->axisRect()->setRangeZoom(Qt::Horizontal);
-    QCPRange range = ui->customPlot->axisRect()->axis(QCPAxis::atBottom, 0)->range();
-    plotControl.adjustXRange(ui->customPlot, range);
   }
 }
 
@@ -2352,12 +2355,80 @@ void MainWindow::on_actionSendFile_triggered()
 void MainWindow::on_actionValueDisplay_triggered(bool checked)
 {
     if(checked){
-        ui->splitter_2->setStretchFactor(0,61);
-        ui->splitter_2->setStretchFactor(1,10);
-//        ui->tableWidget->setVisible(true);
         ui->tableWidget->show();
+        //设置宽度
+        QList<int> widthList;
+        int width = ui->splitter_2->width();
+        widthList << static_cast<int>(width*0.78) << static_cast<int>(width*0.22);
+        ui->splitter_2->setSizes(widthList);
     }else{
-//        ui->tableWidget->setVisible(false);
         ui->tableWidget->close();
+    }
+}
+
+void MainWindow::on_textBrowser_customContextMenuRequested(const QPoint &pos)
+{
+    QPoint noWarning = pos;
+    noWarning.x();
+
+    QAction *clearTextBrowser = nullptr;
+    QMenu *popMenu = new QMenu( this );
+    //添加右键菜单
+    clearTextBrowser = new QAction("清空数据显示区", this);
+    popMenu->addAction( clearTextBrowser );
+    connect( clearTextBrowser, SIGNAL(triggered() ), this, SLOT( clearTextBrowserSlot()) );
+    popMenu->exec( QCursor::pos() );
+    delete popMenu;
+    delete clearTextBrowser;
+}
+
+void MainWindow::clearTextBrowserSlot()
+{
+    ui->textBrowser->clear();
+    RxBuff.clear();
+    hexBrowserBuff.clear();
+    hexBrowserBuffIndex = 0;
+    BrowserBuff.clear();
+    BrowserBuffIndex = 0;
+    unshowedRxBuff.clear();
+}
+
+void MainWindow::on_tableWidget_customContextMenuRequested(const QPoint &pos)
+{
+    QList<QTableWidgetItem*> selectedItems = ui->tableWidget->selectedItems();
+    QAction *deleteValueDisplayRow = nullptr;
+    QAction *deleteValueDisplay = nullptr;
+    QMenu *popMenu = new QMenu( this );
+    //添加右键菜单
+    if( selectedItems.size() ){
+        deleteValueDisplayRow = new QAction("删除元素所在行", this);
+        popMenu->addAction( deleteValueDisplayRow );
+        connect( deleteValueDisplayRow, SIGNAL(triggered() ), this, SLOT( deleteValueDisplayRowSlot()) );
+
+        popMenu->addSeparator();
+    }
+    deleteValueDisplay = new QAction("删除所有行", this);
+    popMenu->addAction( deleteValueDisplay );
+    connect( deleteValueDisplay, SIGNAL(triggered() ), this, SLOT( deleteValueDisplaySlot()) );
+    popMenu->exec( QCursor::pos() );
+    delete popMenu;
+    delete deleteValueDisplayRow;
+    delete deleteValueDisplay;
+}
+
+void MainWindow::deleteValueDisplayRowSlot()
+{
+    QList<QTableWidgetItem*> selectedItems = ui->tableWidget->selectedItems();
+
+    while(selectedItems.size()){
+        ui->tableWidget->removeRow(selectedItems.at(0)->row());
+        selectedItems.pop_front();
+    }
+}
+
+void MainWindow::deleteValueDisplaySlot()
+{
+    while(ui->tableWidget->rowCount()>0){
+        ui->tableWidget->removeRow(0);
     }
 }

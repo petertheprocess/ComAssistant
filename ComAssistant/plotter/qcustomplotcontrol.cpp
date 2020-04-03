@@ -79,6 +79,16 @@ double QCustomPlotControl::getXAxisLength()
     return xRange.upper - xRange.lower;
 }
 
+bool QCustomPlotControl::setXAxisLength(double length)
+{
+    if(length < 0)
+        return false;
+    xRange.upper = 0;
+    xRange.lower = -length;
+    customPlot->xAxis->setRange(xAxisCnt, xRange.upper - xRange.lower, Qt::AlignRight);
+    return true;
+}
+
 QVector<QString> QCustomPlotControl::getNameSet()
 {
     nameSet.clear();
@@ -138,22 +148,6 @@ bool QCustomPlotControl::addGraph(QCustomPlot* customPlot, int num)
     customPlot->replot();
 
     return true;
-}
-
-void QCustomPlotControl::adjustXRange(QCustomPlot* customPlot, bool enlarge)
-{
-    if(enlarge){
-        xRangeLengh = static_cast<int>((static_cast<double>(xRangeLengh )* (1+zoomScale)));
-    }else{
-        xRangeLengh = static_cast<int>((static_cast<double>(xRangeLengh )* (1+zoomScale)));
-    }
-    customPlot->replot();
-}
-
-void QCustomPlotControl::adjustXRange(QCustomPlot* customPlot, const QCPRange& qcpRange)
-{
-    xRange = qcpRange;
-    customPlot->replot();
 }
 
 /*

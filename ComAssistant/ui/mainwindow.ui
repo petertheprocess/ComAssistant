@@ -283,7 +283,7 @@ p, li { white-space: pre-wrap; }
            </sizepolicy>
           </property>
           <property name="text">
-           <string>清空窗口/缓冲</string>
+           <string>清空</string>
           </property>
          </widget>
         </item>
@@ -339,7 +339,11 @@ p, li { white-space: pre-wrap; }
          </size>
         </property>
        </widget>
-       <widget class="QTableWidget" name="tableWidget"/>
+       <widget class="QTableWidget" name="tableWidget">
+        <property name="contextMenuPolicy">
+         <enum>Qt::CustomContextMenu</enum>
+        </property>
+       </widget>
       </widget>
       <widget class="QSplitter" name="splitter">
        <property name="minimumSize">
@@ -357,6 +361,9 @@ p, li { white-space: pre-wrap; }
           <family>Consolas</family>
           <pointsize>10</pointsize>
          </font>
+        </property>
+        <property name="contextMenuPolicy">
+         <enum>Qt::CustomContextMenu</enum>
         </property>
         <property name="textInteractionFlags">
          <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse|Qt::TextBrowserInteraction|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>

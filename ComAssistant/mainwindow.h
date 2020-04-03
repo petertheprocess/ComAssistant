@@ -177,6 +177,13 @@ private slots:
 
     void on_actionValueDisplay_triggered(bool checked);
 
+    void on_textBrowser_customContextMenuRequested(const QPoint &pos);
+    void clearTextBrowserSlot();
+
+    void on_tableWidget_customContextMenuRequested(const QPoint &pos);
+    void deleteValueDisplayRowSlot();
+    void deleteValueDisplaySlot();
+
 private:
     bool needSaveConfig = true;
     void readConfig();
