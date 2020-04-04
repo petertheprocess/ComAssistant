@@ -1824,43 +1824,16 @@ void MainWindow::showTracer(QMouseEvent *event)
     }
     m_Tracer->setVisible(true);
 
-    //获取x轴
-    double x = ui->customPlot->xAxis->pixelToCoord(event->pos().x());
-
-    //寻找Y轴
-    double y = 0;
+    //获取容器
     QSharedPointer<QCPGraphDataContainer> tmpContainer;
     tmpContainer = ui->customPlot->selectedGraphs().first()->data();
-    //使用二分法快速查找所在点数据！！！敲黑板，下边这段是重点
-    int low = 0, high = tmpContainer->size();
-    while(high > low)
-    {
-        int middle = (low + high) / 2;
-        if(x < tmpContainer->constBegin()->mainKey() ||
-           x > (tmpContainer->constEnd()-1)->mainKey())
-            break;
 
-        if(x == (tmpContainer->constBegin() + middle)->mainKey())
-        {
-            y = (tmpContainer->constBegin() + middle)->mainValue();
-            break;
-        }
-        if(x > (tmpContainer->constBegin() + middle)->mainKey())
-        {
-            low = middle;
-        }
-        else if(x < (tmpContainer->constBegin() + middle)->mainKey())
-        {
-            high = middle;
-        }
-        if(high - low <= 1)
-        {   //差值计算所在位置数据
-            y = (tmpContainer->constBegin()+low)->mainValue() + ( (x - (tmpContainer->constBegin() + low)->mainKey()) *
-                ((tmpContainer->constBegin()+high)->mainValue() - (tmpContainer->constBegin()+low)->mainValue()) ) /
-                ((tmpContainer->constBegin()+high)->mainKey() - (tmpContainer->constBegin()+low)->mainKey());
-            break;
-        }
-    }
+    //获取x轴坐标
+    double x = ui->customPlot->xAxis->pixelToCoord(event->pos().x());
+    x = static_cast<int>(x+0.5);// 四舍五入取整
+    //获取Y轴坐标
+    double y = 0;
+    y = (tmpContainer->constBegin()+static_cast<int>(x))->mainValue();
 
     //范围约束
     QCPRange xRange = ui->customPlot->axisRect()->axis(QCPAxis::atBottom, 0)->range();
