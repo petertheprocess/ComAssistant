@@ -98,7 +98,7 @@ private slots:
 
     void on_actionSaveOriginData_triggered();
 
-    void on_actionReadOriginData_triggered();
+    void on_actionOpenOriginData_triggered();
 
     void on_actionAbout_triggered();
 

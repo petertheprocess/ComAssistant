@@ -283,7 +283,10 @@ p, li { white-space: pre-wrap; }
            </sizepolicy>
           </property>
           <property name="text">
-           <string>清空</string>
+           <string>清  空</string>
+          </property>
+          <property name="shortcut">
+           <string>Ctrl+Del</string>
           </property>
          </widget>
         </item>
@@ -296,7 +299,10 @@ p, li { white-space: pre-wrap; }
            </sizepolicy>
           </property>
           <property name="text">
-           <string>发送</string>
+           <string>发  送</string>
+          </property>
+          <property name="shortcut">
+           <string>Ctrl+Return</string>
           </property>
           <property name="default">
            <bool>false</bool>
@@ -431,8 +437,8 @@ p, li { white-space: pre-wrap; }
      <string>帮助</string>
     </property>
     <addaction name="actionManual"/>
-    <addaction name="actionUpdate"/>
     <addaction name="actionUsageStatistic"/>
+    <addaction name="actionUpdate"/>
     <addaction name="actionAbout"/>
    </widget>
    <widget class="QMenu" name="file">
@@ -440,7 +446,7 @@ p, li { white-space: pre-wrap; }
      <string>文件</string>
     </property>
     <addaction name="actionSaveOriginData"/>
-    <addaction name="actionReadOriginData"/>
+    <addaction name="actionOpenOriginData"/>
     <addaction name="separator"/>
     <addaction name="actionSaveShowedData"/>
     <addaction name="separator"/>
@@ -494,10 +500,16 @@ p, li { white-space: pre-wrap; }
    <property name="text">
     <string>关于</string>
    </property>
+   <property name="shortcut">
+    <string>F4</string>
+   </property>
   </action>
   <action name="actionUpdate">
    <property name="text">
     <string>检查更新</string>
+   </property>
+   <property name="shortcut">
+    <string>F3</string>
    </property>
   </action>
   <action name="actionCOM_Config">
@@ -515,6 +527,9 @@ p, li { white-space: pre-wrap; }
    <property name="toolTip">
     <string>使用教程</string>
    </property>
+   <property name="shortcut">
+    <string>F1</string>
+   </property>
   </action>
   <action name="actionSaveOriginData">
    <property name="text">
@@ -523,13 +538,19 @@ p, li { white-space: pre-wrap; }
    <property name="toolTip">
     <string>保存所有字符</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
   </action>
-  <action name="actionReadOriginData">
+  <action name="actionOpenOriginData">
    <property name="text">
-    <string>读取原始数据</string>
+    <string>打开原始数据</string>
    </property>
    <property name="toolTip">
     <string>读取原始数据</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
    </property>
   </action>
   <action name="actionUTF8">
@@ -680,6 +701,9 @@ p, li { white-space: pre-wrap; }
   <action name="actionUsageStatistic">
    <property name="text">
     <string>使用统计</string>
+   </property>
+   <property name="shortcut">
+    <string>F2</string>
    </property>
   </action>
   <action name="actionSendFile">

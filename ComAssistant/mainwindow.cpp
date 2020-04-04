@@ -280,7 +280,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QString style = file.readAll();
     file.close();
     this->setStyleSheet(style);
-    QFont font = QFont("Courier New",10);
+    QFont font;
     font.setFamilies(QStringList()<<"Courier New"<<"Consolas"<<"Microsoft YaHei UI");
     ui->customPlot->legend->setFont(font);
     ui->customPlot->legend->setSelectedFont(font);
@@ -1109,7 +1109,7 @@ void MainWindow::on_actionSaveOriginData_triggered()
 
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
-                                                    "保存数据-选择文件路径",
+                                                    "保存原始数据-选择文件路径",
                                                     lastFileDialogPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".dat",
                                                     "Dat File(*.dat);;All File(*.*)");
     //检查路径格式
@@ -1142,12 +1142,12 @@ void MainWindow::on_actionSaveOriginData_triggered()
  * Action:读取数据动作触发
  * Function:
 */
-void MainWindow::on_actionReadOriginData_triggered()
+void MainWindow::on_actionOpenOriginData_triggered()
 {   
     static QString lastFileName;
     //打开文件对话框
     QString readPath = QFileDialog::getOpenFileName(this,
-                                                    "读取数据-选择文件路径",
+                                                    "读取原始数据-选择文件路径",
                                                     lastFileDialogPath + lastFileName,
                                                     "Dat File(*.dat);;All File(*.*)");
     //检查文件路径结尾
@@ -1289,7 +1289,7 @@ void MainWindow::on_actionSaveShowedData_triggered()
 {
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
-                                                    "保存数据-选择文件路径",
+                                                    "保存显示数据-选择文件路径",
                                                     lastFileDialogPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".txt",
                                                     "Text File(*.txt);;All File(*.*)");
     //检查路径
@@ -1959,7 +1959,7 @@ void MainWindow::on_actionSavePlotData_triggered()
 {
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
-                                                    "保存数据-选择文件路径",
+                                                    "保存绘图数据-选择文件路径",
                                                     lastFileDialogPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".xlsx",
                                                     "XLSX File(*.xlsx);;CSV File(*.csv);;TXT File(*.txt);;All File(*.*)");
     //检查路径格式
@@ -2002,7 +2002,7 @@ void MainWindow::on_actionSavePlotAsPicture_triggered()
 {
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
-                                                    "保存图片-选择文件路径",
+                                                    "曲线保存图片-选择文件路径",
                                                     lastFileDialogPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss"),
                                                     "Bmp File(*.bmp);;Pdf File(*.pdf);;Jpeg File(*.jpg);;Png File(*.png);;All File(*.*)");
     //检查路径格式
