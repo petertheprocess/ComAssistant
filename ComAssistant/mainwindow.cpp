@@ -282,6 +282,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setStyleSheet(style);
     QFont font;
     font.setFamilies(QStringList()<<"Courier New"<<"Consolas"<<"Microsoft YaHei UI");
+    font.setPointSize(10);
     ui->customPlot->legend->setFont(font);
     ui->customPlot->legend->setSelectedFont(font);
     ui->customPlot->xAxis->setTickLabelFont(font);

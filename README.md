@@ -11,6 +11,7 @@ printf("{:%f,%f}\r\n", data1, data2);
 
 ![demo](screenshoot/demo.gif)
 ![mainwindow](screenshoot/mainwindow.png)
+![mainwindow](screenshoot/mainwindow2.jpg)
 ![graphwindow](screenshoot/graphwindow.png)
 ![scatterline](screenshoot/scatterline.png)
 ![multistring](screenshoot/multistring.png)
@@ -26,6 +27,8 @@ printf("{:%f,%f}\r\n", data1, data2);
   - 串口热插拔检测。（需要WinAPI）
   - XYZModen协议支持
   - DeBug转log文件
+  - 数值显示器列宽度是否支持手动调整（应该支持，但是目前看来必要性不是很强）
+  - 绘图器的标签追踪Tracer改为吸附点。
 
 # 暂时无法实现的功能
   - 图像Y轴只按显示的区域最大值调整（暂时没有合适的方法实现：1.自己造轮子在高密度绘图时容易遇到性能问题；2.图形库的API间接实现时，在Y轴不变化即直线的情形时会正反馈发散，可能是由于API对直线设为居中，但不限制）
