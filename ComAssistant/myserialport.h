@@ -7,6 +7,7 @@
 #include <QList>
 #include <QString>
 #include <QByteArray>
+#include <QtDebug>
 
 #include <config.h>
 
@@ -22,6 +23,8 @@ public:
     QByteArray readAll();
     //刷新串口
     QList<QString> refreshSerialPort();
+    //端口数量变化检测。应周期性执行
+    bool portAmountChanged();
     //获取收发统计值
     unsigned int getTxCnt();
     unsigned int getRxCnt();

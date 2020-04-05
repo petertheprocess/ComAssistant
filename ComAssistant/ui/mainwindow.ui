@@ -147,6 +147,9 @@
         <property name="text">
          <string>刷新串口</string>
         </property>
+        <property name="shortcut">
+         <string>F5</string>
+        </property>
        </widget>
       </item>
       <item>

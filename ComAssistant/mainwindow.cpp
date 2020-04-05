@@ -202,9 +202,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&cycleSendTimer, SIGNAL(timeout()), this, SLOT(cycleSendTimerSlot()));
     connect(&secTimer, SIGNAL(timeout()), this, SLOT(secTimerSlot()));
     connect(&cycleReadTimer, SIGNAL(timeout()), this, SLOT(cycleReadTimerSlot()));
-//    connect(&serial, SIGNAL(readyRead()), this, SLOT(readSerialPort()));
     connect(&serial, SIGNAL(bytesWritten(qint64)), this, SLOT(serialBytesWritten(qint64)));
+    connect(&serial, SIGNAL(error(QSerialPort::SerialPortError)),  this, SLOT(handleSerialError(QSerialPort::SerialPortError)));
+
     connect(ui->textBrowser->verticalScrollBar(),SIGNAL(actionTriggered(int)),this,SLOT(verticalScrollBarActionTriggered(int)));
+
     // connect slot that ties some axis selections together (especially opposite axes):
     connect(ui->customPlot, SIGNAL(selectionChangedByUser()), this, SLOT(selectionChanged()));
     // connect slots that takes care that when an axis is selected, only that direction can be dragged and zoomed:
@@ -264,7 +266,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //搜寻可用串口，并尝试打开
     on_refreshCom_clicked();
-    tryOpenSerialIfOnlyOne();
+    tryOpenSerial();
 
     //数值显示器初始化
     ui->valueDisplay->setColumnCount(2);
@@ -435,6 +437,7 @@ MainWindow::~MainWindow()
         Config::setLastFileDialogPath(lastFileDialogPath);
 
         //serial
+        Config::setPortName(serial.portName());
         Config::setBaudrate(serial.baudRate());
         Config::setDataBits(serial.dataBits());
         Config::setStopBits(serial.stopBits());
@@ -473,15 +476,18 @@ MainWindow::~MainWindow()
 */
 void MainWindow::on_refreshCom_clicked()
 {   
+    if(ui->refreshCom->isEnabled()==false){
+        ui->statusBar->showMessage("刷新功能被禁用",1000);
+        return;
+    }
+
     //测试更新下拉列表
     mySerialPort *testSerial = new mySerialPort;
     QList<QString> tmp;
 
     tmp = testSerial->refreshSerialPort();
     //刷新串口状态，需要记录当前选择的条目用于刷新后恢复
-    int index = ui->comList->currentIndex();
-    if(index == -1)//如果没有条目被选中，默认选择第一个
-        index = 0;
+    QString portName = ui->comList->currentText().mid(0,ui->comList->currentText().indexOf('('));
     ui->comList->clear();
     foreach(const QString &info, tmp)
     {
@@ -489,7 +495,15 @@ void MainWindow::on_refreshCom_clicked()
     }
     if(ui->comList->count() == 0)
         ui->comList->addItem("未找到可用串口!");
-    ui->comList->setCurrentIndex(index);
+
+    //恢复刷新前的选择
+    ui->comList->setCurrentIndex(0);
+    for(int i = 0; i < ui->comList->count(); i++){
+        if(ui->comList->itemText(i).startsWith(portName)){
+            ui->comList->setCurrentIndex(i);
+            break;
+        }
+    }
 
     delete testSerial;
 }
@@ -497,16 +511,25 @@ void MainWindow::on_refreshCom_clicked()
 /*
  * Function:在只有一个串口设备时且未被占用时尝试打开
 */
-bool MainWindow::tryOpenSerialIfOnlyOne()
+void MainWindow::tryOpenSerial()
 {
     //只存在一个串口时且串口未被占用时自动打开
     if(ui->comList->count()==1 && ui->comList->currentText().indexOf("占用")==-1 && ui->comList->currentText()!="未找到可用串口!"){
         ui->refreshCom->setChecked(false);
         ui->comSwitch->setChecked(true);
         on_comSwitch_clicked(true);
-        return true;
-    }else
-        return false;
+    }else{
+        //如果有多个串口，则尝试选择上次使用的端口号
+        if(ui->comList->count()>1){
+            QString name = Config::getPortName();
+            for(int i = 0; i < ui->comList->count(); i++){
+                if(ui->comList->itemText(i).startsWith(name)){
+                    ui->comList->setCurrentIndex(i);
+                    break;
+                }
+            }
+        }
+    }
 }
 
 //串口开关
@@ -520,12 +543,12 @@ void MainWindow::on_comSwitch_clicked(bool checked)
         if(serial.open(com,baud)){
             ui->comSwitch->setText("关闭串口");
             ui->comSwitch->setChecked(true);
-            ui->refreshCom->setEnabled(false);
+//            ui->refreshCom->setEnabled(false);
         }
         else {
             ui->comSwitch->setText("打开串口");
             ui->comSwitch->setChecked(false);
-            ui->refreshCom->setEnabled(true);
+//            ui->refreshCom->setEnabled(true);
             QString msg = "请检查下列情况后重新打开串口：\n\n"
                           "# USB线缆是否松动？\n"
                           "# 是否选择了正确的串口设备？\n"
@@ -548,7 +571,7 @@ void MainWindow::on_comSwitch_clicked(bool checked)
         serial.close();
         ui->comSwitch->setText("打开串口");
         ui->comSwitch->setChecked(false);
-        ui->refreshCom->setEnabled(true);
+//        ui->refreshCom->setEnabled(true);
     }
 
     on_refreshCom_clicked();
@@ -834,6 +857,28 @@ void MainWindow::serialBytesWritten(qint64 bytes)
 
     //更新收发统计
     statusStatisticLabel->setText(serial.getTxRxString());
+}
+
+void MainWindow::handleSerialError(QSerialPort::SerialPortError errCode)
+{
+    //故障检测
+    if(errCode == QSerialPort::ResourceError){
+        //记录故障的串口号
+        QString portName = serial.portName();
+        //关闭串口
+        on_comSwitch_clicked(false);
+        //强提醒也争取了时间，如果是短时间松动，则点击确定后可以恢复所选的端口
+        QMessageBox::warning(this,"警告","检测到串口故障，已关闭串口。\n串口是否发生了松动？");
+        //【还要】再刷新一次
+        on_refreshCom_clicked();
+        //尝试恢复所选端口号
+        for(int i = 0; i < ui->comList->count(); i++){
+            if(ui->comList->itemText(i).startsWith(portName)){
+                ui->comList->setCurrentIndex(i);
+            }
+        }
+    }
+//    qDebug()<<"handleSerialError"<<errCode;
 }
 
 void MainWindow::cycleReadTimerSlot()

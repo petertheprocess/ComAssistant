@@ -68,7 +68,7 @@ private slots:
     void paraseFileSlot();
 
     void on_refreshCom_clicked();
-    bool tryOpenSerialIfOnlyOne();
+    void tryOpenSerial();
 
     void on_comSwitch_clicked(bool checked);
 
@@ -78,6 +78,7 @@ private slots:
 
     void readSerialPort();
     void serialBytesWritten(qint64 bytes);
+    void handleSerialError(QSerialPort::SerialPortError errCode);
     void printToTextBrowser();
     void cycleSendTimerSlot();
     void cycleReadTimerSlot();

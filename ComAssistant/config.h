@@ -35,6 +35,7 @@
 #define KEY_LASTFILEDIALOGPATH  QString("LastFileDialogPath")
 
 //serial键
+#define KEY_PORTNAME        QString("PortName")
 #define KEY_BAUDRATE        QString("Baudrate")
 #define KEY_STOPBIT         QString("StopBit")
 #define KEY_DATABIT         QString("DataBit")
@@ -98,16 +99,19 @@ public:
     static void setVersion(void);
     static QString getVersion();
     //serial
+    static void setPortName(QString name);
+    static QString getPortName();
     static void setBaudrate(int baud);
-    static void setParity(QSerialPort::Parity parity);
-    static void setDataBits(QSerialPort::DataBits databits);
-    static void setStopBits(QSerialPort::StopBits stopbits);
-    static void setFlowControl(QSerialPort::FlowControl flowControl);
     static int getBaudrate();
+    static void setParity(QSerialPort::Parity parity);
     static QSerialPort::Parity getParity();
+    static void setDataBits(QSerialPort::DataBits databits);
     static QSerialPort::DataBits getDataBits();
+    static void setStopBits(QSerialPort::StopBits stopbits);
     static QSerialPort::StopBits getStopBits();
+    static void setFlowControl(QSerialPort::FlowControl flowControl);
     static QSerialPort::FlowControl getFlowControl();
+
     //global
     static void setCodeRule(CodeRule_e rule);
     static CodeRule_e getCodeRule();

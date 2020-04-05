@@ -44,11 +44,11 @@ void mySerialPort::resetRxCnt()
 QList<QString> mySerialPort::refreshSerialPort()
 {
     QList<QString> tmp;
+    QSerialPort TmpSerial;
 
     //搜索串口
     foreach (const QSerialPortInfo &info,QSerialPortInfo::availablePorts())
     {
-        QSerialPort TmpSerial;
         TmpSerial.setPort(info);
         if(TmpSerial.open(QSerialPort::ReadWrite))
         {
@@ -86,6 +86,21 @@ QList<QString> mySerialPort::refreshSerialPort()
     }
 
     return sorted;
+}
+
+/*
+ *  如果当前设备处于占用状态，又被拔出后可能无法检测到数量变化，需要用错误处理槽函数先进行处理
+*/
+bool mySerialPort::portAmountChanged()
+{
+    static int lastPortAmount = 0;
+    int currentPortAmount = QSerialPortInfo::availablePorts().size();
+    if(lastPortAmount != currentPortAmount){
+        lastPortAmount = currentPortAmount;
+        return true;
+    }else{
+        return false;
+    }
 }
 
 /*

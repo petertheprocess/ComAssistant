@@ -19,6 +19,7 @@ void Config::writeDefault(){
     iniFile->setValue(SECTION_GLOBAL+KEY_TEXTSENDAREA, "");
     iniFile->setValue(SECTION_GLOBAL+KEY_LASTFILEDIALOGPATH, "");
 
+    iniFile->setValue(SECTION_SERIAL+KEY_PORTNAME, "");
     iniFile->setValue(SECTION_SERIAL+KEY_BAUDRATE, QSerialPort::Baud115200);
     iniFile->setValue(SECTION_SERIAL+KEY_PARITY, QSerialPort::NoParity);
     iniFile->setValue(SECTION_SERIAL+KEY_DATABIT, QSerialPort::Data8);
@@ -81,43 +82,39 @@ QString Config::getVersion(){
     delete iniFile;
     return value;
 }
+
 //serial
+void Config::setPortName(QString name){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_SERIAL+KEY_PORTNAME, name);
+    delete iniFile;
+}
+QString Config::getPortName(){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    QString value = iniFile->value(SECTION_SERIAL+KEY_PORTNAME, "").toString();
+    delete iniFile;
+    return value;
+}
+
 void Config::setBaudrate(int baud){
     createDefaultIfNotExist();
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
     iniFile->setValue(SECTION_SERIAL+KEY_BAUDRATE, baud);
     delete iniFile;
 }
-void Config::setParity(QSerialPort::Parity parity){
-    createDefaultIfNotExist();
-    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-    iniFile->setValue(SECTION_SERIAL+KEY_PARITY, parity);
-    delete iniFile;
-}
-void Config::setDataBits(QSerialPort::DataBits databits){
-    createDefaultIfNotExist();
-    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-    iniFile->setValue(SECTION_SERIAL+KEY_DATABIT, databits);
-    delete iniFile;
-}
-void Config::setStopBits(QSerialPort::StopBits stopbits){
-    createDefaultIfNotExist();
-    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-    iniFile->setValue(SECTION_SERIAL+KEY_STOPBIT, stopbits);
-    delete iniFile;
-}
-void Config::setFlowControl(QSerialPort::FlowControl flowControl){
-    createDefaultIfNotExist();
-    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
-    iniFile->setValue(SECTION_SERIAL+KEY_FLOWCONTROL, flowControl);
-    delete iniFile;
-}
-
 int Config::getBaudrate(){
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
     int value = iniFile->value(SECTION_SERIAL+KEY_BAUDRATE, QSerialPort::Baud115200).toInt();
     delete iniFile;
     return value;
+}
+
+void Config::setParity(QSerialPort::Parity parity){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_SERIAL+KEY_PARITY, parity);
+    delete iniFile;
 }
 QSerialPort::Parity Config::getParity(){
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
@@ -125,17 +122,38 @@ QSerialPort::Parity Config::getParity(){
     delete iniFile;
     return static_cast<QSerialPort::Parity>(value);
 }
+
+void Config::setDataBits(QSerialPort::DataBits databits){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_SERIAL+KEY_DATABIT, databits);
+    delete iniFile;
+}
 QSerialPort::DataBits Config::getDataBits(){
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
     int value = iniFile->value(SECTION_SERIAL+KEY_DATABIT, QSerialPort::Data8).toInt();
     delete iniFile;
     return static_cast<QSerialPort::DataBits>(value);
 }
+
+void Config::setStopBits(QSerialPort::StopBits stopbits){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_SERIAL+KEY_STOPBIT, stopbits);
+    delete iniFile;
+}
 QSerialPort::StopBits Config::getStopBits(){
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
     int value = iniFile->value(SECTION_SERIAL+KEY_STOPBIT, QSerialPort::OneStop).toInt();
     delete iniFile;
     return static_cast<QSerialPort::StopBits>(value);
+}
+
+void Config::setFlowControl(QSerialPort::FlowControl flowControl){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_SERIAL+KEY_FLOWCONTROL, flowControl);
+    delete iniFile;
 }
 QSerialPort::FlowControl Config::getFlowControl(){
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
