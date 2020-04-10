@@ -1455,7 +1455,7 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
             bar->setValue(newValue);
         }
     }
-    qDebug()<<action<<printToBrowserFlag;
+//    qDebug()<<action<<printToBrowserFlag;
 }
 
 void MainWindow::on_actionLinePlot_triggered()
