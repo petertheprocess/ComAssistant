@@ -317,3 +317,39 @@ void MyQCustomPlot::showTracer(QMouseEvent *event)
 
     this->replot();
 }
+
+/*
+ * Function:保存图像为文本格式，可以选择不同的分隔符，csv文件可以用,
+*/
+bool MyQCustomPlot::saveGraphAsTxt(const QString& filePath, char separate)
+{
+    //列表头和值
+    double value;
+    QString txtBuff;
+    QSharedPointer<QCPGraphDataContainer> tmpContainer;
+
+    //构造表头
+    for(int j = 0; j < this->graphCount(); j++){
+        txtBuff += this->graph(j)->name() + separate;
+    }
+    txtBuff += "\n";
+
+    //构造数据行
+    int dataLen = this->graph(0)->data()->size();
+    for(int i = 0; i < dataLen; i++){
+        for(int j = 0; j < this->graphCount(); j++){
+            tmpContainer = this->graph(j)->data();
+            value = (tmpContainer->constBegin()+i)->mainValue();
+            txtBuff += QString::number(value,'f') + separate;
+        }
+        txtBuff += "\n";
+    }
+
+    QFile file(filePath);
+    if(!file.open(QFile::WriteOnly|QFile::Text))
+        return false;
+    file.write(txtBuff.toLocal8Bit());
+    file.flush();
+    file.close();
+    return true;
+}

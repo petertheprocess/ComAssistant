@@ -7,6 +7,8 @@
 #include <QMessageBox>
 #include <QtDebug>
 #include <QString>
+#include <QFile>
+#include <QSharedPointer>
 
 #include "qcustomplot.h"
 
@@ -26,6 +28,7 @@ public:
 
     MyTracer *m_Tracer; //坐标跟随鼠标
     void init(QStatusBar* pBar, QCustomPlotControl* control, DataProtocol* proto);
+    bool saveGraphAsTxt(const QString& filePath, char separate=' ');
 
 private slots:
     void axisLabelDoubleClick(QCPAxis* axis, QCPAxis::SelectablePart part);

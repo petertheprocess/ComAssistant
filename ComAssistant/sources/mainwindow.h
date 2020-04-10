@@ -131,9 +131,6 @@ private slots:
 
     void verticalScrollBarActionTriggered(int action);
 
-    //绘图器交互
-
-
     void on_actionLinePlot_triggered();
 
     void on_actionScatterLinePlot_triggered();
@@ -205,10 +202,10 @@ private:
 
     HTTP *http;
 
+    bool printToBrowserFlag = true;
+
     //使用统计
     int currentRunTime = 0; //运行时间
-
-    bool saveGraphAsTxt(const QString& filePath, char separate=' ');
 };
 
 #endif // MAINWINDOW_H

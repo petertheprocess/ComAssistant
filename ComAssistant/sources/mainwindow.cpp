@@ -637,6 +637,9 @@ void MainWindow::paraseFileSlot()
 
 void MainWindow::printToTextBrowser()
 {
+    if(printToBrowserFlag==false)
+        return;
+
     //估计当前窗口可显示多少字符
     int HH = static_cast<int>(ui->textBrowser->height()/19.2);
     int WW = static_cast<int>(ui->textBrowser->width()/9.38);
@@ -1389,6 +1392,7 @@ void MainWindow::on_actiondebug_triggered(bool checked)
 
 void MainWindow::verticalScrollBarActionTriggered(int action)
 {
+
     QScrollBar* bar = ui->textBrowser->verticalScrollBar();
     if(action == QAbstractSlider::SliderSingleStepAdd ||
        action == QAbstractSlider::SliderSingleStepSub||
@@ -1400,11 +1404,31 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
         int newValue;
         bool res;
 
+        //自动滚屏判断。滚动到最底部才打印数据。两个if不能用else
+        if(action == QAbstractSlider::SliderNoAction ||
+            action == QAbstractSlider::SliderSingleStepSub ||
+            action == QAbstractSlider::SliderPageStepAdd ||
+            action == QAbstractSlider::SliderPageStepSub ||
+            action == QAbstractSlider::SliderMove){
+            printToBrowserFlag = false;
+        }
+        if(action == QAbstractSlider::SliderNoAction ||
+                action == QAbstractSlider::SliderSingleStepAdd ||
+                action == QAbstractSlider::SliderPageStepAdd ||
+                action == QAbstractSlider::SliderMove){
+            if(value == bar->maximum()){
+                printToBrowserFlag = true;
+                printToTextBrowser();//立即刷新一次
+            }
+        }
+
+        //
         if(ui->hexDisplay->isChecked()){
             res = hexBrowserBuffIndex != hexBrowserBuff.size();
         }else{
             res = BrowserBuffIndex != BrowserBuff.size();
         }
+        //翻到顶部了，加载更多内容
         if(value == 0 && res){
 
             if(BrowserBuffIndex+PAGING_SIZE < BrowserBuff.size()){
@@ -1431,8 +1455,7 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
             bar->setValue(newValue);
         }
     }
-//    qDebug()<<bar->value();
-//    qDebug()<<action;
+    qDebug()<<action<<printToBrowserFlag;
 }
 
 void MainWindow::on_actionLinePlot_triggered()
@@ -1497,42 +1520,6 @@ void MainWindow::on_actionManual_triggered()
 
 }
 
-/*
- * Function:保存图像为文本格式，可以选择不同的分隔符，csv文件可以用,
-*/
-bool MainWindow::saveGraphAsTxt(const QString& filePath, char separate)
-{
-    //列表头和值
-    double value;
-    QString txtBuff;
-    QSharedPointer<QCPGraphDataContainer> tmpContainer;
-
-    //构造表头
-    for(int j = 0; j < ui->customPlot->graphCount(); j++){
-        txtBuff += ui->customPlot->graph(j)->name() + separate;
-    }
-    txtBuff += "\n";
-
-    //构造数据行
-    int dataLen = ui->customPlot->graph(0)->data()->size();
-    for(int i = 0; i < dataLen; i++){
-        for(int j = 0; j < ui->customPlot->graphCount(); j++){
-            tmpContainer = ui->customPlot->graph(j)->data();
-            value = (tmpContainer->constBegin()+i)->mainValue();
-            txtBuff += QString::number(value,'f') + separate;
-        }
-        txtBuff += "\n";
-    }
-
-    QFile file(filePath);
-    if(!file.open(QFile::WriteOnly|QFile::Text))
-        return false;
-    file.write(txtBuff.toLocal8Bit());
-    file.flush();
-    file.close();
-    return true;
-}
-
 void MainWindow::on_actionSavePlotData_triggered()
 {
     //打开保存文件对话框
@@ -1558,10 +1545,10 @@ void MainWindow::on_actionSavePlotData_triggered()
         if(MyXlsx::write(ui->customPlot, savePath))
             ok = true;
     }else if(savePath.endsWith(".csv")){
-        if(saveGraphAsTxt(savePath,','))
+        if(ui->customPlot->saveGraphAsTxt(savePath,','))
             ok = true;
     }else if(savePath.endsWith(".txt")){
-        if(saveGraphAsTxt(savePath,' '))
+        if(ui->customPlot->saveGraphAsTxt(savePath,' '))
             ok = true;
     }
 
