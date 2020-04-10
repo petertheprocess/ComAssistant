@@ -334,7 +334,7 @@ p, li { white-space: pre-wrap; }
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
-       <widget class="QCustomPlot" name="customPlot" native="true">
+       <widget class="MyQCustomPlot" name="customPlot" native="true">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
           <horstretch>0</horstretch>
@@ -745,9 +745,9 @@ p, li { white-space: pre-wrap; }
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>QCustomPlot</class>
+   <class>MyQCustomPlot</class>
    <extends>QWidget</extends>
-   <header>qcustomplot.h</header>
+   <header>myqcustomplot.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

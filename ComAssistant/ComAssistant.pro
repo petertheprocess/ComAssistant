@@ -68,6 +68,7 @@ SOURCES += \
     dialog/stm32isp_dialog.cpp \
     plotter/axistag.cpp \
     plotter/dataprotocol.cpp \
+    plotter/myqcustomplot.cpp \
     plotter/mytracer.cpp \
     plotter/qcustomplot.cpp \
     plotter/qcustomplotcontrol.cpp \
@@ -133,6 +134,7 @@ HEADERS += \
     dialog/stm32isp_dialog.h \
     plotter/axistag.h \
     plotter/dataprotocol.h \
+    plotter/myqcustomplot.h \
     plotter/mytracer.h \
     plotter/qcustomplot.h \
     plotter/qcustomplotcontrol.h \

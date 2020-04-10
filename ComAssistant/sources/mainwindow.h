@@ -24,13 +24,9 @@
 #include <QMenu>
 #include <QInputDialog>
 #include <QList>
-
 //绘图器类
-#include "qcustomplot.h"
+#include "myqcustomplot.h"
 #include "dataprotocol.h"
-#include "qcustomplotcontrol.h"
-#include "axistag.h"
-#include "mytracer.h"
 //自定义类
 #include "myxlsx.h"
 #include "highlighter.h"
@@ -136,18 +132,7 @@ private slots:
     void verticalScrollBarActionTriggered(int action);
 
     //绘图器交互
-    void axisLabelDoubleClick(QCPAxis* axis, QCPAxis::SelectablePart part);
-    void legendDoubleClick(QCPLegend* legend, QCPAbstractLegendItem* item);
-    void selectionChanged();
-    void mousePress();
-    void mouseWheel();
-    void removeSelectedGraph();
-    void removeAllGraphs();
-    void hideSelectedGraph();
-    void contextMenuRequest(QPoint pos);
-    void moveLegend();
-    void graphClicked(QCPAbstractPlottable *plottable, int dataIndex);
-    void showTracer(QMouseEvent *event);
+
 
     void on_actionLinePlot_triggered();
 
@@ -214,11 +199,10 @@ private:
     QString lastFileDialogPath;
 
     Highlighter *highlighter = nullptr;
-    DataProtocol* protocol;
-    QCustomPlotControl plotControl;
-    MyTracer *m_Tracer; //坐标跟随鼠标
 
-    friend HTTP;
+    DataProtocol* protocol;
+    QCustomPlotControl* plotControl;
+
     HTTP *http;
 
     //使用统计

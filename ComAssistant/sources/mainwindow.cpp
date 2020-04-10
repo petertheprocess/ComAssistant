@@ -79,7 +79,7 @@ void MainWindow::readConfig()
     ui->actionValueDisplay->setChecked(Config::getValueDisplayState());
     on_actionValueDisplay_triggered(Config::getValueDisplayState());
     //图像名字集
-    plotControl.setNameSet(ui->customPlot, Config::getPlotterGraphNames(plotControl.getMaxValidGraphNumber()));
+    plotControl->setNameSet(ui->customPlot, Config::getPlotterGraphNames(plotControl->getMaxValidGraphNumber()));
 }
 
 
@@ -101,29 +101,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->textBrowser->verticalScrollBar(),SIGNAL(actionTriggered(int)),this,SLOT(verticalScrollBarActionTriggered(int)));
 
-    // connect slot that ties some axis selections together (especially opposite axes):
-    connect(ui->customPlot, SIGNAL(selectionChangedByUser()), this, SLOT(selectionChanged()));
-    // connect slots that takes care that when an axis is selected, only that direction can be dragged and zoomed:
-    connect(ui->customPlot, SIGNAL(mousePress(QMouseEvent*)), this, SLOT(mousePress()));
-    connect(ui->customPlot, SIGNAL(mouseWheel(QWheelEvent*)), this, SLOT(mouseWheel()));
-
-    // make bottom and left axes transfer their ranges to top and right axes:
-    connect(ui->customPlot->xAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->xAxis2, SLOT(setRange(QCPRange)));
-    connect(ui->customPlot->yAxis, SIGNAL(rangeChanged(QCPRange)), ui->customPlot->yAxis2, SLOT(setRange(QCPRange)));
-
-    // connect some interaction slots:
-    connect(ui->customPlot, SIGNAL(axisDoubleClick(QCPAxis*,QCPAxis::SelectablePart,QMouseEvent*)), this, SLOT(axisLabelDoubleClick(QCPAxis*,QCPAxis::SelectablePart)));
-    connect(ui->customPlot, SIGNAL(legendDoubleClick(QCPLegend*,QCPAbstractLegendItem*,QMouseEvent*)), this, SLOT(legendDoubleClick(QCPLegend*,QCPAbstractLegendItem*)));
-
-    // connect slot that shows a message in the status bar when a graph is clicked:
-    connect(ui->customPlot, SIGNAL(plottableClick(QCPAbstractPlottable*,int,QMouseEvent*)), this, SLOT(graphClicked(QCPAbstractPlottable*,int)));
-
-    // setup policy and connect slot for context menu popup:
-    ui->customPlot->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->customPlot, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(contextMenuRequest(QPoint)));
-    // 坐标跟随
-    connect(ui->customPlot, SIGNAL(mouseMove(QMouseEvent*)), this,SLOT(showTracer(QMouseEvent*)));
-
     //状态栏标签
     statusRemoteMsgLabel = new QLabel(this);
     statusSpeedLabel = new QLabel(this);
@@ -143,9 +120,10 @@ MainWindow::MainWindow(QWidget *parent) :
     //初始化协议栈
     protocol = new DataProtocol;
 
-    //初始化绘图器
-    plotControl.setupPlotter(ui->customPlot);
-    m_Tracer = new MyTracer(ui->customPlot, ui->customPlot->graph(), TracerType::DataTracer);
+    //初始化绘图控制器
+    plotControl = new QCustomPlotControl;
+    plotControl->setupPlotter(ui->customPlot);
+    ui->customPlot->init(ui->statusBar, plotControl, protocol);
 
     //http
     http = new HTTP(this);
@@ -192,7 +170,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->customPlot->yAxis2->setSelectedTickLabelFont(font);
     ui->customPlot->yAxis2->setSelectedLabelFont(font);
     ui->customPlot->yAxis2->setLabelFont(font);
-    m_Tracer->setLabelFont(font);
+    ui->customPlot->m_Tracer->setLabelFont(font);
 
     //启动定时器
     secTimer.setTimerType(Qt::PreciseTimer);
@@ -306,7 +284,7 @@ MainWindow::~MainWindow()
             Config::setPlotterType(ProtocolType_e::Ascii);
         else
             Config::setPlotterType(ProtocolType_e::Float);
-        Config::setPlotterGraphNames(plotControl.getNameSetsFromPlot());
+        Config::setPlotterGraphNames(plotControl->getNameSetsFromPlot());
         Config::setXAxisName(ui->customPlot->xAxis->label());
         Config::setYAxisName(ui->customPlot->yAxis->label());
         Config::setValueDisplayState(ui->actionValueDisplay->isChecked());
@@ -322,6 +300,7 @@ MainWindow::~MainWindow()
     }else{
         Config::writeDefault();
     }
+    delete plotControl;
     delete protocol;
     delete highlighter;
     delete ui;
@@ -515,10 +494,10 @@ void MainWindow::readSerialPort()
             if(ui->actionPlotterSwitch->isChecked()){
                 //文件解析可能有大量数据，因此关闭刷新，提高解析速度
                 if(paraseFile){
-                    if(false == plotControl.displayToPlotter(ui->customPlot, oneRowData, false))
+                    if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData, false))
                         ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
                 }else{
-                    if(false == plotControl.displayToPlotter(ui->customPlot, oneRowData))
+                    if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData))
                         ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
                 }
             }
@@ -538,10 +517,10 @@ void MainWindow::readSerialPort()
                     ui->valueDisplay->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
                 }
                 //添加数据
-                int min = oneRowData.size() < plotControl.getNameSetsFromPlot().size() ? oneRowData.size() : plotControl.getNameSetsFromPlot().size();
+                int min = oneRowData.size() < plotControl->getNameSetsFromPlot().size() ? oneRowData.size() : plotControl->getNameSetsFromPlot().size();
                 for(int i=0; i < min; i++){
                     //这里会重复new对象导致内存溢出吗
-                    ui->valueDisplay->setItem(i,0,new QTableWidgetItem(plotControl.getNameSetsFromPlot().at(i)));
+                    ui->valueDisplay->setItem(i,0,new QTableWidgetItem(plotControl->getNameSetsFromPlot().at(i)));
                     ui->valueDisplay->setItem(i,1,new QTableWidgetItem(QString::number(oneRowData.at(i),'f')));
                     //不可编辑
                     ui->valueDisplay->item(i,0)->setFlags(ui->valueDisplay->item(i,0)->flags() & (~Qt::ItemIsEditable));
@@ -856,12 +835,12 @@ void MainWindow::on_clearWindows_clicked()
 
     //绘图器相关
     protocol->clearBuff();
-    plotControl.clearPlotter(ui->customPlot, -1);
+    plotControl->clearPlotter(ui->customPlot, -1);
     while(ui->customPlot->graphCount()>1){
         ui->customPlot->removeGraph(ui->customPlot->graphCount()-1);
     }
     ui->customPlot->yAxis->setRange(0,5);
-    ui->customPlot->xAxis->setRange(0, plotControl.getXAxisLength(), Qt::AlignRight);
+    ui->customPlot->xAxis->setRange(0, plotControl->getXAxisLength(), Qt::AlignRight);
     ui->customPlot->replot();
 
     //数值显示器
@@ -1456,249 +1435,12 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
 //    qDebug()<<action;
 }
 
-
-/*plotter交互*/
-
-void MainWindow::axisLabelDoubleClick(QCPAxis *axis, QCPAxis::SelectablePart part)
-{
-  // Set an axis label by double clicking on it
-  if (part == QCPAxis::spAxisLabel) // only react when the actual axis label is clicked, not tick label or axis backbone
-  {
-    bool ok;
-    QString newLabel = QInputDialog::getText(this, "更改轴标签", "新的轴标签：",
-                                             QLineEdit::Normal, axis->label(), &ok, Qt::WindowCloseButtonHint);
-    if (ok)
-    {
-      axis->setLabel(newLabel);
-      ui->customPlot->replot();
-    }
-  }else if(part == QCPAxis::spAxis){
-      if(axis==ui->customPlot->yAxis||axis==ui->customPlot->yAxis2){
-         ui->statusBar->showMessage("Y轴无法手动调整");
-         return;
-      }
-      bool ok;
-      double newLength = QInputDialog::getDouble(this, "更改X轴长度", "新的X轴长度：",plotControl.getXAxisLength(),
-                                                 0, 10000, 1, &ok, Qt::WindowCloseButtonHint);
-      if (ok)
-      {
-        plotControl.setXAxisLength(newLength);
-        ui->customPlot->replot();
-      }
-  }
-}
-
-void MainWindow::legendDoubleClick(QCPLegend *legend, QCPAbstractLegendItem *item)
-{
-  // Rename a graph by double clicking on its legend item
-  Q_UNUSED(legend)
-  if (item) // only react if item was clicked (user could have clicked on border padding of legend where there is no item, then item is 0)
-  {
-    QCPPlottableLegendItem *plItem = qobject_cast<QCPPlottableLegendItem*>(item);
-    bool ok;
-    QString newName = QInputDialog::getText(this, "更改曲线名称", "新的曲线名称",
-                                            QLineEdit::Normal, plItem->plottable()->name(), &ok, Qt::WindowCloseButtonHint);
-    if (ok)
-    {
-      plItem->plottable()->setName(newName);
-      plotControl.getNameSetsFromPlot();
-      ui->customPlot->replot();
-    }
-  }
-}
-
-void MainWindow::selectionChanged()
-{
-  /*
-   normally, axis base line, axis tick labels and axis labels are selectable separately, but we want
-   the user only to be able to select the axis as a whole, so we tie the selected states of the tick labels
-   and the axis base line together. However, the axis label shall be selectable individually.
-
-   The selection state of the left and right axes shall be synchronized as well as the state of the
-   bottom and top axes.
-
-   Further, we want to synchronize the selection of the graphs with the selection state of the respective
-   legend item belonging to that graph. So the user can select a graph by either clicking on the graph itself
-   or on its legend item.
-  */
-
-  // make top and bottom axes be selected synchronously, and handle axis and tick labels as one selectable object:
-  if (ui->customPlot->xAxis->selectedParts().testFlag(QCPAxis::spAxis) || ui->customPlot->xAxis->selectedParts().testFlag(QCPAxis::spTickLabels) ||
-      ui->customPlot->xAxis2->selectedParts().testFlag(QCPAxis::spAxis) || ui->customPlot->xAxis2->selectedParts().testFlag(QCPAxis::spTickLabels))
-  {
-    ui->customPlot->xAxis2->setSelectedParts(QCPAxis::spAxis|QCPAxis::spTickLabels);
-    ui->customPlot->xAxis->setSelectedParts(QCPAxis::spAxis|QCPAxis::spTickLabels);
-  }
-  // make left and right axes be selected synchronously, and handle axis and tick labels as one selectable object:
-  if (ui->customPlot->yAxis->selectedParts().testFlag(QCPAxis::spAxis) || ui->customPlot->yAxis->selectedParts().testFlag(QCPAxis::spTickLabels) ||
-      ui->customPlot->yAxis2->selectedParts().testFlag(QCPAxis::spAxis) || ui->customPlot->yAxis2->selectedParts().testFlag(QCPAxis::spTickLabels))
-  {
-    ui->customPlot->yAxis2->setSelectedParts(QCPAxis::spAxis|QCPAxis::spTickLabels);
-    ui->customPlot->yAxis->setSelectedParts(QCPAxis::spAxis|QCPAxis::spTickLabels);
-  }
-
-  // synchronize selection of graphs with selection of corresponding legend items:
-  for (int i=0; i<ui->customPlot->graphCount(); ++i)
-  {
-    QCPGraph *graph = ui->customPlot->graph(i);
-    QCPPlottableLegendItem *item = ui->customPlot->legend->itemWithPlottable(graph);
-    if (item->selected() || graph->selected())
-    {
-      item->setSelected(true);
-      graph->setSelection(QCPDataSelection(graph->data()->dataRange()));
-    }
-  }
-}
-
-void MainWindow::mousePress()
-{
-  // if an axis is selected, only allow the direction of that axis to be dragged
-  // if no axis is selected, both directions may be dragged
-
-  if (ui->customPlot->xAxis->selectedParts().testFlag(QCPAxis::spAxis))
-    ui->customPlot->axisRect()->setRangeDrag(ui->customPlot->xAxis->orientation());
-  else if (ui->customPlot->yAxis->selectedParts().testFlag(QCPAxis::spAxis))
-    ui->customPlot->axisRect()->setRangeDrag(ui->customPlot->yAxis->orientation());
-  else
-    ui->customPlot->axisRect()->setRangeDrag(Qt::Horizontal|Qt::Vertical);
-}
-
-void MainWindow::mouseWheel()
-{
-  // if an axis is selected, only allow the direction of that axis to be zoomed
-  // if no axis is selected, both directions may be zoomed
-
-  if (ui->customPlot->xAxis->selectedParts().testFlag(QCPAxis::spAxis)){
-    ui->customPlot->axisRect()->setRangeZoom(ui->customPlot->xAxis->orientation());
-  }
-  else if (ui->customPlot->yAxis->selectedParts().testFlag(QCPAxis::spAxis)){
-    ui->customPlot->axisRect()->setRangeZoom(ui->customPlot->yAxis->orientation());
-  }
-  else{
-    //只调X轴
-    ui->customPlot->axisRect()->setRangeZoom(Qt::Horizontal);
-  }
-}
-
-void MainWindow::removeSelectedGraph()
-{
-    QMessageBox::Button res;
-    res = QMessageBox::warning(this,"警告","确定要移除所选曲线吗？",QMessageBox::Ok|QMessageBox::No);
-    if(res == QMessageBox::No)
-        return;
-
-    if (ui->customPlot->selectedGraphs().size() > 0)
-    {
-        ui->customPlot->removeGraph(ui->customPlot->selectedGraphs().first());
-        ui->customPlot->rescaleAxes(true);
-        ui->customPlot->replot();
-    }
-}
-
-void MainWindow::removeAllGraphs()
-{
-    QMessageBox::Button res;
-    res = QMessageBox::warning(this,"警告","确定要移除所有曲线吗？",QMessageBox::Ok|QMessageBox::No);
-    if(res == QMessageBox::No)
-        return;
-
-    protocol->clearBuff();
-    plotControl.clearPlotter(ui->customPlot, -1);
-    while(ui->customPlot->graphCount()>1){
-        ui->customPlot->removeGraph(ui->customPlot->graphCount()-1);
-    }
-    ui->customPlot->yAxis->setRange(0,5);
-    ui->customPlot->xAxis->setRange(0, plotControl.getXAxisLength(), Qt::AlignRight);
-    ui->customPlot->replot();
-}
-
-void MainWindow::hideSelectedGraph()
-{
-    if (ui->customPlot->selectedGraphs().size() > 0)
-    {
-        //获取图像编号
-        int index = 0;
-        for(;index < ui->customPlot->graphCount(); index++){
-            if(ui->customPlot->graph(index)->name() == ui->customPlot->selectedGraphs().first()->name()){
-                break;
-            }
-        }
-        //可见性控制
-        if(ui->customPlot->selectedGraphs().first()->visible()){
-            ui->customPlot->selectedGraphs().first()->setVisible(false);
-            ui->customPlot->legend->item(index)->setTextColor(Qt::gray);
-        }
-        else{
-            ui->customPlot->selectedGraphs().first()->setVisible(true);
-            ui->customPlot->legend->item(index)->setTextColor(Qt::black);
-        }
-        ui->customPlot->rescaleAxes(true);
-        ui->customPlot->replot();
-    }
-}
-
-void MainWindow::contextMenuRequest(QPoint pos)
-{
-  QMenu *menu = new QMenu(this);
-  menu->setAttribute(Qt::WA_DeleteOnClose);
-
-  if (ui->customPlot->legend->selectTest(pos, false) >= 0) // context menu on legend requested
-  {
-    menu->addAction("移动到左上角", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignTop|Qt::AlignLeft));
-    menu->addAction("移动到右上角", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignTop|Qt::AlignRight));
-    menu->addAction("移动到右下角", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignBottom|Qt::AlignRight));
-    menu->addAction("移动到左下角", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignBottom|Qt::AlignLeft));
-  } else  // general context menu on graphs requested
-  {
-    if (ui->customPlot->graphCount() > 0)
-      menu->addAction("移除所有曲线", this, SLOT(removeAllGraphs()));
-  }
-  //选择了曲线
-  if (ui->customPlot->selectedGraphs().size() > 0){
-    menu->addSeparator();
-    menu->addAction("移除所选曲线", this, SLOT(removeSelectedGraph()));
-    menu->addSeparator();
-    //所选曲线是否可见
-    if(ui->customPlot->selectedGraphs().first()->visible()){
-        menu->addAction("隐藏所选曲线", this, SLOT(hideSelectedGraph()));
-    }else{
-        menu->addAction("显示所选曲线", this, SLOT(hideSelectedGraph()));
-    }
-  }
-
-  menu->popup(ui->customPlot->mapToGlobal(pos));
-}
-
-void MainWindow::moveLegend()
-{
-  if (QAction* contextAction = qobject_cast<QAction*>(sender())) // make sure this slot is really called by a context menu action, so it carries the data we need
-  {
-    bool ok;
-    int dataInt = contextAction->data().toInt(&ok);
-    if (ok)
-    {
-      ui->customPlot->axisRect()->insetLayout()->setInsetAlignment(0, static_cast<Qt::Alignment>(dataInt));
-      ui->customPlot->replot();
-    }
-  }
-}
-
-void MainWindow::graphClicked(QCPAbstractPlottable *plottable, int dataIndex)
-{
-  // since we know we only have QCPGraphs in the plot, we can immediately access interface1D()
-  // usually it's better to first check whether interface1D() returns non-zero, and only then use it.
-  double dataValue = plottable->interface1D()->dataMainValue(dataIndex);
-  QString message = QString("Clicked on graph '%1' at data point #%2 with value %3.").arg(plottable->name()).arg(dataIndex).arg(dataValue);
-  qDebug()<<message;
-}
-
-
 void MainWindow::on_actionLinePlot_triggered()
 {
     ui->actionLinePlot->setChecked(true);
     ui->actionScatterLinePlot->setChecked(false);
     ui->actionScatterPlot->setChecked(false);
-    plotControl.setupLineType(ui->customPlot, QCustomPlotControl::Line);
+    plotControl->setupLineType(ui->customPlot, QCustomPlotControl::Line);
 }
 
 void MainWindow::on_actionScatterLinePlot_triggered()
@@ -1706,7 +1448,7 @@ void MainWindow::on_actionScatterLinePlot_triggered()
     ui->actionLinePlot->setChecked(false);
     ui->actionScatterLinePlot->setChecked(true);
     ui->actionScatterPlot->setChecked(false);
-    plotControl.setupLineType(ui->customPlot, QCustomPlotControl::ScatterLine);
+    plotControl->setupLineType(ui->customPlot, QCustomPlotControl::ScatterLine);
 }
 
 void MainWindow::on_actionScatterPlot_triggered()
@@ -1714,47 +1456,7 @@ void MainWindow::on_actionScatterPlot_triggered()
     ui->actionLinePlot->setChecked(false);
     ui->actionScatterLinePlot->setChecked(false);
     ui->actionScatterPlot->setChecked(true);
-    plotControl.setupLineType(ui->customPlot, QCustomPlotControl::Scatter);
-}
-
-void MainWindow::showTracer(QMouseEvent *event)
-{
-    if(ui->customPlot->selectedGraphs().size() <= 0){
-        m_Tracer->setVisible(false);
-        ui->customPlot->replot();
-        return;
-    }
-    m_Tracer->setVisible(true);
-
-    //获取容器
-    QSharedPointer<QCPGraphDataContainer> tmpContainer;
-    tmpContainer = ui->customPlot->selectedGraphs().first()->data();
-
-    //获取x轴坐标
-    double x = ui->customPlot->xAxis->pixelToCoord(event->pos().x());
-    x = static_cast<int>(x+0.5);// 四舍五入取整
-    //获取Y轴坐标
-    double y = 0;
-    y = (tmpContainer->constBegin()+static_cast<int>(x))->mainValue();
-
-    //范围约束
-    QCPRange xRange = ui->customPlot->axisRect()->axis(QCPAxis::atBottom, 0)->range();
-    QCPRange yRange = ui->customPlot->axisRect()->axis(QCPAxis::atLeft, 0)->range();
-    if(x > xRange.upper)
-        x = xRange.upper;
-    if(x < xRange.lower)
-        x = xRange.lower;
-    if(y > yRange.upper)
-        y = yRange.upper;
-    if(y < yRange.lower)
-        y = yRange.lower;
-
-    //更新Tracer
-    QString text = "X:" + QString::number(x, 'f', 2) + " Y:" + QString::number(y, 'f', 2);
-    m_Tracer->updatePosition(x, y);
-    m_Tracer->setText(text);
-
-    ui->customPlot->replot();
+    plotControl->setupLineType(ui->customPlot, QCustomPlotControl::Scatter);
 }
 
 void MainWindow::on_actionResetDefaultConfig_triggered(bool checked)
