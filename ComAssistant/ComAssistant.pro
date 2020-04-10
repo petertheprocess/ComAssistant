@@ -63,20 +63,21 @@ SOURCES += \
     QXlsx/source/xlsxworksheet.cpp \
     QXlsx/source/xlsxzipreader.cpp \
     QXlsx/source/xlsxzipwriter.cpp \
-    baseconversion.cpp \
-    config.cpp \
     dialog/about_me_dialog.cpp \
     dialog/settings_dialog.cpp \
     dialog/stm32isp_dialog.cpp \
-    highlighter.cpp \
-    main.cpp \
-    mainwindow.cpp \
-    myserialport.cpp \
     plotter/axistag.cpp \
     plotter/dataprotocol.cpp \
     plotter/mytracer.cpp \
     plotter/qcustomplot.cpp \
     plotter/qcustomplotcontrol.cpp \
+    sources/baseconversion.cpp \
+    sources/config.cpp \
+    sources/highlighter.cpp \
+    sources/http.cpp \
+    sources/main.cpp \
+    sources/mainwindow.cpp \
+    sources/myserialport.cpp
 
 HEADERS += \
     QXlsx/header/xlsxabstractooxmlfile.h \
@@ -127,19 +128,20 @@ HEADERS += \
     QXlsx/header/xlsxzipreader_p.h \
     QXlsx/header/xlsxzipwriter_p.h \
     QXlsx/myxlsx.h \
-    baseconversion.h \
-    config.h \
     dialog/about_me_dialog.h \
     dialog/settings_dialog.h \
     dialog/stm32isp_dialog.h \
-    highlighter.h \
-    mainwindow.h \
-    myserialport.h \
     plotter/axistag.h \
     plotter/dataprotocol.h \
     plotter/mytracer.h \
     plotter/qcustomplot.h \
     plotter/qcustomplotcontrol.h \
+    sources/baseconversion.h \
+    sources/config.h \
+    sources/highlighter.h \
+    sources/http.h \
+    sources/mainwindow.h \
+    sources/myserialport.h
 
 FORMS += \
         ui/about_me_dialog.ui \
@@ -155,6 +157,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 RC_ICONS = logo.ico
 
 #头文件搜索路径
+INCLUDEPATH += $$PWD/sources/
 INCLUDEPATH += $$PWD/plotter/
 INCLUDEPATH += $$PWD/dialog/
 INCLUDEPATH += $$PWD/QXlsx/
