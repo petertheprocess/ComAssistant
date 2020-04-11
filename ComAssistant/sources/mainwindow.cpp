@@ -1748,7 +1748,7 @@ void MainWindow::on_actionUsageStatistic_triggered()
     }else if(totalTxRx_MB<6400){
         rankStr = "恭喜您，获得了【王牌码农】的称号！请再接再厉！";
     }else{
-        rankStr = "荣誉只是浮云。";
+        rankStr = "荣誉只是浮云~";
     }
 
     //上屏显示
@@ -1895,6 +1895,10 @@ void MainWindow::clearTextBrowserSlot()
 
 void MainWindow::on_valueDisplay_customContextMenuRequested(const QPoint &pos)
 {
+    //消除警告
+    QPoint pp = pos;
+    pp.isNull();
+
     QList<QTableWidgetItem*> selectedItems = ui->valueDisplay->selectedItems();
     QAction *deleteValueDisplayRow = nullptr;
     QAction *deleteValueDisplay = nullptr;
