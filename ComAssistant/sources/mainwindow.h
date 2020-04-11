@@ -90,17 +90,17 @@ private slots:
     void on_actionSendFile_triggered();
 
     //function
-    void on_actionSTM32_ISP_triggered();
     void on_actionMultiString_triggered(bool checked);
+    void on_actionSTM32_ISP_triggered();
     
     //setting
     void on_actionCOM_Config_triggered();
-    void on_action_winLikeEnter_triggered(bool checked);
-    void on_action_unixLikeEnter_triggered(bool checked);
     void on_actionGBK_triggered(bool checked);
     void on_actionUTF8_triggered(bool checked);
-    void on_actionResetDefaultConfig_triggered(bool checked);
+    void on_action_winLikeEnter_triggered(bool checked);
+    void on_action_unixLikeEnter_triggered(bool checked);
     void on_actionKeyWordHighlight_triggered(bool checked);
+    void on_actionResetDefaultConfig_triggered(bool checked);
     
     //visualization
     void on_actionPlotterSwitch_triggered(bool checked);
@@ -113,10 +113,10 @@ private slots:
     void on_actiondebug_triggered(bool checked);
 
     //help
-    void on_actionAbout_triggered();
-    void on_actionUpdate_triggered();
     void on_actionManual_triggered();
     void on_actionUsageStatistic_triggered();
+    void on_actionUpdate_triggered();
+    void on_actionAbout_triggered();
 
     //timer
     void secTimerSlot();
