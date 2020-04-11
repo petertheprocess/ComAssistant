@@ -1404,6 +1404,8 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
         int newValue;
         bool res;
 
+//        qDebug()<<action<<value<<bar->maximum()<<printToBrowserFlag;
+
         //自动滚屏判断。滚动到最底部才打印数据。两个if不能用else
         if(action == QAbstractSlider::SliderNoAction ||
             action == QAbstractSlider::SliderSingleStepSub ||
@@ -1416,7 +1418,7 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
                 action == QAbstractSlider::SliderSingleStepAdd ||
                 action == QAbstractSlider::SliderPageStepAdd ||
                 action == QAbstractSlider::SliderMove){
-            if(value == bar->maximum()){
+            if(value >= bar->maximum() - 5 ){
                 printToBrowserFlag = true;
                 printToTextBrowser();//立即刷新一次
             }
@@ -1455,7 +1457,7 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
             bar->setValue(newValue);
         }
     }
-//    qDebug()<<action<<printToBrowserFlag;
+
 }
 
 void MainWindow::on_actionLinePlot_triggered()
