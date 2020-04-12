@@ -68,6 +68,7 @@ bool HTTP::postUsageStatistic(void)
 //    ui->statusBar->showMessage("正在提交使用统计...", 1000);
 
     //准备上传数据
+    //为了不改动服务器端程序，不要打乱已有的顺序改变
     QString sendData = "Version=#VERSION#&StartTime=#STARTTIME#&RunTime=#RUNTIME#&TxCnt=#TXCNT#&RxCnt=#RXCNT#";
     sendData.replace("#VERSION#",Config::getVersion());
     QString current_date_str = Config::getStartTime();
