@@ -8,6 +8,7 @@ Config::Config()
 void Config::writeDefault(){
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
 
+    iniFile->setValue(SECTION_GLOBAL+KEY_FIRSTRUN, true);
     iniFile->setValue(SECTION_GLOBAL+KEY_CODERULE, CodeRule_e::GBK);
     iniFile->setValue(SECTION_GLOBAL+KEY_ENTERSTYLE , EnterStyle_e::WinStyle);
     iniFile->setValue(SECTION_GLOBAL+KEY_TIMESTAMPSTATE, false);
@@ -70,6 +71,20 @@ bool Config::isFileExist(QString path)
     }
     return false;
 }
+
+void Config::setFirstRun(bool flag){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_GLOBAL+KEY_FIRSTRUN, flag);
+    delete iniFile;
+}
+bool Config::getFirstRun(){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    bool value = iniFile->value(SECTION_GLOBAL+KEY_FIRSTRUN, true).toBool();
+    delete iniFile;
+    return value;
+}
+
 void Config::setVersion(void){
     createDefaultIfNotExist();
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);

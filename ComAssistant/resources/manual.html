@@ -64,7 +64,12 @@
 
 <h2>数据可视化</h2>
 <ul>
-  <li><b>绘图器</b>：绘图器开关</li>
+  <li><b>绘图器</b>：绘图器开关。
+    <ul><b>注意</b>：
+        <li>横轴为绘图点的数量，纵轴为绘图点的值，如要求数据点之间具有相同的时间间隔，请自行控制下位机的发送时间间隔。</li>
+        <li>为了追求简单易用，绘图器协议不带数据校验，若因电磁环境复杂导致数据传输出错，软件通常难以发现和纠正。</li>
+    </ul>
+    </li>
   <li><b>线型</b>：支持线图、点线图、点图三种风格</li>
   <li><b>数值显示器</b>：数值显示开关。与绘图器共用Ascii协议，不支持Float协议</li>
   <li><b>协议类型</b>：绘图器支持两种简单的协议类型，均为单精度浮点型。
@@ -74,7 +79,7 @@
         <pre style="background-color: rgb(235, 235, 235);">
         printf("{:%f,%f,%f}\r\n", data1, data2, data3);
         </pre>
-        表示同一时刻，3条曲线的数据。{和:之间可以添加一些自定义数据，比如计数统计cnt++，但是不能再次添加:和{等容易引起歧义的符号。曲线数量不能超过15个。
+        表示同一时刻，3条曲线的数据。{和:之间可以添加一些自定义数据，比如发送次数统计cnt++，但是不能再次添加:和{等容易引起歧义的符号。曲线数量不能超过15个。
       </li><br>
       <li>
         <b>Float协议规则为</b>：直接将float类型数据按小端顺序拆成4个字节依次发送，并以0x00, 0x00, 0x80, 0x7F四个字节作为一组数据的结尾，其中第一个数据表示第一条曲线，依次类推，曲线数量不能超过15个。
@@ -89,11 +94,11 @@
         {
           u8 dataBuff[4+4+4];
           u8 cnt = 0;
-          dataBuff[cnt++]=BYTE0(data1);
+          dataBuff[cnt++]=BYTE0(data1); //第一个变量
           dataBuff[cnt++]=BYTE1(data1);
           dataBuff[cnt++]=BYTE2(data1);
           dataBuff[cnt++]=BYTE3(data1);
-          dataBuff[cnt++]=BYTE0(data2);
+          dataBuff[cnt++]=BYTE0(data2); //第二个变量
           dataBuff[cnt++]=BYTE1(data2);
           dataBuff[cnt++]=BYTE2(data2);
           dataBuff[cnt++]=BYTE3(data2);

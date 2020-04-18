@@ -177,6 +177,17 @@ MainWindow::MainWindow(QWidget *parent) :
     cycleReadTimer.setTimerType(Qt::PreciseTimer);
     secTimer.start(1000);
     cycleReadTimer.start(5);
+
+    //显示界面
+    this->show();
+    //是否首次运行
+    if(Config::getFirstRun()){
+        //弹出帮助文件
+        on_actionManual_triggered();
+        //弹出声明
+        on_actionAbout_triggered();
+        QMessageBox::information(this, "提示", "欢迎使用本串口调试助手。\n\n请认真阅读帮助文件与相关声明。\n若您继续使用本软件则代表您接受并同意相关声明。\n若您不同意相关声明请自行关闭软件。");
+    }
 }
 
 void MainWindow::secTimerSlot()
@@ -204,10 +215,10 @@ void MainWindow::secTimerSlot()
 
 void MainWindow::debugTimerSlot()
 {
-    #define BYTE0(dwTemp)       static_cast<char>((*reinterpret_cast<char *>(&dwTemp)))
-    #define BYTE1(dwTemp)       static_cast<char>((*(reinterpret_cast<char *>(&dwTemp) + 1)))
-    #define BYTE2(dwTemp)       static_cast<char>((*(reinterpret_cast<char *>(&dwTemp) + 2)))
-    #define BYTE3(dwTemp)       static_cast<char>((*(reinterpret_cast<char *>(&dwTemp) + 3)))
+    #define BYTE0(dwTemp)   static_cast<char>((*reinterpret_cast<char *>(&dwTemp)))
+    #define BYTE1(dwTemp)   static_cast<char>((*(reinterpret_cast<char *>(&dwTemp) + 1)))
+    #define BYTE2(dwTemp)   static_cast<char>((*(reinterpret_cast<char *>(&dwTemp) + 2)))
+    #define BYTE3(dwTemp)   static_cast<char>((*(reinterpret_cast<char *>(&dwTemp) + 3)))
 
     static double count;
     float num1, num2, num3;
@@ -243,6 +254,7 @@ void MainWindow::debugTimerSlot()
 MainWindow::~MainWindow()
 {
     if(needSaveConfig){
+        Config::setFirstRun(false);
         if(ui->actionUTF8->isChecked()){
             Config::setCodeRule(CodeRule_e::UTF8);
         }else if(ui->actionGBK->isChecked()){
@@ -1418,7 +1430,7 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
                 action == QAbstractSlider::SliderSingleStepAdd ||
                 action == QAbstractSlider::SliderPageStepAdd ||
                 action == QAbstractSlider::SliderMove){
-            if(value >= bar->maximum() - 5 ){
+            if(value == bar->maximum() ){
                 printToBrowserFlag = true;
                 printToTextBrowser();//立即刷新一次
             }
@@ -1513,6 +1525,11 @@ void MainWindow::on_actionManual_triggered()
             BrowserBuff.append(html);
             hexBrowserBuff.clear();
             hexBrowserBuff.append(toHexDisplay(html.toLocal8Bit()));
+
+            //翻到最前面
+            ui->textBrowser->verticalScrollBar()->setValue(0);
+            hexBrowserBuffIndex = hexBrowserBuff.size();
+            BrowserBuffIndex = BrowserBuff.size();
         }else{
             QMessageBox::information(this, "提示", "帮助文件被占用。");
         }

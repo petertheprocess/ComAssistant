@@ -22,6 +22,7 @@
 #define SECTION_ABOUT    QString("About/")
 
 //global键
+#define KEY_FIRSTRUN            QString("FirstRun")
 #define KEY_CODERULE            QString("CodeRule")
 #define KEY_ENTERSTYLE          QString("EnterStyle")
 #define KEY_TIMESTAMPSTATE      QString("TimeStampState")
@@ -95,6 +96,9 @@ public:
     static void writeDefault();
     static void createDefaultIfNotExist();
     static bool isFileExist(QString path);
+
+    static void setFirstRun(bool flag);
+    static bool getFirstRun();
 
     static void setVersion(void);
     static QString getVersion();
