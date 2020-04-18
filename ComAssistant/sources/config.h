@@ -15,11 +15,12 @@
 //默认发送间隔
 #define DEFAULT_SEND_INTERVAL   100
 //节
-#define SECTION_GLOBAL   QString("Global/")
-#define SECTION_SERIAL   QString("Serial/")
+#define SECTION_GLOBAL    QString("Global/")
+#define SECTION_SERIAL    QString("Serial/")
+#define SECTION_MULTISTR  QString("MultiStr/")
 #define SECTION_PLOTTER   QString("Plotter/")
-#define SECTION_STATIC   QString("Static/")
-#define SECTION_ABOUT    QString("About/")
+#define SECTION_STATIC    QString("Static/")
+#define SECTION_ABOUT     QString("About/")
 
 //global键
 #define KEY_FIRSTRUN            QString("FirstRun")
@@ -29,8 +30,6 @@
 #define KEY_SENDINTERVAL        QString("SendInterval")
 #define KEY_HEXSENDSTATE        QString("HexSendState")
 #define KEY_HEXSHOWSTATE        QString("HexShowState")
-#define KEY_MULTISTRINGSTATE    QString("MultiStringState")
-#define KEY_MULTISTRING         QString("MultiString")
 #define KEY_HIGHLIGHTSTATE      QString("HighlightState")
 #define KEY_TEXTSENDAREA        QString("TextSendArea")
 #define KEY_LASTFILEDIALOGPATH  QString("LastFileDialogPath")
@@ -42,6 +41,10 @@
 #define KEY_DATABIT         QString("DataBit")
 #define KEY_PARITY          QString("Parity")
 #define KEY_FLOWCONTROL     QString("FlowControl")
+
+//multiStr键
+#define KEY_MULTISTRINGSTATE    QString("MultiStringState")
+#define KEY_MULTISTRING         QString("MultiString")
 
 //plotter键
 #define KEY_PLOTTERSTATE        QString("PlotterState")
@@ -90,7 +93,7 @@ class Config
 public:
     #define defualtGraphName  "Graph 1;Graph 2;Graph 3;Graph 4;Graph 5;Graph 6;Graph 7;Graph 8;Graph 9;Graph 10;Graph 11;Graph 12;Graph 13;Graph 14;Graph 15;"
     //版本
-    #define VERSION_STRING  "0.2.1"
+    #define VERSION_STRING  "0.2.2"
 
     Config();
     static void writeDefault();

@@ -15,7 +15,6 @@ void Config::writeDefault(){
     iniFile->setValue(SECTION_GLOBAL+KEY_SENDINTERVAL, DEFAULT_SEND_INTERVAL);
     iniFile->setValue(SECTION_GLOBAL+KEY_HEXSENDSTATE, false);
     iniFile->setValue(SECTION_GLOBAL+KEY_HEXSHOWSTATE, false);
-    iniFile->setValue(SECTION_GLOBAL+KEY_MULTISTRINGSTATE, false);
     iniFile->setValue(SECTION_GLOBAL+KEY_HIGHLIGHTSTATE, true);
     iniFile->setValue(SECTION_GLOBAL+KEY_TEXTSENDAREA, "");
     iniFile->setValue(SECTION_GLOBAL+KEY_LASTFILEDIALOGPATH, "");
@@ -26,6 +25,8 @@ void Config::writeDefault(){
     iniFile->setValue(SECTION_SERIAL+KEY_DATABIT, QSerialPort::Data8);
     iniFile->setValue(SECTION_SERIAL+KEY_STOPBIT, QSerialPort::OneStop);
     iniFile->setValue(SECTION_SERIAL+KEY_FLOWCONTROL, QSerialPort::NoFlowControl);
+
+    iniFile->setValue(SECTION_MULTISTR+KEY_MULTISTRINGSTATE, false);
 
     iniFile->setValue(SECTION_PLOTTER+KEY_PLOTTERSTATE, false);
     iniFile->setValue(SECTION_PLOTTER+KEY_PROTOCOLTYPE, ProtocolType_e::Ascii);
@@ -281,15 +282,15 @@ bool Config::setMultiString(QStringList multiStr){
 
     int i = 0;
     for(i = 0; i > -1; i++){
-        QString tmp = iniFile->value(SECTION_GLOBAL+KEY_MULTISTRING+QString::number(i), "").toString();
+        QString tmp = iniFile->value(SECTION_MULTISTR+KEY_MULTISTRING+QString::number(i), "").toString();
         if(!tmp.isEmpty()){
-            iniFile->setValue(SECTION_GLOBAL+KEY_MULTISTRING+QString::number(i), "");
+            iniFile->setValue(SECTION_MULTISTR+KEY_MULTISTRING+QString::number(i), "");
         }else{
             break;
         }
     }
     for(i = 0; i < multiStr.size(); i++){
-        iniFile->setValue(SECTION_GLOBAL+KEY_MULTISTRING+QString::number(i), multiStr.at(i));
+        iniFile->setValue(SECTION_MULTISTR+KEY_MULTISTRING+QString::number(i), multiStr.at(i));
     }
 
     delete iniFile;
@@ -307,7 +308,7 @@ QStringList Config::getMultiString(){
             case 2: preStr = "右击条目删除/编辑"; break;
             default: preStr = ""; break;
         }
-        QString value = iniFile->value(SECTION_GLOBAL+KEY_MULTISTRING+QString::number(i), preStr).toString();
+        QString value = iniFile->value(SECTION_MULTISTR+KEY_MULTISTRING+QString::number(i), preStr).toString();
         if(value.isEmpty())
             break;
         else
