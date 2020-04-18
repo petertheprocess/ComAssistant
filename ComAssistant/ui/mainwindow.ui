@@ -617,6 +617,9 @@ p, li { white-space: pre-wrap; }
    <property name="text">
     <string>绘图器</string>
    </property>
+   <property name="iconVisibleInMenu">
+    <bool>true</bool>
+   </property>
   </action>
   <action name="actionAscii">
    <property name="checkable">
@@ -669,7 +672,13 @@ p, li { white-space: pre-wrap; }
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>回环收发测试</string>
+    <string>绘图测试</string>
+   </property>
+   <property name="statusTip">
+    <string/>
+   </property>
+   <property name="whatsThis">
+    <string/>
    </property>
   </action>
   <action name="actionResetDefaultConfig">

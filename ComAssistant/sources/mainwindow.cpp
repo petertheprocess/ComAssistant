@@ -246,6 +246,7 @@ void MainWindow::debugTimerSlot()
         }
     }
 
+
     if(ui->actionPlotterSwitch->isChecked()||ui->actionValueDisplay->isChecked()){
         count = count + 0.1;
     }

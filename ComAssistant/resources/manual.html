@@ -102,7 +102,7 @@
           dataBuff[cnt++]=BYTE1(data2);
           dataBuff[cnt++]=BYTE2(data2);
           dataBuff[cnt++]=BYTE3(data2);
-          dataBuff[cnt++]=0x00;
+          dataBuff[cnt++]=0x00; //结束标志
           dataBuff[cnt++]=0x00;
           dataBuff[cnt++]=0x80;
           dataBuff[cnt++]=0x7F;
@@ -116,6 +116,7 @@
       </li>
     </ul>
   </li>
+  <li><b>绘图测试</b>：勾选后软件会生成3条正弦数据并发送，将TX和RX短接后，软件可以显示收到的数据</li>
 </ul>
 
 <h2>操作指导</h2>
@@ -127,9 +128,19 @@
   <li>双击轴标题可以修改轴标题名称</li>
   <li>“数据显示区”、“多字符串”、“绘图器”、“数值显示器”之间均可以通过拖动自行调整大小</li>
   <li>数据显示区的滑动条：上滑可以自动停止滚屏，便于观察历史数据并保持数据的接收。下滑至底部时重新开启滚屏，观察最新数据</li>
+</ul>
+
+<h2>快捷键</h2>
+<ul>
   <li><code style="background-color: rgb(235, 235, 235);">F5</code>刷新按钮</li>
   <li><code style="background-color: rgb(235, 235, 235);">Ctrl+Enter </code>发送按钮</li>
   <li><code style="background-color: rgb(235, 235, 235);">Ctrl+Delete</code>清空按钮</li>
+  <li><code style="background-color: rgb(235, 235, 235);">Ctrl+S</code>保存原始数据</li>
+  <li><code style="background-color: rgb(235, 235, 235);">Ctrl+O</code>打开原始数据</li>
+  <li><code style="background-color: rgb(235, 235, 235);">F1</code>使用教程</li>
+  <li><code style="background-color: rgb(235, 235, 235);">F2</code>使用统计</li>
+  <li><code style="background-color: rgb(235, 235, 235);">F3</code>检查更新</li>
+  <li><code style="background-color: rgb(235, 235, 235);">F4</code>关于</li>
 </ul>
 
 <h2>注意</h2>
