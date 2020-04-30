@@ -172,6 +172,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->customPlot->yAxis2->setLabelFont(font);
     ui->customPlot->m_Tracer->setLabelFont(font);
 
+    this->setWindowTitle("串口调试助手 V"+Config::getVersion());
+
     //启动定时器
     secTimer.setTimerType(Qt::PreciseTimer);
     cycleReadTimer.setTimerType(Qt::PreciseTimer);
