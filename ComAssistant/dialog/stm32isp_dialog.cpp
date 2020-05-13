@@ -65,16 +65,12 @@ STM32ISP_Dialog::STM32ISP_Dialog(QWidget *parent) :
     connect(process,SIGNAL(readyRead()),this,SLOT(readyRead()));
 
     ui->browser->setText(
-                tr("点击refresh按钮刷新串口\r\n")+
-                tr("点击OpenFile按钮选择你的hex程序\r\n")+
-                tr("点击Download下载文件\r\n")+
-                tr("点击GetChipInfo获取芯片信息\r\n")+
-                tr("--------------------------------------------------\r\n")+
-                tr("- 文件路径请避免空格和中文，本上位机未作特别处理，可能导致问题。\r\n")+
-                tr("- 【确保STM32已经进入ISP Bootloader(或者BT0被置高后并复位)。】\r\n")
+                tr("- 【确保STM32可正确进入ISP模式\r\n")+
+                tr("- 【如开发板有自动下载电路，可勾选“使用自动下载电路”进入ISP模式】\r\n")+
+                tr("- 【如开发板无自动下载电路，可拉高BOOT0后复位单片机进入ISP模式，也可通过以下函数进行软件跳转】\r\n")
                 );
     ui->browser->append("STM32F1/F4系列可使用以下函数跳转至ISP Bootloader：\n");
-    ui->browser->append(
+    ui->browser->append("<pre style=\"background-color: rgb(235, 235, 235);\">"
                         "    void JumpToISP(void)\n"
                         "    {\n"
                         "        //根据芯片修改地址,参阅“芯片参考手册——Flash——系统存储区”部分\n"
@@ -107,7 +103,7 @@ STM32ISP_Dialog::STM32ISP_Dialog(QWidget *parent) :
                         "            Jump_To_ISP();\n"
                         "        }\n"
                         "    }\n"
-                        );
+                        "</pre>");
     ui->browser->append("欢迎访问：<a href=\"https://shop490276933.taobao.com\">https://shop490276933.taobao.com</a>\r\n");
 
     QLabel *permanent1=new QLabel(this);
@@ -139,13 +135,21 @@ void STM32ISP_Dialog::on_openfile_clicked()
             QByteArray fileBuff = file.readAll();
             file.close();
 
+            //把路径格式改成cmd支持的格式，并在前后加双引号
+            while (fileName.indexOf('/')!=-1) {
+                fileName.replace('/','\\');
+            }
+            if(fileName.startsWith('"')==false)
+                fileName.push_front('"');
+            if(fileName.endsWith('"')==false)
+                fileName.push_back('"');
+
             ui->fileaddr->setText(fileName);
             ui->browser->setText(fileBuff);
         }
         else
             file.close();
     }
-
 }
 
 //刷新串口
@@ -154,7 +158,9 @@ void STM32ISP_Dialog::on_refresh_clicked()
     if(process->isOpen())
     {
         qDebug()<<"There is process running.";
-        return;
+        ui->browser->append("检测到stm32isp正在运行，已停止该进程。");
+        process->close();
+//        return;
     }
     ui->com->clear();
     foreach (const QSerialPortInfo &info,QSerialPortInfo::availablePorts())
@@ -187,7 +193,9 @@ void STM32ISP_Dialog::on_download_clicked()
     if(process->isOpen())
     {
         qDebug()<<"There is process running.";
-        return;
+        ui->browser->append("检测到stm32isp正在运行，已停止该进程。");
+        process->close();
+//        return;
     }
     ui->browser->setText("");
     ui->progressBar->setValue(0);
@@ -195,18 +203,21 @@ void STM32ISP_Dialog::on_download_clicked()
     QString comPort="-com:";
     QString CMD="";
 
-    //路径如果带空格必须以参数形式传递，以下方式无法正常启动
-    //路径如果带中文也无法正常启动
+    //准备构建需要传入的参数
     path="-path:"+ui->fileaddr->text();
     comPort="-com:"+ui->com->currentText().mid(0,ui->com->currentText().indexOf('('));
-    CMD="-download -ADC";
+    CMD="-download";
     QStringList cmdLine;
-    cmdLine.append("/c "+CLIToolPath+" "+path+" "+comPort+" "+CMD);
+    cmdLine<<path<<comPort<<CMD;
+    if(ui->useAutoDownloadCircuit->isChecked())
+        cmdLine<<"-adc";
+    if(ui->eraseAll->isChecked())
+        cmdLine<<"-true";
     qDebug()<<cmdLine;
 
-//    process->start("cmd",cmdLine);
+    //调用命令行程序
     process->setProgram(CLIToolPath);
-    process->setArguments(QStringList()<<path<<comPort<<CMD);
+    process->setArguments(cmdLine);
     process->start();
 }
 
@@ -216,23 +227,25 @@ void STM32ISP_Dialog::on_getchipinfo_clicked()
     if(process->isOpen())
     {
         qDebug()<<"There is process running.";
-        return;
+        ui->browser->append("检测到stm32isp正在运行，已停止该进程。");
+        process->close();
+//        return;
     }
     ui->browser->setText("");
-    QString path;
     QString comPort="-com:";
     QString CMD="";
 
-    path=ui->fileaddr->text();
-
     comPort="-com:"+ui->com->currentText().mid(0,ui->com->currentText().indexOf('('));
     CMD="-getinfo";
+
     QStringList cmdLine;
-    cmdLine.append("/c "+CLIToolPath+" "+comPort+" "+CMD);
+    cmdLine<<comPort<<CMD;
+    if(ui->useAutoDownloadCircuit->isChecked())
+        cmdLine<<"-adc";
     qDebug()<<cmdLine;
 
-//    process->start("cmd",cmdLine);
+    //调用命令行程序
     process->setProgram(CLIToolPath);
-    process->setArguments(QStringList()<<comPort<<CMD);
+    process->setArguments(cmdLine);
     process->start();
 }

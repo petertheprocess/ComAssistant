@@ -15,44 +15,18 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QGridLayout" name="gridLayout" rowstretch="1,1,0,0,0,0,0,5,5,0,0,0,0,0,0,1" columnstretch="2,1,1,1" columnminimumwidth="0,0,0,0">
-     <item row="0" column="0" colspan="3">
-      <widget class="QComboBox" name="com">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-      </widget>
-     </item>
-     <item row="8" column="3">
-      <widget class="QPushButton" name="getchipinfo">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>GetChipInfo</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="3">
-      <widget class="QPushButton" name="openfile">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>OpenFile</string>
-       </property>
-      </widget>
-     </item>
+    <layout class="QGridLayout" name="gridLayout" rowstretch="1,1,0,0,0,0,0,5,5,0,0,0,0,0,0,1,0,0,0" columnstretch="2,1,1,1" columnminimumwidth="0,0,0,0">
      <item row="7" column="3">
+      <widget class="QCheckBox" name="useAutoDownloadCircuit">
+       <property name="text">
+        <string>使用自动下载电路</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="10" column="3">
       <widget class="QPushButton" name="download">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -61,20 +35,7 @@
         </sizepolicy>
        </property>
        <property name="text">
-        <string>Download</string>
-       </property>
-      </widget>
-     </item>
-     <item row="15" column="0" colspan="4">
-      <widget class="QProgressBar" name="progressBar">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="value">
-        <number>24</number>
+        <string>下载程序</string>
        </property>
       </widget>
      </item>
@@ -88,6 +49,29 @@
        </property>
       </widget>
      </item>
+     <item row="0" column="0" colspan="3">
+      <widget class="QComboBox" name="com">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
+      <widget class="QPushButton" name="openfile">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>选择HEX文件</string>
+       </property>
+      </widget>
+     </item>
      <item row="0" column="3">
       <widget class="QPushButton" name="refresh">
        <property name="sizePolicy">
@@ -97,15 +81,48 @@
         </sizepolicy>
        </property>
        <property name="text">
-        <string>Refresh</string>
+        <string>刷新串口</string>
        </property>
        <property name="checkable">
         <bool>false</bool>
        </property>
       </widget>
      </item>
-     <item row="7" column="0" rowspan="2" colspan="3">
+     <item row="8" column="3">
+      <widget class="QCheckBox" name="eraseAll">
+       <property name="text">
+        <string>擦除芯片</string>
+       </property>
+      </widget>
+     </item>
+     <item row="11" column="3" rowspan="3">
+      <widget class="QPushButton" name="getchipinfo">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>获取芯片信息</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="0" rowspan="8" colspan="3">
       <widget class="QTextEdit" name="browser"/>
+     </item>
+     <item row="15" column="0" rowspan="4" colspan="4">
+      <widget class="QProgressBar" name="progressBar">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="value">
+        <number>24</number>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
