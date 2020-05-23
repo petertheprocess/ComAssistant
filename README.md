@@ -1,14 +1,6 @@
 # QT串口调试助手
   一个基于QT的串口调试助手，实现了基本收发功能、绘图功能、数据保存、关键字高亮等功能，并支持STM32F1和F4系列的自动下载。
 
-绘图协议：
-
-```c
-//ASCII格式协议
-//几条曲线就几个变量。
-printf("{:%f,%f}\r\n", data1, data2);
-```
-
 ![demo](screenshoot/demo.gif)
 ![mainwindow](screenshoot/mainwindow.png)
 ![mainwindow](screenshoot/mainwindow2.jpg)
@@ -16,14 +8,26 @@ printf("{:%f,%f}\r\n", data1, data2);
 ![scatterline](screenshoot/scatterline.png)
 ![multistring](screenshoot/multistring.png)
 
+# 如何绘图
+当打开绘图器后，按照如下协议发送数据即可绘制曲线：
+```c
+//ASCII格式协议
+//几条曲线就几个变量。
+printf("{:%f,%f}\r\n", data1, data2);
+```
+
 # 计划清单
   - 代码重构/优化/注释
-  
+  - hex全屏显示时好像无法显示历史数据
+  - 数据刷新太快时好像显示不对
+
 # 考虑中的功能
   - 多语言支持？
   - XYZModen协议支持
   - DeBug转log文件
   - 数值显示器列宽度是否支持手动调整（目前看来必要性不是很强）
+  - 协议过滤器，分包显示（刷新显示区前扫描缓存剔除不需要显示的数据包？）
+  - 断网时，信息发布区显示Moved
 
 # 暂时无法实现的功能
   - 图像Y轴只按显示的区域最大值调整：暂时没有合适的方法实现，

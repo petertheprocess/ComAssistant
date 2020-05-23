@@ -67,7 +67,8 @@ STM32ISP_Dialog::STM32ISP_Dialog(QWidget *parent) :
     ui->browser->setText(
                 tr("- 【确保STM32可正确进入ISP模式\r\n")+
                 tr("- 【如开发板有自动下载电路，可勾选“使用自动下载电路”进入ISP模式】\r\n")+
-                tr("- 【如开发板无自动下载电路，可拉高BOOT0后复位单片机进入ISP模式，也可通过以下函数进行软件跳转】\r\n")
+                tr("- 【如开发板无自动下载电路，可拉高BOOT0后复位单片机进入ISP模式，也可通过以下函数进行软件跳转】\r\n")+
+                tr("- 【仅支持通过DTR低电平复位，RTS高电平控制自动下载电路进ISP模式】\r\n")
                 );
     ui->browser->append("STM32F1/F4系列可使用以下函数跳转至ISP Bootloader：\n");
     ui->browser->append("<pre style=\"background-color: rgb(235, 235, 235);\">"

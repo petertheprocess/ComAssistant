@@ -1,6 +1,9 @@
 /build-ComAssistant-Desktop_Qt_5_12_3_MinGW_64_bit-Debug
 /build-ComAssistant-Desktop_Qt_5_12_3_MinGW_64_bit-Profile
 /build-ComAssistant-Desktop_Qt_5_12_3_MinGW_64_bit-Release
+/build-ComAssistant-Desktop_Qt_5_12_3_MinGW_32_bit-Debug
+/build-ComAssistant-Desktop_Qt_5_12_3_MinGW_32_bit-Profile
+/build-ComAssistant-Desktop_Qt_5_12_3_MinGW_32_bit-Release
 /ComAssistant/*.user
 
 # C++ objects and libs
@@ -50,7 +53,7 @@ target_wrapper.*
 # QtCreator CMake
 CMakeLists.txt.user*
 
-# QtCreator 4.8< compilation database 
+# QtCreator 4.8< compilation database
 compile_commands.json
 
 # QtCreator local machine specific files for imported projects
