@@ -831,6 +831,9 @@ void MainWindow::on_sendButton_clicked()
 
 void MainWindow::on_clearWindows_clicked()
 {
+    //开启滚屏
+    printToBrowserFlag = true;
+
     //串口
     serial.resetCnt();
     if(serial.isOpen())
@@ -1407,7 +1410,8 @@ void MainWindow::on_actiondebug_triggered(bool checked)
 
 void MainWindow::verticalScrollBarActionTriggered(int action)
 {
-
+    //取消上滑暂停滚屏的功能
+#if 0
     QScrollBar* bar = ui->textBrowser->verticalScrollBar();
     if(action == QAbstractSlider::SliderSingleStepAdd ||
        action == QAbstractSlider::SliderSingleStepSub||
@@ -1472,7 +1476,7 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
             bar->setValue(newValue);
         }
     }
-
+#endif
 }
 
 void MainWindow::on_actionLinePlot_triggered()
