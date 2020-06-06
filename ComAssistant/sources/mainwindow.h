@@ -137,6 +137,10 @@ private slots:
     void deleteSeedSlot();
     void clearSeedsSlot();
 
+    void on_timeStampCheckBox_stateChanged(int arg1);
+
+    void on_timeOut_textChanged(const QString &arg1);
+
 private:
     bool needSaveConfig = true;
     void readConfig();
@@ -158,10 +162,11 @@ private:
     int BrowserBuffIndex = 0; //显示指示
     QByteArray unshowedRxBuff;    //未上屏的接收缓冲
 
-    QTimer cycleSendTimer; //循环发送定时器
-    QTimer debugTimer; //调试定时器
-    QTimer secTimer;  //秒定时器
-    QTimer cycleReadTimer; //周期读取定时器
+    QTimer cycleSendTimer;  //循环发送定时器
+    QTimer debugTimer;      //调试定时器
+    QTimer secTimer;        //秒定时器
+    QTimer cycleReadTimer;  //周期读取定时器
+    QTimer timeStampTimer;  //时间戳定时器
 
     QString enter;
     QString lastFileDialogPath; //上次文件对话框路径

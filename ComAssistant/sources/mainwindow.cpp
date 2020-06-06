@@ -95,7 +95,8 @@ MainWindow::MainWindow(QWidget *parent) :
     //槽
     connect(&cycleSendTimer, SIGNAL(timeout()), this, SLOT(cycleSendTimerSlot()));
     connect(&secTimer, SIGNAL(timeout()), this, SLOT(secTimerSlot()));
-    connect(&cycleReadTimer, SIGNAL(timeout()), this, SLOT(cycleReadTimerSlot()));
+//    connect(&cycleReadTimer, SIGNAL(timeout()), this, SLOT(cycleReadTimerSlot()));
+    connect(&serial, SIGNAL(readyRead()), this, SLOT(readSerialPort()));
     connect(&serial, SIGNAL(bytesWritten(qint64)), this, SLOT(serialBytesWritten(qint64)));
     connect(&serial, SIGNAL(error(QSerialPort::SerialPortError)),  this, SLOT(handleSerialError(QSerialPort::SerialPortError)));
 
@@ -113,6 +114,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //设置波特率框和发送间隔框的合法输入范围
     ui->baudrateList->setValidator(new QIntValidator(0,9999999,this));
     ui->sendInterval->setValidator(new QIntValidator(0,99999,this));
+    ui->timeOut->setValidator(new QIntValidator(0,99999,this));
 
     //加载高亮规则
     on_actionKeyWordHighlight_triggered(ui->actionKeyWordHighlight->isChecked());
@@ -441,8 +443,9 @@ void MainWindow::readSerialPort()
     static bool needEnter = false;
     static bool needTimeString = true;
     timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
-    timeString = "["+timeString+"]Rx<- ";
+    timeString = "\n["+timeString+"]Rx<- ";
 
+    //解析文件模式
     if(paraseFile){
         tmpReadBuff = paraseFileBuff.at(paraseFileBuffIndex++);
         RxBuff.append(tmpReadBuff);
@@ -455,30 +458,41 @@ void MainWindow::readSerialPort()
             return;
     }
 
-    //tmpReadBuff可能为空。
     if(tmpReadBuff.isEmpty()){
-        //如果开启时间戳轮询到空数据，说明没有数据了，可以补回车换行了
-        if(ui->timeStampCheckBox->isChecked()){
-            if(needEnter){
-                hexBrowserBuff.append("\n");
-                BrowserBuff.append("\n");
-                needEnter = false;
-                needTimeString = true;
-            }
-        }
-        //其他的解析没必要进行，直接返回
         return;
-    }else{
-        //如果开启时间戳，又多次轮询到了数据，则只需要显示一次时间戳，并置位需要回车标志，下次轮询到空数据时可以追加回车
-        if(ui->timeStampCheckBox->isChecked()){
-            if(needTimeString){
-                needTimeString = false;
-            }else{
-                timeString.clear();
-            }
-            needEnter = true;
-        }
     }
+
+    //收到数据且时间戳超时则可以添加新的时间戳和换行
+    if(ui->timeStampCheckBox->isChecked() && timeStampTimer.isActive()==false){
+        needEnter = false;
+        needTimeString = true;
+        timeStampTimer.setSingleShot(true);
+        timeStampTimer.start(ui->timeOut->text().toInt());
+    }
+//    //tmpReadBuff可能为空。
+//    if(tmpReadBuff.isEmpty()){
+//        //如果开启时间戳轮询到空数据，说明没有数据了，可以补回车换行了
+//        if(ui->timeStampCheckBox->isChecked()){
+//            if(needEnter){
+//                hexBrowserBuff.append("\n");
+//                BrowserBuff.append("\n");
+//                needEnter = false;
+//                needTimeString = true;
+//            }
+//        }
+//        //其他的解析没必要进行，直接返回
+//        return;
+//    }else{
+//        //如果开启时间戳，又多次轮询到了数据，则只需要显示一次时间戳，并置位需要回车标志，下次轮询到空数据时可以追加回车
+//        if(ui->timeStampCheckBox->isChecked()){
+//            if(needTimeString){
+//                needTimeString = false;
+//            }else{
+//                timeString.clear();
+//            }
+//            needEnter = true;
+//        }
+//    }
 
     //速度统计，不能和下面的互换，否则不准确
     statisticRxByteCnt += tmpReadBuff.size();
@@ -545,7 +559,7 @@ void MainWindow::readSerialPort()
         }
     }
 
-    //如果开启隐藏绘图数据，绘图器可能会删除数据
+    //如果开启隐藏绘图数据，绘图器可能会删除数据，因此重新判断一次
     if(tmpReadBuff.isEmpty())
         return;
 
@@ -737,8 +751,10 @@ void MainWindow::handleSerialError(QSerialPort::SerialPortError errCode)
 
 void MainWindow::cycleReadTimerSlot()
 {
+#if 0
     if(paraseFile == false)
         readSerialPort();
+#endif
 }
 
 /*
@@ -805,10 +821,10 @@ void MainWindow::on_sendButton_clicked()
     if(ui->timeStampCheckBox->isChecked()){
         QString timeString;
         timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
-        timeString = "["+timeString+"]Tx-> ";
+        timeString = "\n["+timeString+"]Tx-> ";
 
-        hexBrowserBuff.append(timeString + toHexDisplay(sendArr) + "\n");
-        BrowserBuff.append(timeString + QString::fromLocal8Bit(sendArr) + "\n");
+        hexBrowserBuff.append(timeString + toHexDisplay(sendArr));
+        BrowserBuff.append(timeString + QString::fromLocal8Bit(sendArr));
 
         //打印数据
         printToTextBrowser();
@@ -1476,6 +1492,8 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
             bar->setValue(newValue);
         }
     }
+#else
+    action = NULL;
 #endif
 }
 
@@ -1945,3 +1963,22 @@ void MainWindow::deleteValueDisplaySlot()
     }
 }
 
+
+void MainWindow::on_timeStampCheckBox_stateChanged(int arg1)
+{
+    if(arg1 != 0){
+        ui->timeOut->setEnabled(true);
+        timeStampTimer.setTimerType(Qt::PreciseTimer);
+        timeStampTimer.setSingleShot(true);
+        timeStampTimer.start(ui->timeOut->text().toInt());
+    }else{
+        ui->timeOut->setEnabled(false);
+        timeStampTimer.stop();
+    }
+}
+
+void MainWindow::on_timeOut_textChanged(const QString &arg1)
+{
+    timeStampTimer.setSingleShot(true);
+    timeStampTimer.start(arg1.toInt());
+}
