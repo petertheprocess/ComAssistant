@@ -67,7 +67,7 @@ void MyQCustomPlot::axisLabelDoubleClick(QCPAxis *axis, QCPAxis::SelectablePart 
                                                  0, 10000, 1, &ok, Qt::WindowCloseButtonHint);
       if (ok)
       {
-//        plotControl->setXAxisLength(newLength);
+        plotControl->setXAxisLength(newLength);
         this->replot();
       }
   }
