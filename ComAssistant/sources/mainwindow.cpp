@@ -1519,31 +1519,15 @@ void MainWindow::on_actionResetDefaultConfig_triggered(bool checked)
 
 void MainWindow::on_actionManual_triggered()
 {
-    QFile file(":/manual.html");
-    QString html;
-    if(file.exists()){
-        if(file.open(QFile::ReadOnly)){
-            html = file.readAll();
-            file.close();
-
-            ui->textBrowser->clear();
-            ui->textBrowser->append(html);
-            BrowserBuff.clear();
-            BrowserBuff.append(html);
-            hexBrowserBuff.clear();
-            hexBrowserBuff.append(toHexDisplay(html.toLocal8Bit()));
-
-            //翻到最前面
-            ui->textBrowser->verticalScrollBar()->setValue(0);
-            hexBrowserBuffIndex = hexBrowserBuff.size();
-            BrowserBuffIndex = BrowserBuff.size();
-        }else{
-            QMessageBox::information(this, "提示", "帮助文件被占用。");
-        }
-    }else{
-        QMessageBox::information(this, "提示", "帮助文件丢失。");
-    }
-
+    //创建关于我对话框资源
+    About_Me_Dialog* p = new About_Me_Dialog(this);
+    p->getVersionString(Config::getVersion());
+    p->showManualDoc();
+    p->resize(1024,768);
+    //设置close后自动销毁
+    p->setAttribute(Qt::WA_DeleteOnClose);
+    //非阻塞式显示
+    p->show();
 }
 
 void MainWindow::on_actionSavePlotData_triggered()
@@ -1776,7 +1760,7 @@ void MainWindow::on_actionUsageStatistic_triggered()
     }
 
     //上屏显示
-    ui->textBrowser->clear();
+    //ui->textBrowser->clear(); //如果清屏的话要做提示，可能用户数据还未保存
     ui->textBrowser->append("软件版本："+Config::getVersion());
     ui->textBrowser->append("");
     ui->textBrowser->append("【设备信息】");

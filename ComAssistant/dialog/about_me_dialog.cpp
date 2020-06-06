@@ -20,6 +20,30 @@ void About_Me_Dialog::getVersionString(QString str)
     ui->version->setText(str);
 }
 
+void About_Me_Dialog::showManualDoc(void)
+{
+    QFile file(":/manual.html");
+    QString html;
+    if(file.exists()){
+        if(file.open(QFile::ReadOnly)){
+            html = file.readAll();
+            file.close();
+
+            ui->textBrowser->clear();
+            ui->textBrowser->append(html);
+
+            //滚动到最前面，不知道为什么设置滚动条没效果
+            QTextCursor cursor = ui->textBrowser->textCursor();
+            cursor.setPosition(0);
+            ui->textBrowser->setTextCursor(cursor);
+        }else{
+            QMessageBox::information(this, "提示", "帮助文件被占用。");
+        }
+    }else{
+        QMessageBox::information(this, "提示", "帮助文件丢失。");
+    }
+}
+
 void About_Me_Dialog::on_okButton_clicked()
 {
     this->close();

@@ -5,6 +5,10 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QDebug>
+#include <QFile>
+#include <QMessageBox>
+#include <QScrollBar>
+#include <QTextCursor>
 
 namespace Ui {
 class About_Me_Dialog;
@@ -18,6 +22,7 @@ public:
     explicit About_Me_Dialog(QWidget *parent = nullptr);
     ~About_Me_Dialog();
     void getVersionString(QString str);
+    void showManualDoc(void);
 
 private slots:
     void on_okButton_clicked();
