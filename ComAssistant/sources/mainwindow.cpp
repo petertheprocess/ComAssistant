@@ -1367,6 +1367,9 @@ void MainWindow::plotterParaseTimerSlot()
     if(plotterParasePosInRxBuff >= RxBuff.size() - 1)
         return;
 
+    if(RxBuff.size()-plotterParasePosInRxBuff > 1024)
+        ui->statusBar->showMessage("数据量较大，绘图器繁忙！", 2000);
+
     //绘图器与数值显示器解析
     if(ui->actionPlotterSwitch->isChecked() || ui->actionValueDisplay->isChecked()){
         //根据协议选择不同的缓冲
