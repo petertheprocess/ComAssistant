@@ -571,51 +571,19 @@ void MainWindow::readSerialPort()
             return;
     }
 
-    //考虑中文处理
-    if(ui->actionUTF8->isChecked()){
-        //UTF8中文字符处理
-        //最后一个字符不是ascii字符才处理，否则直接上屏       
+    //如果不是hex显示则要考虑中文处理
+    if(ui->hexDisplay->isChecked()==false){
+        //只需要保证上屏的最后一个字节的高位不是1即可
         if(tmpReadBuff.back() & 0x80){
-            //中文一定有连续3个字符高位为1
-            int continuesCnt = 0;
-            int lastUTFpos = -1;
-            for(int i = 0; i < tmpReadBuff.size(); i++){
-                if(tmpReadBuff.at(i)&0x80){
-                    continuesCnt++;
-                }else {
-                    continuesCnt=0;
-                }
-                if(continuesCnt == 3){
-                    continuesCnt = 0;
-                    lastUTFpos = i;
-                }
+            int reversePos = tmpReadBuff.size()-1;
+            while(tmpReadBuff.at(reversePos)&0x80){
+                reversePos--;
+                if(reversePos<0)
+                    break;
             }
-            unshowedRxBuff = tmpReadBuff.mid(lastUTFpos+1);
-            tmpReadBuff = tmpReadBuff.mid(0,lastUTFpos+1);
+            unshowedRxBuff = tmpReadBuff.mid(reversePos+1);
+            tmpReadBuff = tmpReadBuff.mid(0,reversePos+1);
         }
-//        qDebug()<<unshowedRxBuff<<tmpReadBuff;
-    }else if(ui->actionGBK->isChecked()){
-        //GBK中文字符处理
-        //最后一个字符不是ascii字符才处理，否则直接上屏
-        if(tmpReadBuff.back() & 0x80){
-            //中文一定有连续2个字符高位为1
-            int continuesCnt = 0;
-            int lastUTFpos = -1;
-            for(int i = 0; i < tmpReadBuff.size(); i++){
-                if(tmpReadBuff.at(i)&0x80){
-                    continuesCnt++;
-                }else {
-                    continuesCnt=0;
-                }
-                if(continuesCnt == 2){
-                    continuesCnt = 0;
-                    lastUTFpos = i;
-                }
-            }
-            unshowedRxBuff = tmpReadBuff.mid(lastUTFpos+1);
-            tmpReadBuff = tmpReadBuff.mid(0,lastUTFpos+1);
-        }
-//        qDebug()<<unshowedRxBuff<<tmpReadBuff;
     }
 
     //时间戳选项
