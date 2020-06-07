@@ -834,6 +834,7 @@ void MainWindow::on_clearWindows_clicked()
     ui->customPlot->yAxis->setRange(0,5);
     ui->customPlot->xAxis->setRange(0, plotControl->getXAxisLength(), Qt::AlignRight);
     ui->customPlot->replot();
+    plotterParasePosInRxBuff = 0;
 
     //数值显示器
     deleteValueDisplaySlot();
