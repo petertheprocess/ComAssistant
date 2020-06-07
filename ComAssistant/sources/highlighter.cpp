@@ -125,6 +125,7 @@ Highlighter::Highlighter(QTextDocument *parent)
         rule.format = keywordFormat;
         highlightingRules.append(rule);
     }
+
 }
 //! [6]
 

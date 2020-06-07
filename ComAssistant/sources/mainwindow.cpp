@@ -474,8 +474,14 @@ void MainWindow::readSerialPort()
             return;
     }
 
+    //空数据检查
     if(tmpReadBuff.isEmpty()){
         return;
+    }
+
+    //'\0'检查
+    while(tmpReadBuff.indexOf('\0')!=-1){
+        tmpReadBuff.replace('\0',"\\0");
     }
 
     //收到数据且时间戳超时则可以添加新的时间戳和换行
@@ -485,30 +491,6 @@ void MainWindow::readSerialPort()
         timeStampTimer.setSingleShot(true);
         timeStampTimer.start(ui->timeStampTimeOut->text().toInt());
     }
-//    //tmpReadBuff可能为空。
-//    if(tmpReadBuff.isEmpty()){
-//        //如果开启时间戳轮询到空数据，说明没有数据了，可以补回车换行了
-//        if(ui->timeStampCheckBox->isChecked()){
-//            if(needEnter){
-//                hexBrowserBuff.append("\n");
-//                BrowserBuff.append("\n");
-//                needEnter = false;
-//                needTimeString = true;
-//            }
-//        }
-//        //其他的解析没必要进行，直接返回
-//        return;
-//    }else{
-//        //如果开启时间戳，又多次轮询到了数据，则只需要显示一次时间戳，并置位需要回车标志，下次轮询到空数据时可以追加回车
-//        if(ui->timeStampCheckBox->isChecked()){
-//            if(needTimeString){
-//                needTimeString = false;
-//            }else{
-//                timeString.clear();
-//            }
-//            needEnter = true;
-//        }
-//    }
 
     //速度统计，不能和下面的互换，否则不准确
     statisticRxByteCnt += tmpReadBuff.size();
