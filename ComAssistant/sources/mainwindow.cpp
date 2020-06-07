@@ -618,7 +618,7 @@ void MainWindow::paraseFileSlot()
     ui->customPlot->replot();
 //    qDebug()<<tt<<tt1<<paraseFileBuffIndex/paraseFileBuff.size();
     if(paraseFileBuffIndex!=paraseFileBuff.size()){
-        ui->statusBar->showMessage("解析进度："+QString::number(static_cast<int>(100.0*(paraseFileBuffIndex+1.0)/paraseFileBuff.size()))+"% 点“清空”可中止解析。",1000);
+        ui->statusBar->showMessage("解析进度："+QString::number(static_cast<int>(100.0*(paraseFileBuffIndex+1.0)/paraseFileBuff.size()))+"% ",1000);
         emit paraseFileSignal();
     }else{
         paraseFile = false;
@@ -627,6 +627,7 @@ void MainWindow::paraseFileSlot()
         ui->sendButton->setEnabled(true);
         ui->multiString->setEnabled(true);
         ui->cycleSendCheck->setEnabled(true);
+        ui->clearWindows->setText("清  空");
     }
 }
 
@@ -802,6 +803,7 @@ void MainWindow::on_sendButton_clicked()
 
 void MainWindow::on_clearWindows_clicked()
 {
+    ui->clearWindows->setText("清  空");
 
     //串口
     serial.resetCnt();
@@ -1075,6 +1077,7 @@ void MainWindow::on_actionOpenOriginData_triggered()
         cycleSendTimer.stop();
         ui->cycleSendCheck->setEnabled(false);
         ui->cycleSendCheck->setChecked(false);
+        ui->clearWindows->setText("中  止");
 
         // 解析读取的数据
         paraseFile = true;
@@ -1348,7 +1351,7 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
         heightList << static_cast<int>(height*0.8) << static_cast<int>(height*0.2);
         ui->splitter_3->setSizes(heightList);
 
-        plotterParaseTimer.start(20);
+        plotterParaseTimer.start(10);
         plotterParasePosInRxBuff = RxBuff.size() - 1;
     }else{
         ui->customPlot->hide();

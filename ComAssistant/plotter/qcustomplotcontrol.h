@@ -13,6 +13,7 @@ using namespace std;
 
 class QCustomPlotControl
 {
+
 public:
     typedef enum {
         Line,
@@ -61,7 +62,12 @@ public:
     //返回横坐标长度
     double getXAxisLength();
     bool setXAxisLength(double length);
+
+private slots:
+
+
 private:
+
     QCustomPlot* customPlot;
     QVector<QColor> colorSet;
     QVector<QString> nameSet;

@@ -150,19 +150,21 @@ void MyQCustomPlot::mousePress()
 
 void MyQCustomPlot::mouseWheel()
 {
-  // if an axis is selected, only allow the direction of that axis to be zoomed
-  // if no axis is selected, both directions may be zoomed
+    // if an axis is selected, only allow the direction of that axis to be zoomed
+    // if no axis is selected, both directions may be zoomed
 
-  if (this->xAxis->selectedParts().testFlag(QCPAxis::spAxis)){
-    this->axisRect()->setRangeZoom(this->xAxis->orientation());
-  }
-  else if (this->yAxis->selectedParts().testFlag(QCPAxis::spAxis)){
-    this->axisRect()->setRangeZoom(this->yAxis->orientation());
-  }
-  else{
-    //只调X轴
-    this->axisRect()->setRangeZoom(Qt::Horizontal);
-  }
+    if (this->xAxis->selectedParts().testFlag(QCPAxis::spAxis)){
+        this->axisRect()->setRangeZoom(this->xAxis->orientation());
+        plotControl->setXAxisLength(this->xAxis->range().upper - this->xAxis->range().lower);
+    }
+    else if (this->yAxis->selectedParts().testFlag(QCPAxis::spAxis)){
+        this->axisRect()->setRangeZoom(this->yAxis->orientation());
+    }
+    else{
+        //只调X轴
+        this->axisRect()->setRangeZoom(Qt::Horizontal);
+        plotControl->setXAxisLength(this->xAxis->range().upper - this->xAxis->range().lower);
+    }
 }
 
 void MyQCustomPlot::removeSelectedGraph()
