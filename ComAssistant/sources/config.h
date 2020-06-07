@@ -33,6 +33,7 @@
 #define KEY_HIGHLIGHTSTATE      QString("HighlightState")
 #define KEY_TEXTSENDAREA        QString("TextSendArea")
 #define KEY_LASTFILEDIALOGPATH  QString("LastFileDialogPath")
+#define KEY_TIMESTAMP_TIMEOUT   QString("TimeStampTimeOut")
 
 //serial键
 #define KEY_PORTNAME        QString("PortName")
@@ -65,6 +66,7 @@
 #define KEY_LASTRXCNT       QString("LastRxCnt")
 #define KEY_TOTALRXCNT      QString("TotalRxCnt")
 #define KEY_TOTALRUNCNT     QString("TotalRunCnt")
+
 //about键
 #define KEY_VERSION     QString("Version")
 #define KEY_SOURCE_CODE QString("SourceCode")
@@ -126,6 +128,8 @@ public:
     static EnterStyle_e getEnterStyle();
     static void setTimeStampState(bool checked);
     static bool getTimeStampState();
+    static void setTimeStampTimeOut(int32_t timeout);
+    static int32_t getTimeStampTimeOut();
     static void setSendInterval(const int interval);
     static int getSendInterval();
     static void setHexSendState(bool checked);

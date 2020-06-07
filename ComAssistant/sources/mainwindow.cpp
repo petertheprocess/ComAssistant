@@ -50,6 +50,7 @@ void MainWindow::readConfig()
 
     //时间戳
     ui->timeStampCheckBox->setChecked(Config::getTimeStampState());
+    ui->timeStampTimeOut->setText(QString::number(Config::getTimeStampTimeOut()));
     //发送间隔
     ui->sendInterval->setText(QString::number(Config::getSendInterval()));
     //hex发送
@@ -95,6 +96,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //槽
     connect(&cycleSendTimer, SIGNAL(timeout()), this, SLOT(cycleSendTimerSlot()));
     connect(&secTimer, SIGNAL(timeout()), this, SLOT(secTimerSlot()));
+    connect(&printToTextBrowserTimer, SIGNAL(timeout()), this, SLOT(printToTextBrowserTimerSlot()));
 //    connect(&cycleReadTimer, SIGNAL(timeout()), this, SLOT(cycleReadTimerSlot()));
     connect(&serial, SIGNAL(readyRead()), this, SLOT(readSerialPort()));
     connect(&serial, SIGNAL(bytesWritten(qint64)), this, SLOT(serialBytesWritten(qint64)));
@@ -114,7 +116,7 @@ MainWindow::MainWindow(QWidget *parent) :
     //设置波特率框和发送间隔框的合法输入范围
     ui->baudrateList->setValidator(new QIntValidator(0,9999999,this));
     ui->sendInterval->setValidator(new QIntValidator(0,99999,this));
-    ui->timeOut->setValidator(new QIntValidator(0,99999,this));
+    ui->timeStampTimeOut->setValidator(new QIntValidator(0,99999,this));
 
     //加载高亮规则
     on_actionKeyWordHighlight_triggered(ui->actionKeyWordHighlight->isChecked());
@@ -178,9 +180,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //启动定时器
     secTimer.setTimerType(Qt::PreciseTimer);
-    cycleReadTimer.setTimerType(Qt::PreciseTimer);
+//    cycleReadTimer.setTimerType(Qt::PreciseTimer);
     secTimer.start(1000);
-    cycleReadTimer.start(5);
+//    cycleReadTimer.start(5);
+    printToTextBrowserTimer.start(20);
 
     //显示界面
     this->show();
@@ -192,6 +195,12 @@ MainWindow::MainWindow(QWidget *parent) :
         on_actionAbout_triggered();
         QMessageBox::information(this, "提示", "欢迎使用本串口调试助手。\n\n请认真阅读帮助文件与相关声明。\n若您继续使用本软件则代表您接受并同意相关声明。\n若您不同意相关声明请自行关闭软件。");
     }
+}
+
+void MainWindow::printToTextBrowserTimerSlot()
+{
+    //打印数据
+    printToTextBrowser();
 }
 
 void MainWindow::secTimerSlot()
@@ -276,6 +285,7 @@ MainWindow::~MainWindow()
         Config::setHexShowState(ui->hexDisplay->isChecked());
         Config::setSendInterval(ui->sendInterval->text().toInt());
         Config::setTimeStampState(ui->timeStampCheckBox->isChecked());
+        Config::setTimeStampTimeOut(ui->timeStampTimeOut->text().toInt());
         Config::setMultiStringState(ui->actionMultiString->isChecked());
         Config::setKeyWordHighlightState(ui->actionKeyWordHighlight->isChecked());
         Config::setTextSendArea(ui->textEdit->toPlainText());
@@ -467,7 +477,7 @@ void MainWindow::readSerialPort()
         needEnter = false;
         needTimeString = true;
         timeStampTimer.setSingleShot(true);
-        timeStampTimer.start(ui->timeOut->text().toInt());
+        timeStampTimer.start(ui->timeStampTimeOut->text().toInt());
     }
 //    //tmpReadBuff可能为空。
 //    if(tmpReadBuff.isEmpty()){
@@ -584,6 +594,12 @@ void MainWindow::readSerialPort()
             unshowedRxBuff = tmpReadBuff.mid(reversePos+1);
             tmpReadBuff = tmpReadBuff.mid(0,reversePos+1);
         }
+        //如果unshowedRxBuff正好是相关编码长度的倍数，则可以上屏
+        if((ui->actionGBK->isChecked() && unshowedRxBuff.size()%2==0) ||
+           (ui->actionUTF8->isChecked() && unshowedRxBuff.size()%3==0)){
+            tmpReadBuff.append(unshowedRxBuff);
+            unshowedRxBuff.clear();
+        }
     }
 
     //时间戳选项
@@ -604,9 +620,6 @@ void MainWindow::readSerialPort()
         }
         BrowserBuff.append(QString::fromLocal8Bit(tmpReadBuff));
     }
-
-    //打印数据
-    printToTextBrowser();
 
     //更新收发统计
     statusStatisticLabel->setText(serial.getTxRxString());
@@ -717,13 +730,13 @@ void MainWindow::handleSerialError(QSerialPort::SerialPortError errCode)
 //    qDebug()<<"handleSerialError"<<errCode;
 }
 
-void MainWindow::cycleReadTimerSlot()
-{
-#if 0
-    if(paraseFile == false)
-        readSerialPort();
-#endif
-}
+//void MainWindow::cycleReadTimerSlot()
+//{
+//#if 0
+//    if(paraseFile == false)
+//        readSerialPort();
+//#endif
+//}
 
 /*
  * Function:连续发送定时器槽，执行数据发送
@@ -1935,12 +1948,12 @@ void MainWindow::deleteValueDisplaySlot()
 void MainWindow::on_timeStampCheckBox_stateChanged(int arg1)
 {
     if(arg1 != 0){
-        ui->timeOut->setEnabled(true);
+        ui->timeStampTimeOut->setEnabled(true);
         timeStampTimer.setTimerType(Qt::PreciseTimer);
         timeStampTimer.setSingleShot(true);
-        timeStampTimer.start(ui->timeOut->text().toInt());
+        timeStampTimer.start(ui->timeStampTimeOut->text().toInt());
     }else{
-        ui->timeOut->setEnabled(false);
+        ui->timeStampTimeOut->setEnabled(false);
         timeStampTimer.stop();
     }
 }

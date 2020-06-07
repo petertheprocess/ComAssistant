@@ -218,6 +218,19 @@ bool Config::getTimeStampState(){
     return value;
 }
 
+void Config::setTimeStampTimeOut(int32_t timeout){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_GLOBAL+KEY_TIMESTAMP_TIMEOUT, timeout);
+    delete iniFile;
+}
+int32_t Config::getTimeStampTimeOut(){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    int32_t value = iniFile->value(SECTION_GLOBAL+KEY_TIMESTAMP_TIMEOUT, 20).toInt();
+    delete iniFile;
+    return value;
+}
+
 void Config::setSendInterval(const int interval){
     createDefaultIfNotExist();
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
