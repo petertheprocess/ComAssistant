@@ -199,8 +199,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
 void MainWindow::printToTextBrowserTimerSlot()
 {
+    if(RefreshTextBrowser==false)
+        return;
+
     //打印数据
     printToTextBrowser();
+
+    if(RefreshTextBrowser)
+        RefreshTextBrowser = false;
 }
 
 void MainWindow::secTimerSlot()
@@ -624,6 +630,8 @@ void MainWindow::readSerialPort()
     //更新收发统计
     statusStatisticLabel->setText(serial.getTxRxString());
 
+    //主动触发数据刷新
+    RefreshTextBrowser = true;
 }
 
 void MainWindow::paraseFileSlot()
@@ -647,9 +655,6 @@ void MainWindow::paraseFileSlot()
 
 void MainWindow::printToTextBrowser()
 {
-    if(printToBrowserFlag==false)
-        return;
-
     //估计当前窗口可显示多少字符
     int HH = static_cast<int>(ui->textBrowser->height()/19.2);
     int WW = static_cast<int>(ui->textBrowser->width()/9.38);
@@ -828,8 +833,6 @@ void MainWindow::on_sendButton_clicked()
 
 void MainWindow::on_clearWindows_clicked()
 {
-    //开启滚屏
-    printToBrowserFlag = true;
 
     //串口
     serial.resetCnt();
@@ -1407,8 +1410,6 @@ void MainWindow::on_actiondebug_triggered(bool checked)
 
 void MainWindow::verticalScrollBarActionTriggered(int action)
 {
-    //取消上滑暂停滚屏的功能
-#if 0
     QScrollBar* bar = ui->textBrowser->verticalScrollBar();
     if(action == QAbstractSlider::SliderSingleStepAdd ||
        action == QAbstractSlider::SliderSingleStepSub||
@@ -1419,26 +1420,6 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
         int oldMax = bar->maximum();
         int newValue;
         bool res;
-
-//        qDebug()<<action<<value<<bar->maximum()<<printToBrowserFlag;
-
-        //自动滚屏判断。滚动到最底部才打印数据。两个if不能用else
-        if(action == QAbstractSlider::SliderNoAction ||
-            action == QAbstractSlider::SliderSingleStepSub ||
-            action == QAbstractSlider::SliderPageStepAdd ||
-            action == QAbstractSlider::SliderPageStepSub ||
-            action == QAbstractSlider::SliderMove){
-            printToBrowserFlag = false;
-        }
-        if(action == QAbstractSlider::SliderNoAction ||
-                action == QAbstractSlider::SliderSingleStepAdd ||
-                action == QAbstractSlider::SliderPageStepAdd ||
-                action == QAbstractSlider::SliderMove){
-            if(value == bar->maximum() ){
-                printToBrowserFlag = true;
-                printToTextBrowser();//立即刷新一次
-            }
-        }
 
         //
         if(ui->hexDisplay->isChecked()){
@@ -1473,9 +1454,6 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
             bar->setValue(newValue);
         }
     }
-#else
-    action = NULL;
-#endif
 }
 
 void MainWindow::on_actionLinePlot_triggered()
@@ -1958,7 +1936,7 @@ void MainWindow::on_timeStampCheckBox_stateChanged(int arg1)
     }
 }
 
-void MainWindow::on_timeOut_textChanged(const QString &arg1)
+void MainWindow::on_timeStampTimeOut_textChanged(const QString &arg1)
 {
     timeStampTimer.setSingleShot(true);
     timeStampTimer.start(arg1.toInt());

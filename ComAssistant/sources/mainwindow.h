@@ -140,7 +140,7 @@ private slots:
 
     void on_timeStampCheckBox_stateChanged(int arg1);
 
-    void on_timeOut_textChanged(const QString &arg1);
+    void on_timeStampTimeOut_textChanged(const QString &arg1);
 
 private:
     bool needSaveConfig = true;
@@ -180,7 +180,7 @@ private:
 
     HTTP *http;
 
-    bool printToBrowserFlag = true; //滚屏开关
+    bool RefreshTextBrowser = true; //数据显示区刷新标记
 
     //统计
     int currentRunTime = 0; //运行时间
