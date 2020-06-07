@@ -67,16 +67,16 @@ QVector<double> DataProtocol::popOneRowData()
 
 /*
  * Function: 解析协议
- * para1: 输入的数据
+ * para1: 被解析的数据
  * return: 返回不满足本协议的数据，因为可能有其他用途和含义
 */
-void DataProtocol::parase(const QByteArray& inputArray)
+void DataProtocol::parase(const QByteArray& inputArray, int32_t startPos = 0)
 {
     RowData_t rowData;
     Pack_t pack;
     QByteArray restArray;
     //未解析的数据
-    unparasedBuff += inputArray;
+    unparasedBuff += inputArray.mid(startPos);
     //数据流分包
     extractPacks(unparasedBuff, restArray);
     unparasedBuff = restArray;

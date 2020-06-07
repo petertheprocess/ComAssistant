@@ -122,8 +122,8 @@ private slots:
     void secTimerSlot();
     void debugTimerSlot();
     void cycleSendTimerSlot();
-//    void cycleReadTimerSlot();
     void printToTextBrowserTimerSlot();
+    void plotterParaseTimerSlot();
 
     //contextMenuRequested
     void on_textBrowser_customContextMenuRequested(const QPoint &pos);
@@ -166,9 +166,9 @@ private:
     QTimer cycleSendTimer;  //循环发送定时器
     QTimer debugTimer;      //调试定时器
     QTimer secTimer;        //秒定时器
-    QTimer cycleReadTimer;  //周期读取定时器
     QTimer timeStampTimer;  //时间戳定时器
     QTimer printToTextBrowserTimer; //刷新文本显示区的定时器
+    QTimer plotterParaseTimer;      //协议解析定时器
 
     QString enter;
     QString lastFileDialogPath; //上次文件对话框路径
@@ -181,6 +181,7 @@ private:
     HTTP *http;
 
     bool RefreshTextBrowser = true; //数据显示区刷新标记
+    int plotterParasePosInRxBuff = 0;      //绘图器已解析的位置
 
     //统计
     int currentRunTime = 0; //运行时间

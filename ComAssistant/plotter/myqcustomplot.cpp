@@ -235,8 +235,9 @@ void MyQCustomPlot::contextMenuRequest(QPoint pos)
     menu->addAction("移动到左下角", this, SLOT(moveLegend()))->setData(static_cast<int>(Qt::AlignBottom|Qt::AlignLeft));
   } else  // general context menu on graphs requested
   {
-    if (this->graphCount() > 0)
+    if (this->graphCount() > 0){
       menu->addAction("移除所有曲线", this, SLOT(removeAllGraphs()));
+    }
   }
   //选择了曲线
   if (this->selectedGraphs().size() > 0){

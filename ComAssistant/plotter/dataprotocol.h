@@ -38,7 +38,7 @@ public:
     void clearBuff();
     int parasedBuffSize();//判断数据池剩余大小
     QVector<double> popOneRowData();//弹出一行数据，没有数据则为空
-    void parase(const QByteArray& inputArray);
+    void parase(const QByteArray& inputArray, int32_t startPos);
     void setProtocolType(ProtocolType_e type, bool clearbuff=true);
     ProtocolType_e getProtocolType();
     QVector<QByteArray> getExtrackedPacks(const QByteArray &inputArray);

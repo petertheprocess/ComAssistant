@@ -97,7 +97,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&cycleSendTimer, SIGNAL(timeout()), this, SLOT(cycleSendTimerSlot()));
     connect(&secTimer, SIGNAL(timeout()), this, SLOT(secTimerSlot()));
     connect(&printToTextBrowserTimer, SIGNAL(timeout()), this, SLOT(printToTextBrowserTimerSlot()));
-//    connect(&cycleReadTimer, SIGNAL(timeout()), this, SLOT(cycleReadTimerSlot()));
+    connect(&plotterParaseTimer, SIGNAL(timeout()), this, SLOT(plotterParaseTimerSlot()));
     connect(&serial, SIGNAL(readyRead()), this, SLOT(readSerialPort()));
     connect(&serial, SIGNAL(bytesWritten(qint64)), this, SLOT(serialBytesWritten(qint64)));
     connect(&serial, SIGNAL(error(QSerialPort::SerialPortError)),  this, SLOT(handleSerialError(QSerialPort::SerialPortError)));
@@ -180,10 +180,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //启动定时器
     secTimer.setTimerType(Qt::PreciseTimer);
-//    cycleReadTimer.setTimerType(Qt::PreciseTimer);
     secTimer.start(1000);
-//    cycleReadTimer.start(5);
     printToTextBrowserTimer.start(20);
+    plotterParaseTimer.setTimerType(Qt::PreciseTimer);
 
     //显示界面
     this->show();
@@ -456,8 +455,6 @@ void MainWindow::readSerialPort()
 
     //先获取时间，避免解析数据导致时间消耗的影响
     QString timeString;
-    static bool needEnter = false;
-    static bool needTimeString = true;
     timeString = QDateTime::currentDateTime().toString("hh:mm:ss.zzz");
     timeString = "\n["+timeString+"]Rx<- ";
 
@@ -486,8 +483,6 @@ void MainWindow::readSerialPort()
 
     //收到数据且时间戳超时则可以添加新的时间戳和换行
     if(ui->timeStampCheckBox->isChecked() && timeStampTimer.isActive()==false){
-        needEnter = false;
-        needTimeString = true;
         timeStampTimer.setSingleShot(true);
         timeStampTimer.start(ui->timeStampTimeOut->text().toInt());
     }
@@ -495,71 +490,71 @@ void MainWindow::readSerialPort()
     //速度统计，不能和下面的互换，否则不准确
     statisticRxByteCnt += tmpReadBuff.size();
 
-    //float绘图协议不处理中文
-    if(protocol->getProtocolType()==DataProtocol::Float){
-        floatParaseBuff = tmpReadBuff;
-    }
+//    //float绘图协议不处理中文
+//    if(protocol->getProtocolType()==DataProtocol::Float){
+//        floatParaseBuff = tmpReadBuff;
+//    }
 
     //读取数据并衔接到上次未处理完的数据后面
     tmpReadBuff = unshowedRxBuff + tmpReadBuff;
     unshowedRxBuff.clear();
 
-    //绘图器与数值显示器解析
-    if(ui->actionPlotterSwitch->isChecked() || ui->actionValueDisplay->isChecked()){
-        //根据协议选择不同的缓冲
-        if(protocol->getProtocolType()==DataProtocol::Ascii){
-            protocol->parase(tmpReadBuff);
-        }
-        else if(protocol->getProtocolType()==DataProtocol::Float){
-            protocol->parase(floatParaseBuff);
-        }
+//    //绘图器与数值显示器解析
+//    if(ui->actionPlotterSwitch->isChecked() || ui->actionValueDisplay->isChecked()){
+//        //根据协议选择不同的缓冲
+//        if(protocol->getProtocolType()==DataProtocol::Ascii){
+//            protocol->parase(tmpReadBuff);
+//        }
+//        else if(protocol->getProtocolType()==DataProtocol::Float){
+//            protocol->parase(floatParaseBuff);
+//        }
 
-        while(protocol->parasedBuffSize()>0){
-            QVector<double> oneRowData;
-            oneRowData = protocol->popOneRowData();
-            //绘图显示器
-            if(ui->actionPlotterSwitch->isChecked()){
-                //文件解析可能有大量数据，因此关闭刷新，提高解析速度
-                if(paraseFile){
-                    if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData, false))
-                        ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
-                }else{
-                    if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData))
-                        ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
-                }
-            }
+//        while(protocol->parasedBuffSize()>0){
+//            QVector<double> oneRowData;
+//            oneRowData = protocol->popOneRowData();
+//            //绘图显示器
+//            if(ui->actionPlotterSwitch->isChecked()){
+//                //文件解析可能有大量数据，因此关闭刷新，提高解析速度
+//                if(paraseFile){
+//                    if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData, false))
+//                        ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
+//                }else{
+//                    if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData))
+//                        ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
+//                }
+//            }
 
-            //数值显示器
-            if(ui->actionValueDisplay->isChecked()){
-                //判断是否添加行
-                if(ui->valueDisplay->rowCount() < oneRowData.size()){
-                    //设置行
-                    ui->valueDisplay->setRowCount(oneRowData.size());
-                    //设置列，固定的
-                    ui->valueDisplay->setColumnCount(2);
-                    ui->valueDisplay->setHorizontalHeaderItem(0,new QTableWidgetItem("名称"));
-                    ui->valueDisplay->setHorizontalHeaderItem(1,new QTableWidgetItem("值"));
-                    ui->valueDisplay->horizontalHeader()->setStretchLastSection(true);
-                    ui->valueDisplay->horizontalHeader()->setSectionResizeMode(0,QHeaderView::Stretch);
-                    ui->valueDisplay->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
-                }
-                //添加数据
-                int min = oneRowData.size() < plotControl->getNameSetsFromPlot().size() ? oneRowData.size() : plotControl->getNameSetsFromPlot().size();
-                for(int i=0; i < min; i++){
-                    //这里会重复new对象导致内存溢出吗
-                    ui->valueDisplay->setItem(i,0,new QTableWidgetItem(plotControl->getNameSetsFromPlot().at(i)));
-                    ui->valueDisplay->setItem(i,1,new QTableWidgetItem(QString::number(oneRowData.at(i),'f')));
-                    //不可编辑
-                    ui->valueDisplay->item(i,0)->setFlags(ui->valueDisplay->item(i,0)->flags() & (~Qt::ItemIsEditable));
-                    ui->valueDisplay->item(i,1)->setFlags(ui->valueDisplay->item(i,1)->flags() & (~Qt::ItemIsEditable));
-                }
-            }
-        }
-    }
+//            //数值显示器
+//            if(ui->actionValueDisplay->isChecked()){
+//                //判断是否添加行
+//                if(ui->valueDisplay->rowCount() < oneRowData.size()){
+//                    //设置行
+//                    ui->valueDisplay->setRowCount(oneRowData.size());
+//                    //设置列，固定的
+//                    ui->valueDisplay->setColumnCount(2);
+//                    ui->valueDisplay->setHorizontalHeaderItem(0,new QTableWidgetItem("名称"));
+//                    ui->valueDisplay->setHorizontalHeaderItem(1,new QTableWidgetItem("值"));
+//                    ui->valueDisplay->horizontalHeader()->setStretchLastSection(true);
+//                    ui->valueDisplay->horizontalHeader()->setSectionResizeMode(0,QHeaderView::Stretch);
+//                    ui->valueDisplay->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
+//                }
+//                //添加数据
+//                int min = oneRowData.size() < plotControl->getNameSetsFromPlot().size() ? oneRowData.size() : plotControl->getNameSetsFromPlot().size();
+//                for(int i=0; i < min; i++){
+//                    //这里会重复new对象导致内存溢出吗
+//                    ui->valueDisplay->setItem(i,0,new QTableWidgetItem(plotControl->getNameSetsFromPlot().at(i)));
+//                    ui->valueDisplay->setItem(i,1,new QTableWidgetItem(QString::number(oneRowData.at(i),'f')));
+//                    //不可编辑
+//                    ui->valueDisplay->item(i,0)->setFlags(ui->valueDisplay->item(i,0)->flags() & (~Qt::ItemIsEditable));
+//                    ui->valueDisplay->item(i,1)->setFlags(ui->valueDisplay->item(i,1)->flags() & (~Qt::ItemIsEditable));
+//                }
+//            }
+//        }
+//    }
 
-    //如果开启隐藏绘图数据，绘图器可能会删除数据，因此重新判断一次
-    if(tmpReadBuff.isEmpty())
-        return;
+//    //如果开启隐藏绘图数据，绘图器可能会删除数据，因此重新判断一次
+//    if(tmpReadBuff.isEmpty())
+//        return;
 
     //'\r'若单独结尾则可能被误切断，放到下一批数据中
     if(tmpReadBuff.endsWith('\r')){
@@ -623,7 +618,7 @@ void MainWindow::paraseFileSlot()
     ui->customPlot->replot();
 //    qDebug()<<tt<<tt1<<paraseFileBuffIndex/paraseFileBuff.size();
     if(paraseFileBuffIndex!=paraseFileBuff.size()){
-        ui->statusBar->showMessage("解析进度："+QString::number(static_cast<int>(100.0*(paraseFileBuffIndex+1.0)/paraseFileBuff.size()))+"%",1000);
+        ui->statusBar->showMessage("解析进度："+QString::number(static_cast<int>(100.0*(paraseFileBuffIndex+1.0)/paraseFileBuff.size()))+"% 点“清空”可中止解析。",1000);
         emit paraseFileSignal();
     }else{
         paraseFile = false;
@@ -716,14 +711,6 @@ void MainWindow::handleSerialError(QSerialPort::SerialPortError errCode)
     }
 //    qDebug()<<"handleSerialError"<<errCode;
 }
-
-//void MainWindow::cycleReadTimerSlot()
-//{
-//#if 0
-//    if(paraseFile == false)
-//        readSerialPort();
-//#endif
-//}
 
 /*
  * Function:连续发送定时器槽，执行数据发送
@@ -1072,6 +1059,10 @@ void MainWindow::on_actionOpenOriginData_triggered()
             return;
         }
 
+        //重置绘图器解析点，以触发解析
+        if(ui->actionPlotterSwitch->isChecked())
+            plotterParasePosInRxBuff = 0;
+
         ui->textBrowser->clear();
         ui->textBrowser->append("File size: "+QString::number(file.size())+" Byte");
         ui->textBrowser->append("Read containt:"+enter);
@@ -1356,9 +1347,76 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
         int height = ui->splitter_3->height();
         heightList << static_cast<int>(height*0.8) << static_cast<int>(height*0.2);
         ui->splitter_3->setSizes(heightList);
+
+        plotterParaseTimer.start(20);
+        plotterParasePosInRxBuff = RxBuff.size() - 1;
     }else{
         ui->customPlot->hide();
+        plotterParaseTimer.stop();
     }
+}
+
+void MainWindow::plotterParaseTimerSlot()
+{
+    //TODO: RxBuff会被多个地方修改，会不会有漏数据的风险
+
+    if(plotterParasePosInRxBuff >= RxBuff.size() - 1)
+        return;
+
+    //绘图器与数值显示器解析
+    if(ui->actionPlotterSwitch->isChecked() || ui->actionValueDisplay->isChecked()){
+        //根据协议选择不同的缓冲
+        if(protocol->getProtocolType()==DataProtocol::Ascii){
+            protocol->parase(RxBuff, plotterParasePosInRxBuff);
+        }
+        else if(protocol->getProtocolType()==DataProtocol::Float){
+            protocol->parase(RxBuff, plotterParasePosInRxBuff);
+        }
+
+        while(protocol->parasedBuffSize()>0){
+            QVector<double> oneRowData;
+            oneRowData = protocol->popOneRowData();
+            //绘图显示器
+            if(ui->actionPlotterSwitch->isChecked()){
+                //文件解析可能有大量数据，因此关闭刷新，提高解析速度
+                if(paraseFile){
+                    if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData, false))
+                        ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
+                }else{
+                    if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData))
+                        ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
+                }
+            }
+
+            //数值显示器
+            if(ui->actionValueDisplay->isChecked()){
+                //判断是否添加行
+                if(ui->valueDisplay->rowCount() < oneRowData.size()){
+                    //设置行
+                    ui->valueDisplay->setRowCount(oneRowData.size());
+                    //设置列，固定的
+                    ui->valueDisplay->setColumnCount(2);
+                    ui->valueDisplay->setHorizontalHeaderItem(0,new QTableWidgetItem("名称"));
+                    ui->valueDisplay->setHorizontalHeaderItem(1,new QTableWidgetItem("值"));
+                    ui->valueDisplay->horizontalHeader()->setStretchLastSection(true);
+                    ui->valueDisplay->horizontalHeader()->setSectionResizeMode(0,QHeaderView::Stretch);
+                    ui->valueDisplay->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
+                }
+                //添加数据
+                int min = oneRowData.size() < plotControl->getNameSetsFromPlot().size() ? oneRowData.size() : plotControl->getNameSetsFromPlot().size();
+                for(int i=0; i < min; i++){
+                    //这里会重复new对象导致内存溢出吗
+                    ui->valueDisplay->setItem(i,0,new QTableWidgetItem(plotControl->getNameSetsFromPlot().at(i)));
+                    ui->valueDisplay->setItem(i,1,new QTableWidgetItem(QString::number(oneRowData.at(i),'f')));
+                    //不可编辑
+                    ui->valueDisplay->item(i,0)->setFlags(ui->valueDisplay->item(i,0)->flags() & (~Qt::ItemIsEditable));
+                    ui->valueDisplay->item(i,1)->setFlags(ui->valueDisplay->item(i,1)->flags() & (~Qt::ItemIsEditable));
+                }
+            }
+        }
+    }
+
+    plotterParasePosInRxBuff = RxBuff.size() - 1;
 }
 
 void MainWindow::on_actionAscii_triggered(bool checked)
@@ -1839,10 +1897,20 @@ void MainWindow::on_textBrowser_customContextMenuRequested(const QPoint &pos)
     noWarning.x();
 
     QAction *clearTextBrowser = nullptr;
+    QAction *saveOriginData = nullptr;
+    QAction *saveShowedData = nullptr;
     QMenu *popMenu = new QMenu( this );
     //添加右键菜单
+    saveOriginData = new QAction("保存原始数据", this);
+    saveShowedData = new QAction("保存显示数据", this);
     clearTextBrowser = new QAction("清空数据显示区", this);
+
+    popMenu->addAction( saveOriginData );
+    popMenu->addAction( saveShowedData );
+    popMenu->addSeparator();
     popMenu->addAction( clearTextBrowser );
+    connect( saveOriginData, SIGNAL(triggered() ), this, SLOT( on_actionSaveOriginData_triggered()) );
+    connect( saveShowedData, SIGNAL(triggered() ), this, SLOT( on_actionSaveShowedData_triggered()) );
     connect( clearTextBrowser, SIGNAL(triggered() ), this, SLOT( clearTextBrowserSlot()) );
     popMenu->exec( QCursor::pos() );
     delete popMenu;
