@@ -1291,11 +1291,18 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
         heightList << static_cast<int>(height*0.8) << static_cast<int>(height*0.2);
         ui->splitter_3->setSizes(heightList);
 
-        plotterParaseTimer.start(PLOTTER_PARASE_PERIOD);
-        plotterParasePosInRxBuff = RxBuff.size() - 1;
+        //没激活就打开（数值显示器也可能激活）
+        if(!plotterParaseTimer.isActive()){
+            plotterParaseTimer.start(PLOTTER_PARASE_PERIOD);
+            plotterParasePosInRxBuff = RxBuff.size() - 1;
+        }
+
     }else{
         ui->customPlot->hide();
-        plotterParaseTimer.stop();
+
+        //数值显示器也未勾选时才停止定时器
+        if(!ui->actionValueDisplay->isChecked())
+            plotterParaseTimer.stop();
     }
 }
 
@@ -1319,6 +1326,7 @@ void MainWindow::plotterParaseTimerSlot()
         }
         plotterParasePosInRxBuff += parasedLength;
 
+        //数据绘图
         while(protocol->parasedBuffSize()>0){
             QVector<double> oneRowData;
             oneRowData = protocol->popOneRowData();
@@ -1366,6 +1374,7 @@ void MainWindow::plotterParaseTimerSlot()
     if(elapsed_time > 2*PLOTTER_PARASE_PERIOD){
         ui->statusBar->showMessage("警告：数据量较大，绘图器繁忙！", 2000);
     }
+//    qDebug()<<"elapsed_time:"<<elapsed_time;
 }
 
 void MainWindow::on_actionAscii_triggered(bool checked)
@@ -1835,8 +1844,18 @@ void MainWindow::on_actionValueDisplay_triggered(bool checked)
         int width = ui->splitter_2->width();
         widthList << static_cast<int>(width*0.75) << static_cast<int>(width*0.25);
         ui->splitter_2->setSizes(widthList);
+
+        //没激活就打开（绘图器也可能激活）
+        if(!plotterParaseTimer.isActive()){
+            plotterParaseTimer.start(PLOTTER_PARASE_PERIOD);
+            plotterParasePosInRxBuff = RxBuff.size() - 1;
+        }
     }else{
         ui->valueDisplay->hide();
+
+        //绘图器也未勾选时才停止定时器
+        if(!ui->actionPlotterSwitch->isChecked())
+            plotterParaseTimer.stop();
     }
 }
 
