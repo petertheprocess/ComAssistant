@@ -302,7 +302,7 @@ MainWindow::~MainWindow()
         Config::setMultiString(multi);
         Config::setLastFileDialogPath(lastFileDialogPath);
 
-        //serial
+        //serial 只保存成功打开过的
         Config::setPortName(serial.portName());
         Config::setBaudrate(serial.baudRate());
         Config::setDataBits(serial.dataBits());
@@ -411,12 +411,10 @@ void MainWindow::on_comSwitch_clicked(bool checked)
         if(serial.open(com,baud)){
             ui->comSwitch->setText("关闭串口");
             ui->comSwitch->setChecked(true);
-//            ui->refreshCom->setEnabled(false);
         }
         else {
             ui->comSwitch->setText("打开串口");
             ui->comSwitch->setChecked(false);
-//            ui->refreshCom->setEnabled(true);
             QString msg = "请检查下列情况后重新打开串口：\n\n"
                           "# USB线缆是否松动？\n"
                           "# 是否选择了正确的串口设备？\n"
@@ -439,7 +437,6 @@ void MainWindow::on_comSwitch_clicked(bool checked)
         serial.close();
         ui->comSwitch->setText("打开串口");
         ui->comSwitch->setChecked(false);
-//        ui->refreshCom->setEnabled(true);
     }
 
     on_refreshCom_clicked();
@@ -476,10 +473,10 @@ void MainWindow::readSerialPort()
         return;
     }
 
-    //'\0'检查
-    while(tmpReadBuff.indexOf('\0')!=-1){
-        tmpReadBuff.replace('\0',"\\0");
-    }
+//    //'\0'检查
+//    while(tmpReadBuff.indexOf('\0')!=-1){
+//        tmpReadBuff.replace('\0',"\\0");
+//    }
 
     //收到数据且时间戳超时则可以添加新的时间戳和换行
     if(ui->timeStampCheckBox->isChecked() && timeStampTimer.isActive()==false){
@@ -490,71 +487,9 @@ void MainWindow::readSerialPort()
     //速度统计，不能和下面的互换，否则不准确
     statisticRxByteCnt += tmpReadBuff.size();
 
-//    //float绘图协议不处理中文
-//    if(protocol->getProtocolType()==DataProtocol::Float){
-//        floatParaseBuff = tmpReadBuff;
-//    }
-
     //读取数据并衔接到上次未处理完的数据后面
     tmpReadBuff = unshowedRxBuff + tmpReadBuff;
     unshowedRxBuff.clear();
-
-//    //绘图器与数值显示器解析
-//    if(ui->actionPlotterSwitch->isChecked() || ui->actionValueDisplay->isChecked()){
-//        //根据协议选择不同的缓冲
-//        if(protocol->getProtocolType()==DataProtocol::Ascii){
-//            protocol->parase(tmpReadBuff);
-//        }
-//        else if(protocol->getProtocolType()==DataProtocol::Float){
-//            protocol->parase(floatParaseBuff);
-//        }
-
-//        while(protocol->parasedBuffSize()>0){
-//            QVector<double> oneRowData;
-//            oneRowData = protocol->popOneRowData();
-//            //绘图显示器
-//            if(ui->actionPlotterSwitch->isChecked()){
-//                //文件解析可能有大量数据，因此关闭刷新，提高解析速度
-//                if(paraseFile){
-//                    if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData, false))
-//                        ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
-//                }else{
-//                    if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData))
-//                        ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
-//                }
-//            }
-
-//            //数值显示器
-//            if(ui->actionValueDisplay->isChecked()){
-//                //判断是否添加行
-//                if(ui->valueDisplay->rowCount() < oneRowData.size()){
-//                    //设置行
-//                    ui->valueDisplay->setRowCount(oneRowData.size());
-//                    //设置列，固定的
-//                    ui->valueDisplay->setColumnCount(2);
-//                    ui->valueDisplay->setHorizontalHeaderItem(0,new QTableWidgetItem("名称"));
-//                    ui->valueDisplay->setHorizontalHeaderItem(1,new QTableWidgetItem("值"));
-//                    ui->valueDisplay->horizontalHeader()->setStretchLastSection(true);
-//                    ui->valueDisplay->horizontalHeader()->setSectionResizeMode(0,QHeaderView::Stretch);
-//                    ui->valueDisplay->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
-//                }
-//                //添加数据
-//                int min = oneRowData.size() < plotControl->getNameSetsFromPlot().size() ? oneRowData.size() : plotControl->getNameSetsFromPlot().size();
-//                for(int i=0; i < min; i++){
-//                    //这里会重复new对象导致内存溢出吗
-//                    ui->valueDisplay->setItem(i,0,new QTableWidgetItem(plotControl->getNameSetsFromPlot().at(i)));
-//                    ui->valueDisplay->setItem(i,1,new QTableWidgetItem(QString::number(oneRowData.at(i),'f')));
-//                    //不可编辑
-//                    ui->valueDisplay->item(i,0)->setFlags(ui->valueDisplay->item(i,0)->flags() & (~Qt::ItemIsEditable));
-//                    ui->valueDisplay->item(i,1)->setFlags(ui->valueDisplay->item(i,1)->flags() & (~Qt::ItemIsEditable));
-//                }
-//            }
-//        }
-//    }
-
-//    //如果开启隐藏绘图数据，绘图器可能会删除数据，因此重新判断一次
-//    if(tmpReadBuff.isEmpty())
-//        return;
 
     //'\r'若单独结尾则可能被误切断，放到下一批数据中
     if(tmpReadBuff.endsWith('\r')){
@@ -597,9 +532,12 @@ void MainWindow::readSerialPort()
     }else{
         //hex解析
         hexBrowserBuff.append(toHexDisplay(tmpReadBuff).toLatin1());
-        //asic解析，显示的数据一律不要\r
+        //asic解析，显示的数据一律不要\r。且进行\0显示的检查
         while(tmpReadBuff.indexOf("\r\n")!=-1){
             tmpReadBuff.replace("\r\n","\n");
+        }
+        while(tmpReadBuff.indexOf('\0')!=-1){
+            tmpReadBuff.replace('\0',"\\0");
         }
         BrowserBuff.append(QString::fromLocal8Bit(tmpReadBuff));
     }
@@ -1342,6 +1280,7 @@ void MainWindow::clearSeedsSlot()
 /*
  * Function:绘图器开关
 */
+#define PLOTTER_PARASE_PERIOD   20  //绘图器解析周期
 void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 {
     if(checked){
@@ -1352,7 +1291,7 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
         heightList << static_cast<int>(height*0.8) << static_cast<int>(height*0.2);
         ui->splitter_3->setSizes(heightList);
 
-        plotterParaseTimer.start(10);
+        plotterParaseTimer.start(PLOTTER_PARASE_PERIOD);
         plotterParasePosInRxBuff = RxBuff.size() - 1;
     }else{
         ui->customPlot->hide();
@@ -1362,23 +1301,23 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 
 void MainWindow::plotterParaseTimerSlot()
 {
-    //TODO: RxBuff会被多个地方修改，会不会有漏数据的风险
+    QElapsedTimer elapsedTimer;
+    int32_t parasedLength;
+    elapsedTimer.start();
 
     if(plotterParasePosInRxBuff >= RxBuff.size() - 1)
         return;
-
-    if(RxBuff.size()-plotterParasePosInRxBuff > 1024)
-        ui->statusBar->showMessage("数据量较大，绘图器繁忙！", 2000);
 
     //绘图器与数值显示器解析
     if(ui->actionPlotterSwitch->isChecked() || ui->actionValueDisplay->isChecked()){
         //根据协议选择不同的缓冲
         if(protocol->getProtocolType()==DataProtocol::Ascii){
-            protocol->parase(RxBuff, plotterParasePosInRxBuff);
+            parasedLength = protocol->parase(RxBuff, plotterParasePosInRxBuff);
         }
         else if(protocol->getProtocolType()==DataProtocol::Float){
-            protocol->parase(RxBuff, plotterParasePosInRxBuff);
+            parasedLength = protocol->parase(RxBuff, plotterParasePosInRxBuff);
         }
+        plotterParasePosInRxBuff += parasedLength;
 
         while(protocol->parasedBuffSize()>0){
             QVector<double> oneRowData;
@@ -1423,7 +1362,10 @@ void MainWindow::plotterParaseTimerSlot()
         }
     }
 
-    plotterParasePosInRxBuff = RxBuff.size() - 1;
+    int32_t elapsed_time = elapsedTimer.elapsed();
+    if(elapsed_time > 2*PLOTTER_PARASE_PERIOD){
+        ui->statusBar->showMessage("警告：数据量较大，绘图器繁忙！", 2000);
+    }
 }
 
 void MainWindow::on_actionAscii_triggered(bool checked)
@@ -1906,16 +1848,21 @@ void MainWindow::on_textBrowser_customContextMenuRequested(const QPoint &pos)
     QAction *clearTextBrowser = nullptr;
     QAction *saveOriginData = nullptr;
     QAction *saveShowedData = nullptr;
+    QAction *tips = nullptr;
     QMenu *popMenu = new QMenu( this );
     //添加右键菜单
     saveOriginData = new QAction("保存原始数据", this);
     saveShowedData = new QAction("保存显示数据", this);
     clearTextBrowser = new QAction("清空数据显示区", this);
+    tips = new QAction("提示：Ctrl+A不会全选所有数据！\n"
+                       "     请用保存数据功能。", this);
 
     popMenu->addAction( saveOriginData );
     popMenu->addAction( saveShowedData );
     popMenu->addSeparator();
     popMenu->addAction( clearTextBrowser );
+    popMenu->addSeparator();
+    popMenu->addAction( tips );
     connect( saveOriginData, SIGNAL(triggered() ), this, SLOT( on_actionSaveOriginData_triggered()) );
     connect( saveShowedData, SIGNAL(triggered() ), this, SLOT( on_actionSaveShowedData_triggered()) );
     connect( clearTextBrowser, SIGNAL(triggered() ), this, SLOT( clearTextBrowserSlot()) );

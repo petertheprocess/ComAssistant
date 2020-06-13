@@ -68,15 +68,19 @@ QVector<double> DataProtocol::popOneRowData()
 /*
  * Function: 解析协议
  * para1: 被解析的数据
- * return: 返回不满足本协议的数据，因为可能有其他用途和含义
+ * return: 已经扫描过的数据长度
 */
-void DataProtocol::parase(const QByteArray& inputArray, int32_t startPos = 0)
+int32_t DataProtocol::parase(const QByteArray& inputArray, int32_t &startPos)
 {
     RowData_t rowData;
     Pack_t pack;
     QByteArray restArray;
+    int32_t oldsize, scannedLength;
     //未解析的数据
+    oldsize = unparasedBuff.size();
     unparasedBuff += inputArray.mid(startPos);
+    scannedLength = unparasedBuff.size() - oldsize;
+
     //数据流分包
     extractPacks(unparasedBuff, restArray);
     unparasedBuff = restArray;
@@ -88,13 +92,18 @@ void DataProtocol::parase(const QByteArray& inputArray, int32_t startPos = 0)
         rowData = extractRowData(pack);
         addToDataPool(rowData);
     }
+
+    return scannedLength;
 }
 
 //与下面extractPacks函数类似，不过该函数提取包后不做处理并将结果直接返回
-QVector<QByteArray> DataProtocol::getExtrackedPacks(const QByteArray &inputArray)
+QVector<QByteArray> DataProtocol::getExtrackedPacks(QByteArray &inputArray)
 {
     QVector<QByteArray> result;
     if(protocolType == Ascii){
+        //先剔除\0,\r,\n等特殊数据
+        inputArray = inputArray.trimmed();
+
         QRegularExpression reg;
         QRegularExpressionMatch match;
         int index = 0;
@@ -122,19 +131,23 @@ QVector<QByteArray> DataProtocol::getExtrackedPacks(const QByteArray &inputArray
     }
 }
 
-void DataProtocol::extractPacks(const QByteArray &inputArray, QByteArray &restArray)
+void DataProtocol::extractPacks(QByteArray &inputArray, QByteArray &restArray)
 {
     if(protocolType == Ascii){
+        //先剔除\0,\r,\n等特殊数据
+        inputArray = inputArray.trimmed();
+        while (inputArray.indexOf('\0')!=-1) {
+            inputArray.remove(inputArray.indexOf('\0'), 1);
+        }
         QRegularExpression reg;
         QRegularExpressionMatch match;
         int index = 0;
         //匹配{}间的数据。
         //{:之间不允许再出现{:
-        //:后，数据与逗号作为一个组，这个组至少出现一次。
-        //其中，组中的逗号出现0次或1次，组开头允许有空白字符\\s
+        //:后，数据与逗号作为一个组，这个组至少出现一次，组中的逗号出现0次或1次，组开头允许有空白字符\\s
         //组中的数据：符号出现或者不出现，整数部分出现至少1次，小数点与小数作为整体，可不出现或者1次
         //换行符最多出现2次
-        reg.setPattern("\\{[^{:]*:(\\s*([+-]?\\d+(\\.\\d+)?)?,?)+\\}[\r\n]{0,2}");
+        reg.setPattern("\\{[^{:]*:(\\s*([+-]?\\d+(\\.\\d+)?)?,?)+\\}");
         reg.setPatternOptions(QRegularExpression::InvertedGreedinessOption);//设置为非贪婪模式匹配
         do {
                 QByteArray tmp;
@@ -161,7 +174,12 @@ void DataProtocol::extractPacks(const QByteArray &inputArray, QByteArray &restAr
                 }
                 else{
 //                    qDebug()<<"no match";
-                    break;
+                    if(index < inputArray.size()-1){
+                        index++;
+                        continue;
+                    }else{
+                        break;
+                    }
                 }
         } while(index < inputArray.length());
 
