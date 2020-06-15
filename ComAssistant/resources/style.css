@@ -6,20 +6,28 @@ QPushButton#comSwitch{
     color: rgb(200, 50, 50);
     width: 93px; 
     height: 30px;
+    font-weight: bold;
 }    
 QPushButton#comSwitch:hover{     
-    border: 2px solid rgb(235, 150, 70);
-    color: rgb(235, 150, 70);
+    border: 2px solid rgb(255, 10, 10);
+    color: rgb(255, 10, 10);
 }  
 QPushButton#comSwitch:pressed{  
-    border: 2px solid rgb(160, 180, 30);  
-    color: rgb(160, 180, 30);
+    border: 2px solid rgb(20, 130, 220);
+    color: rgb(20, 130, 220);
 }
 QPushButton#comSwitch:checked{  
-  border: 2px solid rgb(40, 160, 40);   
-  color: rgb(40, 160, 40);
+    border: 2px solid rgb(50, 200, 50);
+    color: rgb(50, 200, 50);
 }  
-
+QPushButton#comSwitch:checked:hover{
+    border: 2px solid rgb(20, 230, 20);
+    color: rgb(20, 230, 20);
+}
+QPushButton#comSwitch:checked:pressed{  
+    border: 2px solid rgb(20, 130, 220);
+    color: rgb(20, 130, 220);
+} 
 /* 点按交互区域 */
 QPushButton{
   font-family: Microsoft YaHei UI;
