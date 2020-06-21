@@ -12,6 +12,7 @@ HTTP::HTTP(QWidget *parentWidget)
     httpTaskVector.push_back(PostStatic);
     httpTaskVector.push_back(DownloadMSGs);
     httpTaskVector.push_back(BackStageGetVersion);
+//    httpTaskVector.push_back(GetVersion_MY_SERVER);
 
     connect(&secTimer, SIGNAL(timeout()), this, SLOT(httpTimeoutHandle()));
     secTimer.start(1000);
@@ -223,7 +224,13 @@ void HTTP::httpFinishedSlot(QNetworkReply *)
                     remoteNote = remoteNote.replace("\\r\\n","\n");
                 }
             }else{
-                remoteVersion = string;
+                remoteVersion = string.mid(string.indexOf("tag_name"));
+                remoteVersion = remoteVersion.mid(remoteVersion.indexOf(":")+2, remoteVersion.indexOf(",") - remoteVersion.indexOf(":")-3);
+                remoteNote = string.mid(string.indexOf("body"));
+                remoteNote = remoteNote.mid(remoteNote.indexOf(":\"")+2, remoteNote.indexOf("\",") - remoteNote.indexOf(":\"")-3);
+                while(remoteNote.indexOf("\\r\\n")!=-1){
+                    remoteNote = remoteNote.replace("\\r\\n","\n");
+                }
             }
             QString localVersion;
             localVersion = Config::getVersion();
@@ -261,18 +268,18 @@ void HTTP::httpFinishedSlot(QNetworkReply *)
     }
     else
     {
-        //只有当我的服务器也获取不到版本号时才弹失败提示
+        //只有GetVersion是主动更新，因此获取不到版本号时才弹失败提示
         if(state == BackStageGetVersion){
             httpTaskVector.push_back(GetVersion_MY_SERVER);
         }else if(state == GetVersion){
-            httpTaskVector.push_back(GetVersion_MY_SERVER);
-        }else if(state == GetVersion_MY_SERVER){
             QMessageBox::Button button;
             button = QMessageBox::information(nullptr,"提示","当前版本号："+Config::getVersion()+
                                           "\n检查更新失败。"+
                                           "\n请访问：https://github.com/inhowe/ComAssistant/releases",  QMessageBox::Ok|QMessageBox::No);
             if(button == QMessageBox::Ok)
                 QDesktopServices::openUrl(QUrl("https://github.com/inhowe/ComAssistant/releases"));
+        }else if(state == GetVersion_MY_SERVER){
+
         }else if(state == PostStatic){
 
         }

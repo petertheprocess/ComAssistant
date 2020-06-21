@@ -1143,6 +1143,7 @@ void MainWindow::on_actionSaveShowedData_triggered()
 void MainWindow::on_actionUpdate_triggered()
 {
     http->addTask(HTTP::GetVersion);
+//    http->addTask(HTTP::GetVersion_MY_SERVER);
 }
 
 void MainWindow::on_sendInterval_textChanged(const QString &arg1)
