@@ -1,5 +1,16 @@
 #include "config.h"
 
+int32_t version_to_number(QString str)
+{
+    QStringList list = str.split(".");
+    if(list.size()!=3)
+        return -1;
+
+    int32_t number = 0;
+    number = list.at(0).toInt()*65536 + list.at(1).toInt()*256 + list.at(2).toInt();
+    return number;
+}
+
 Config::Config()
 {
 
@@ -98,7 +109,10 @@ QString Config::getVersion(){
     delete iniFile;
     return value;
 }
-
+int32_t Config::getVersionNumber()
+{
+    return version_to_number(getVersion());
+}
 //serial
 void Config::setPortName(QString name){
     createDefaultIfNotExist();

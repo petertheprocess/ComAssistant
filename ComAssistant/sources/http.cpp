@@ -188,17 +188,6 @@ void HTTP::httpTimeoutHandle()
 
 }
 
-int32_t version_to_number(QString str)
-{
-    QStringList list = str.split(".");
-    if(list.size()!=3)
-        return -1;
-
-    int32_t number = 0;
-    number = list.at(0).toInt()*65536 + list.at(1).toInt()*256 + list.at(2).toInt();
-    return number;
-}
-
 void HTTP::httpFinishedSlot(QNetworkReply *)
 {
     //超时定时器清0

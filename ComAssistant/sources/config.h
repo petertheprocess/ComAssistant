@@ -90,12 +90,14 @@ enum ProtocolType_e{
     Float = 1
 };
 
+extern int32_t version_to_number(QString str);
+
 class Config
 {
 public:
     #define defualtGraphName  "Graph 1;Graph 2;Graph 3;Graph 4;Graph 5;Graph 6;Graph 7;Graph 8;Graph 9;Graph 10;Graph 11;Graph 12;Graph 13;Graph 14;Graph 15;"
     //版本
-    #define VERSION_STRING  "0.2.4"
+    #define VERSION_STRING  "0.2.5"
 
     Config();
     static void writeDefault();
@@ -107,6 +109,7 @@ public:
 
     static void setVersion(void);
     static QString getVersion();
+    static int32_t getVersionNumber();
     //serial
     static void setPortName(QString name);
     static QString getPortName();
