@@ -1325,8 +1325,8 @@ void MainWindow::plotterParaseTimerSlot()
 
     parasedLength = protocol->parase(RxBuff, plotterParasePosInRxBuff);
     plotterParasePosInRxBuff += parasedLength;
-//    qDebug()<<"elapsed_time"<<elapsedTimer.elapsed()<<"parasedLength"<<parasedLength;
-
+    qDebug()<<"elapsed_time1"<<elapsedTimer.elapsed()<<"parasedBuffSize"<<protocol->parasedBuffSize();
+elapsedTimer.start();
     //数据填充
     while(protocol->parasedBuffSize()>0){
         oneRowData = protocol->popOneRowData();
@@ -1336,8 +1336,9 @@ void MainWindow::plotterParaseTimerSlot()
             if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData, false))
                 ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
         }
+        qApp->processEvents();//数据量可能过大要处理UI
     }
-
+//qDebug()<<"elapsed_time2"<<elapsedTimer.elapsed()<<"speed"<<;
     //曲线刷新
     ui->customPlot->replot();
 
@@ -1368,19 +1369,14 @@ void MainWindow::plotterParaseTimerSlot()
     }
 
     int32_t elapsed_time = elapsedTimer.elapsed();
-    if(elapsed_time > PLOTTER_PARASE_PERIOD){
+    double paraseSpeed = parasedLength/(elapsed_time/1000.0)/1024.0;
+    paraseSpeed = (double)((int)(paraseSpeed*100))/100.0;   //保留两位小数
+    if(paraseSpeed < rxSpeedKB){
         QString temp;
-        temp = temp + "警告：数据量较大，绘图器繁忙！" + "[" + QString::number(parasedLength) + "]";   //parasedLength间接反映繁忙程度
+        temp = temp + "警告：数据量较大，绘图器繁忙！解析速度：" + QString::number(paraseSpeed) + "KB/s";
         ui->statusBar->showMessage(temp, 2000);
-        DYN_PLOTTER_PARASE_PERIOD = DYN_PLOTTER_PARASE_PERIOD / 2;
-        if(DYN_PLOTTER_PARASE_PERIOD<=5)
-            DYN_PLOTTER_PARASE_PERIOD = 5;
-        plotterParaseTimer.start(DYN_PLOTTER_PARASE_PERIOD);
-    }else{
-        DYN_PLOTTER_PARASE_PERIOD = PLOTTER_PARASE_PERIOD;
-        plotterParaseTimer.start(DYN_PLOTTER_PARASE_PERIOD);
     }
-
+    plotterParaseTimer.start(PLOTTER_PARASE_PERIOD);
 
 //    qDebug()<<"plotterParaseTimerSlot elapsed_time:"<<elapsed_time;
 }

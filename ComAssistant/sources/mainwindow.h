@@ -164,7 +164,6 @@ private:
     QByteArray unshowedRxBuff;    //未上屏的接收缓冲
 
     const int32_t PLOTTER_PARASE_PERIOD = 20;  //绘图器默认解析周期
-    int32_t DYN_PLOTTER_PARASE_PERIOD = PLOTTER_PARASE_PERIOD; //动态绘图器默认解析周期
 
     QTimer cycleSendTimer;  //循环发送定时器
     QTimer debugTimer;      //调试定时器
