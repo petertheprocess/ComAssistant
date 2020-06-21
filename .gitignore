@@ -6,6 +6,7 @@
 /build-ComAssistant-Desktop_Qt_5_12_3_MinGW_32_bit-Release
 /ComAssistant/*.user
 /STM32_F4_DMA/OBJ
+/vofa+
 
 # C++ objects and libs
 *.slo

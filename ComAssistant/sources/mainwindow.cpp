@@ -1280,7 +1280,6 @@ void MainWindow::clearSeedsSlot()
 /*
  * Function:绘图器开关
 */
-#define PLOTTER_PARASE_PERIOD   20  //绘图器解析周期
 void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 {
     if(checked){
@@ -1310,71 +1309,80 @@ void MainWindow::plotterParaseTimerSlot()
 {
     QElapsedTimer elapsedTimer;
     int32_t parasedLength;
+    QVector<double> oneRowData;
     elapsedTimer.start();
 
-    if(plotterParasePosInRxBuff >= RxBuff.size() - 1)
+    if(plotterParasePosInRxBuff >= RxBuff.size() - 1){
         return;
+    }
 
-    //绘图器与数值显示器解析
-    if(ui->actionPlotterSwitch->isChecked() || ui->actionValueDisplay->isChecked()){
-        //根据协议选择不同的缓冲
-        if(protocol->getProtocolType()==DataProtocol::Ascii){
-            parasedLength = protocol->parase(RxBuff, plotterParasePosInRxBuff);
+    if(!ui->actionPlotterSwitch->isChecked() &&
+       !ui->actionValueDisplay->isChecked()){
+        return;
+    }
+    //关定时器，防止数据量过大导致咬尾振荡
+    plotterParaseTimer.stop();
+
+    parasedLength = protocol->parase(RxBuff, plotterParasePosInRxBuff);
+    plotterParasePosInRxBuff += parasedLength;
+//    qDebug()<<"elapsed_time"<<elapsedTimer.elapsed()<<"parasedLength"<<parasedLength;
+
+    //数据填充
+    while(protocol->parasedBuffSize()>0){
+        oneRowData = protocol->popOneRowData();
+        //绘图显示器
+        if(ui->actionPlotterSwitch->isChecked()){
+            //关闭刷新，数据全部填充完后统一刷新
+            if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData, false))
+                ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
         }
-        else if(protocol->getProtocolType()==DataProtocol::Float){
-            parasedLength = protocol->parase(RxBuff, plotterParasePosInRxBuff);
+    }
+
+    //曲线刷新
+    ui->customPlot->replot();
+
+    //数值显示器
+    if(ui->actionValueDisplay->isChecked()){
+        //判断是否添加行
+        if(ui->valueDisplay->rowCount() < oneRowData.size()){
+            //设置行
+            ui->valueDisplay->setRowCount(oneRowData.size());
+            //设置列，固定的
+            ui->valueDisplay->setColumnCount(2);
+            ui->valueDisplay->setHorizontalHeaderItem(0,new QTableWidgetItem("名称"));
+            ui->valueDisplay->setHorizontalHeaderItem(1,new QTableWidgetItem("值"));
+            ui->valueDisplay->horizontalHeader()->setStretchLastSection(true);
+            ui->valueDisplay->horizontalHeader()->setSectionResizeMode(0,QHeaderView::Stretch);
+            ui->valueDisplay->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
         }
-        plotterParasePosInRxBuff += parasedLength;
-
-        //数据绘图
-        while(protocol->parasedBuffSize()>0){
-            QVector<double> oneRowData;
-            oneRowData = protocol->popOneRowData();
-            //绘图显示器
-            if(ui->actionPlotterSwitch->isChecked()){
-                //文件解析可能有大量数据，因此关闭刷新，提高解析速度
-                if(paraseFile){
-                    if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData, false))
-                        ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
-                }else{
-                    if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData))
-                        ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
-                }
-            }
-
-            //数值显示器
-            if(ui->actionValueDisplay->isChecked()){
-                //判断是否添加行
-                if(ui->valueDisplay->rowCount() < oneRowData.size()){
-                    //设置行
-                    ui->valueDisplay->setRowCount(oneRowData.size());
-                    //设置列，固定的
-                    ui->valueDisplay->setColumnCount(2);
-                    ui->valueDisplay->setHorizontalHeaderItem(0,new QTableWidgetItem("名称"));
-                    ui->valueDisplay->setHorizontalHeaderItem(1,new QTableWidgetItem("值"));
-                    ui->valueDisplay->horizontalHeader()->setStretchLastSection(true);
-                    ui->valueDisplay->horizontalHeader()->setSectionResizeMode(0,QHeaderView::Stretch);
-                    ui->valueDisplay->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
-                }
-                //添加数据
-                int min = oneRowData.size() < plotControl->getNameSetsFromPlot().size() ? oneRowData.size() : plotControl->getNameSetsFromPlot().size();
-                for(int i=0; i < min; i++){
-                    //这里会重复new对象导致内存溢出吗
-                    ui->valueDisplay->setItem(i,0,new QTableWidgetItem(plotControl->getNameSetsFromPlot().at(i)));
-                    ui->valueDisplay->setItem(i,1,new QTableWidgetItem(QString::number(oneRowData.at(i),'f')));
-                    //不可编辑
-                    ui->valueDisplay->item(i,0)->setFlags(ui->valueDisplay->item(i,0)->flags() & (~Qt::ItemIsEditable));
-                    ui->valueDisplay->item(i,1)->setFlags(ui->valueDisplay->item(i,1)->flags() & (~Qt::ItemIsEditable));
-                }
-            }
+        //添加数据
+        int min = oneRowData.size() < plotControl->getNameSetsFromPlot().size() ? oneRowData.size() : plotControl->getNameSetsFromPlot().size();
+        for(int i=0; i < min; i++){
+            //这里会重复new对象导致内存溢出吗
+            ui->valueDisplay->setItem(i,0,new QTableWidgetItem(plotControl->getNameSetsFromPlot().at(i)));
+            ui->valueDisplay->setItem(i,1,new QTableWidgetItem(QString::number(oneRowData.at(i),'f')));
+            //不可编辑
+            ui->valueDisplay->item(i,0)->setFlags(ui->valueDisplay->item(i,0)->flags() & (~Qt::ItemIsEditable));
+            ui->valueDisplay->item(i,1)->setFlags(ui->valueDisplay->item(i,1)->flags() & (~Qt::ItemIsEditable));
         }
     }
 
     int32_t elapsed_time = elapsedTimer.elapsed();
-    if(elapsed_time > 2*PLOTTER_PARASE_PERIOD){
-        ui->statusBar->showMessage("警告：数据量较大，绘图器繁忙！", 2000);
+    if(elapsed_time > PLOTTER_PARASE_PERIOD){
+        QString temp;
+        temp = temp + "警告：数据量较大，绘图器繁忙！" + "[" + QString::number(parasedLength) + "]";   //parasedLength间接反映繁忙程度
+        ui->statusBar->showMessage(temp, 2000);
+        DYN_PLOTTER_PARASE_PERIOD = DYN_PLOTTER_PARASE_PERIOD / 2;
+        if(DYN_PLOTTER_PARASE_PERIOD<=5)
+            DYN_PLOTTER_PARASE_PERIOD = 5;
+        plotterParaseTimer.start(DYN_PLOTTER_PARASE_PERIOD);
+    }else{
+        DYN_PLOTTER_PARASE_PERIOD = PLOTTER_PARASE_PERIOD;
+        plotterParaseTimer.start(DYN_PLOTTER_PARASE_PERIOD);
     }
-//    qDebug()<<"elapsed_time:"<<elapsed_time;
+
+
+//    qDebug()<<"plotterParaseTimerSlot elapsed_time:"<<elapsed_time;
 }
 
 void MainWindow::on_actionAscii_triggered(bool checked)

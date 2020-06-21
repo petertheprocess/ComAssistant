@@ -26,6 +26,7 @@ printf("{:%f,%f}\r\n", data1, data2);
   - 高亮规则选择
   - 缺少vcruntime140.dll
   - customplotcontrol定义在mycustomplot里
+  - plotControl->displayToPlotter(ui->customPlot, oneRowData, false)极耗时
 
 # 考虑中的功能
   - 多语言支持？

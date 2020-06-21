@@ -131,7 +131,7 @@ QVector<QByteArray> DataProtocol::getExtrackedPacks(QByteArray &inputArray)
     }
 }
 
-void DataProtocol::extractPacks(QByteArray &inputArray, QByteArray &restArray)
+inline void DataProtocol::extractPacks(QByteArray &inputArray, QByteArray &restArray)
 {
     if(protocolType == Ascii){
         //先剔除\0,\r,\n等特殊数据
@@ -199,7 +199,7 @@ void DataProtocol::extractPacks(QByteArray &inputArray, QByteArray &restArray)
     }
 }
 
-DataProtocol::Pack_t DataProtocol::popOnePack()
+inline DataProtocol::Pack_t DataProtocol::popOnePack()
 {
     Pack_t tmp;
     if(packsBuff.isEmpty()){
@@ -210,7 +210,7 @@ DataProtocol::Pack_t DataProtocol::popOnePack()
     return tmp;
 }
 
-DataProtocol::RowData_t DataProtocol::extractRowData(const Pack_t &pack)
+inline DataProtocol::RowData_t DataProtocol::extractRowData(const Pack_t &pack)
 {
 
     RowData_t rowData;
@@ -258,7 +258,7 @@ DataProtocol::RowData_t DataProtocol::extractRowData(const Pack_t &pack)
     return rowData;
 }
 
-void DataProtocol::addToDataPool(const RowData_t& rowData)
+inline void DataProtocol::addToDataPool(const RowData_t& rowData)
 {
     dataPool << rowData;
 }

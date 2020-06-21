@@ -155,6 +155,8 @@ bool QCustomPlotControl::addGraph(QCustomPlot* customPlot, int num)
 */
 bool QCustomPlotControl::displayToPlotter(QCustomPlot* customPlot, const QVector<double>& rowData, bool refresh)
 {
+    QElapsedTimer time;
+    time.start();
     if(rowData.size() <= 0 || rowData.size()>colorSet.size())
         return false;
 
@@ -186,6 +188,7 @@ bool QCustomPlotControl::displayToPlotter(QCustomPlot* customPlot, const QVector
 
     xAxisCnt++;
 
+//    qDebug()<<"displayToPlotter "<<time.elapsed();
     return true;
 }
 
