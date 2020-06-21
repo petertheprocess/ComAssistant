@@ -39,14 +39,14 @@ public:
     void clearBuff();
     int parasedBuffSize();//判断数据池剩余大小
     QVector<double> popOneRowData();//弹出一行数据，没有数据则为空
-    int32_t parase(const QByteArray& inputArray, int32_t &startPos);
+    int32_t parase(const QByteArray& inputArray, int32_t &startPos, int32_t maxParaseLengthLimit);
     void setProtocolType(ProtocolType_e type, bool clearbuff=true);
     ProtocolType_e getProtocolType();
     QVector<QByteArray> getExtrackedPacks(QByteArray &inputArray);
 
 private:
     //从输入参数1中提取所有pack包流进packsBuff缓存中
-    void extractPacks(QByteArray &inputArray, QByteArray &restArray);
+    void extractPacks(QByteArray &inputArray, QByteArray &restArray, bool toDataPool);
     //从pack缓存中弹出一个pack
     Pack_t popOnePack();
     //从pack中提取合法数据行

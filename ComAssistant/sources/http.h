@@ -32,12 +32,14 @@ public:
         DownloadFile, //下载文件，暂未使用
         PostStatic, //上传统计
         DownloadMSGs, //信息发布系统
+        GetVersion_MY_SERVER, //从我的服务器获取版本号
     }HttpFunction_e;
     HTTP(QWidget *parentWidget);
 
     static QString getHostMacAddress();
     bool postUsageStatistic(void);
     bool getRemoteVersion(void);
+    bool getRemoteVersion_my_server(void);
     bool downloadMessages(void);
     void addTask(HttpFunction_e name);
     QStringList getMsgList();

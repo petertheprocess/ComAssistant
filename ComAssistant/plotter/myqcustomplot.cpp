@@ -182,6 +182,12 @@ void MyQCustomPlot::removeSelectedGraph()
     }
 }
 
+void MyQCustomPlot::rescaleYAxis()
+{
+    this->yAxis->rescale(true);
+    this->replot();
+}
+
 void MyQCustomPlot::removeAllGraphs()
 {
     QMessageBox::Button res;
@@ -238,6 +244,7 @@ void MyQCustomPlot::contextMenuRequest(QPoint pos)
   } else  // general context menu on graphs requested
   {
     if (this->graphCount() > 0){
+      menu->addAction("曲线居中", this, SLOT(rescaleYAxis()));
       menu->addAction("移除所有曲线", this, SLOT(removeAllGraphs()));
     }
   }

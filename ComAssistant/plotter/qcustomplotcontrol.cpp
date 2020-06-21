@@ -170,7 +170,7 @@ bool QCustomPlotControl::displayToPlotter(QCustomPlot* customPlot, const QVector
     //填充数据
     int minCnt = colorSet.size()>rowData.size()?rowData.size():colorSet.size();
     for(int i = 0; i < minCnt; i++){
-        customPlot->graph(i)->addData(xAxisCnt, rowData.at(i)); 
+        customPlot->graph(i)->addData(xAxisCnt, rowData.at(i));
     }
 
     //Graph1的动态标签
@@ -180,7 +180,7 @@ bool QCustomPlotControl::displayToPlotter(QCustomPlot* customPlot, const QVector
 
     // make key axis range scroll with the data (at a constant range size of 200):
     customPlot->xAxis->setRange(xAxisCnt, xRange.upper - xRange.lower, Qt::AlignRight);
-    customPlot->yAxis->rescale(true);
+//    customPlot->yAxis->rescale(true);//调Y轴在数据量大时也很耗时
 
     //刷新操作很耗时，因此添加开关
     if(refresh)

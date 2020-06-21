@@ -1308,6 +1308,7 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 void MainWindow::plotterParaseTimerSlot()
 {
     QElapsedTimer elapsedTimer;
+    int32_t maxParaseLengthLimit = 2048;
     int32_t parasedLength;
     QVector<double> oneRowData;
     elapsedTimer.start();
@@ -1322,13 +1323,13 @@ void MainWindow::plotterParaseTimerSlot()
     }
     //关定时器，防止数据量过大导致咬尾振荡
     plotterParaseTimer.stop();
-
-    parasedLength = protocol->parase(RxBuff, plotterParasePosInRxBuff);
+    //添加解析长度限制，防止数据量过大振荡
+    parasedLength = protocol->parase(RxBuff, plotterParasePosInRxBuff, maxParaseLengthLimit);
     plotterParasePosInRxBuff += parasedLength;
-    qDebug()<<"elapsed_time1"<<elapsedTimer.elapsed()<<"parasedBuffSize"<<protocol->parasedBuffSize();
-elapsedTimer.start();
+
     //数据填充
     while(protocol->parasedBuffSize()>0){
+
         oneRowData = protocol->popOneRowData();
         //绘图显示器
         if(ui->actionPlotterSwitch->isChecked()){
@@ -1336,11 +1337,11 @@ elapsedTimer.start();
             if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData, false))
                 ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
         }
-        qApp->processEvents();//数据量可能过大要处理UI
+
     }
-//qDebug()<<"elapsed_time2"<<elapsedTimer.elapsed()<<"speed"<<;
+
     //曲线刷新
-    ui->customPlot->replot();
+    ui->customPlot->replot();   //<10ms
 
     //数值显示器
     if(ui->actionValueDisplay->isChecked()){
@@ -1368,16 +1369,27 @@ elapsedTimer.start();
         }
     }
 
+    if(parasedLength == maxParaseLengthLimit){
+        QString temp;
+        temp = temp + "警告：绘图器繁忙，待解析数据长度：" + QString::number(RxBuff.size() - plotterParasePosInRxBuff - 1) + "Byte";
+        ui->statusBar->showMessage(temp, 2000);
+    }
+
     int32_t elapsed_time = elapsedTimer.elapsed();
     double paraseSpeed = parasedLength/(elapsed_time/1000.0)/1024.0;
     paraseSpeed = (double)((int)(paraseSpeed*100))/100.0;   //保留两位小数
+    static int32_t dynamic_period = PLOTTER_PARASE_PERIOD;
     if(paraseSpeed < rxSpeedKB){
-        QString temp;
-        temp = temp + "警告：数据量较大，绘图器繁忙！解析速度：" + QString::number(paraseSpeed) + "KB/s";
-        ui->statusBar->showMessage(temp, 2000);
+        dynamic_period = dynamic_period - 5;
+        if(dynamic_period <= 5)
+            dynamic_period = 5;
+    }else{
+        dynamic_period = dynamic_period + 5;
+        if(dynamic_period >= PLOTTER_PARASE_PERIOD)
+            dynamic_period = PLOTTER_PARASE_PERIOD;
     }
-    plotterParaseTimer.start(PLOTTER_PARASE_PERIOD);
-
+    plotterParaseTimer.start(dynamic_period);
+//    qDebug()<<"parasedLength"<<parasedLength<<"dynamic_period"<<dynamic_period;
 //    qDebug()<<"plotterParaseTimerSlot elapsed_time:"<<elapsed_time;
 }
 

@@ -37,6 +37,7 @@ private slots:
     void mousePress();
     void mouseWheel();
     void removeSelectedGraph();
+    void rescaleYAxis();
     void removeAllGraphs();
     void hideSelectedGraph();
     void contextMenuRequest(QPoint pos);

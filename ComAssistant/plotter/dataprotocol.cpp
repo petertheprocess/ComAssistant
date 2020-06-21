@@ -70,28 +70,38 @@ QVector<double> DataProtocol::popOneRowData()
  * para1: 被解析的数据
  * return: 已经扫描过的数据长度
 */
-int32_t DataProtocol::parase(const QByteArray& inputArray, int32_t &startPos)
+int32_t DataProtocol::parase(const QByteArray& inputArray, int32_t &startPos, int32_t maxParaseLengthLimit=-1)
 {
     RowData_t rowData;
     Pack_t pack;
     QByteArray restArray;
-    int32_t oldsize, scannedLength;
-    //未解析的数据
+    int32_t oldsize, newsize, scannedLength;
+
     oldsize = unparasedBuff.size();
-    unparasedBuff += inputArray.mid(startPos);
+    newsize = inputArray.size() - oldsize;
+    if(newsize - oldsize < maxParaseLengthLimit){
+        unparasedBuff += inputArray.mid(startPos);
+    }else{
+        unparasedBuff += inputArray.mid(startPos, maxParaseLengthLimit);
+    }
     scannedLength = unparasedBuff.size() - oldsize;
 
+    //未解析的数据
+//    oldsize = unparasedBuff.size();
+//    unparasedBuff += inputArray.mid(startPos);
+//    scannedLength = unparasedBuff.size() - oldsize;
+
     //数据流分包
-    extractPacks(unparasedBuff, restArray);
+    extractPacks(unparasedBuff, restArray, true);
     unparasedBuff = restArray;
 
-    while (packsBuff.size()>0) {
-        //提取一个包
-        pack = popOnePack();
-        //提取一组数
-        rowData = extractRowData(pack);
-        addToDataPool(rowData);
-    }
+//    while (packsBuff.size()>0) {
+//        //提取一个包
+//        pack = popOnePack();
+//        //提取一组数
+//        rowData = extractRowData(pack);
+//        addToDataPool(rowData);
+//    }
 
     return scannedLength;
 }
@@ -131,7 +141,13 @@ QVector<QByteArray> DataProtocol::getExtrackedPacks(QByteArray &inputArray)
     }
 }
 
-inline void DataProtocol::extractPacks(QByteArray &inputArray, QByteArray &restArray)
+/*
+ *
+ * param0[in] 待提取的数据
+ * param1[in] 剩余未转换数据
+ * param2[in] 直接转换到数据池中，减少数据拷贝过程
+*/
+inline void DataProtocol::extractPacks(QByteArray &inputArray, QByteArray &restArray, bool toDataPool=false)
 {
     if(protocolType == Ascii){
         //先剔除\0,\r,\n等特殊数据
@@ -168,7 +184,12 @@ inline void DataProtocol::extractPacks(QByteArray &inputArray, QByteArray &restA
                             tmp = tmp.replace("\r","");
                         while(tmp.indexOf('\n')!=-1)
                             tmp = tmp.replace("\n","");
-                        packsBuff << tmp;
+                        if(toDataPool){
+                            addToDataPool(extractRowData(tmp));
+                        }
+                        else{
+                            packsBuff << tmp;
+                        }
                     }
 //                    qDebug()<<"match"<<match.captured(0);
                 }
