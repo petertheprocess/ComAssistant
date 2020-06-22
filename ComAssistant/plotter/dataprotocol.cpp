@@ -77,6 +77,7 @@ int32_t DataProtocol::parase(const QByteArray& inputArray, int32_t &startPos, in
     QByteArray restArray;
     int32_t oldsize, newsize, scannedLength;
 
+    //未解析数据，防止数据量过大，限制了最大解析长度
     oldsize = unparasedBuff.size();
     newsize = inputArray.size() - oldsize;
     if(newsize - oldsize < maxParaseLengthLimit){
@@ -86,22 +87,9 @@ int32_t DataProtocol::parase(const QByteArray& inputArray, int32_t &startPos, in
     }
     scannedLength = unparasedBuff.size() - oldsize;
 
-    //未解析的数据
-//    oldsize = unparasedBuff.size();
-//    unparasedBuff += inputArray.mid(startPos);
-//    scannedLength = unparasedBuff.size() - oldsize;
-
     //数据流分包
     extractPacks(unparasedBuff, restArray, true);
     unparasedBuff = restArray;
-
-//    while (packsBuff.size()>0) {
-//        //提取一个包
-//        pack = popOnePack();
-//        //提取一组数
-//        rowData = extractRowData(pack);
-//        addToDataPool(rowData);
-//    }
 
     return scannedLength;
 }
@@ -260,7 +248,6 @@ inline DataProtocol::RowData_t DataProtocol::extractRowData(const Pack_t &pack)
                     break;
                 }
         } while(index < dataPack.length());
-
 
     }else if(protocolType == Float){
         dataPack = pack;

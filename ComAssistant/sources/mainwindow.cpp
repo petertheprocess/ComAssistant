@@ -1309,7 +1309,7 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 void MainWindow::plotterParaseTimerSlot()
 {
     QElapsedTimer elapsedTimer;
-    int32_t maxParaseLengthLimit = 2048;
+    int32_t maxParaseLengthLimit = 4096;
     int32_t parasedLength;
     QVector<double> oneRowData;
     elapsedTimer.start();
@@ -1335,12 +1335,13 @@ void MainWindow::plotterParaseTimerSlot()
         //绘图显示器
         if(ui->actionPlotterSwitch->isChecked()){
             //关闭刷新，数据全部填充完后统一刷新
-            if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData, false))
+            if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData, false, false))
                 ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
         }
 
     }
-
+    if(ui->actionAutoRefreshYAxis->isChecked())
+        ui->customPlot->yAxis->rescale(true);
     //曲线刷新
     ui->customPlot->replot();   //<10ms
 

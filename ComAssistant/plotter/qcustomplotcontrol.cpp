@@ -153,7 +153,7 @@ bool QCustomPlotControl::addGraph(QCustomPlot* customPlot, int num)
 /*
  * Function:把数据取出来显示到绘图器上
 */
-bool QCustomPlotControl::displayToPlotter(QCustomPlot* customPlot, const QVector<double>& rowData, bool refresh)
+bool QCustomPlotControl::displayToPlotter(QCustomPlot* customPlot, const QVector<double>& rowData, bool refresh = true, bool rescaleY = true)
 {
     QElapsedTimer time;
     time.start();
@@ -180,7 +180,8 @@ bool QCustomPlotControl::displayToPlotter(QCustomPlot* customPlot, const QVector
 
     // make key axis range scroll with the data (at a constant range size of 200):
     customPlot->xAxis->setRange(xAxisCnt, xRange.upper - xRange.lower, Qt::AlignRight);
-//    customPlot->yAxis->rescale(true);//调Y轴在数据量大时也很耗时
+    if(rescaleY)
+        customPlot->yAxis->rescale(true);//调Y轴在数据量大时也很耗时
 
     //刷新操作很耗时，因此添加开关
     if(refresh)

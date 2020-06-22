@@ -517,6 +517,7 @@ p, li { white-space: pre-wrap; }
     </widget>
     <addaction name="actionPlotterSwitch"/>
     <addaction name="lineStyle"/>
+    <addaction name="actionAutoRefreshYAxis"/>
     <addaction name="separator"/>
     <addaction name="actionValueDisplay"/>
     <addaction name="separator"/>
@@ -779,6 +780,17 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>数值显示器</string>
+   </property>
+  </action>
+  <action name="actionAutoRefreshYAxis">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>自动刷新Y轴</string>
    </property>
   </action>
  </widget>

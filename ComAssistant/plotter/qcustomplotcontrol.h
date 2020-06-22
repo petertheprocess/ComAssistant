@@ -31,7 +31,7 @@ public:
 //    void adjustXRange(QCustomPlot* customPlot, const QCPRange& qcpRange);
 //    void adjustXRange(QCustomPlot* customPlot, bool enlarge);
     //把数据显示到绘图器上
-    bool displayToPlotter(QCustomPlot* customPlot, const QVector<double>& rowData, bool refresh = true);
+    bool displayToPlotter(QCustomPlot* customPlot, const QVector<double>& rowData, bool refresh, bool rescaleY);
     //设置笔宽度
     void setupPenWidth(QCustomPlot* customPlot, double width = 1.5);
     //设置轴间距

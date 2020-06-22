@@ -245,6 +245,7 @@ void MyQCustomPlot::contextMenuRequest(QPoint pos)
   {
     if (this->graphCount() > 0){
       menu->addAction("曲线居中", this, SLOT(rescaleYAxis()));
+      menu->addSeparator();
       menu->addAction("移除所有曲线", this, SLOT(removeAllGraphs()));
     }
   }
