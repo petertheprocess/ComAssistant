@@ -239,17 +239,23 @@ void MainWindow::debugTimerSlot()
     #define BYTE3(dwTemp)   static_cast<char>((*(reinterpret_cast<char *>(&dwTemp) + 3)))
 
     static double count;
-    float num1, num2, num3;
-    num1 = static_cast<float>(qCos(count)+qSin(count/0.4364)*2.5);
-    num2 = static_cast<float>(qSin(count)+qrand()/static_cast<double>(RAND_MAX)*1*qSin(count/0.3843));
-    num3 = static_cast<float>(qCos(count)*1.5-qSin(count/0.4364)*0.5);
+    float num1, num2, num3, num4, num5, num6;
+    num1 = static_cast<float>(qSin(count/0.3843));
+    num2 = static_cast<float>(qCos(count/0.3843));
+    num3 = static_cast<float>(qCos(count/0.6157)+qSin(count/0.3843));
+    num4 = static_cast<float>(qCos(count/0.6157)-qSin(count/0.3843));
+    num5 = static_cast<float>(qSin(count/0.3843)+qrand()/static_cast<double>(RAND_MAX)*1*qSin(count/0.6157));
+    num6 = static_cast<float>(qCos(count/0.3843)+qrand()/static_cast<double>(RAND_MAX)*1*qCos(count/0.6157));
 
     if(ui->actionAscii->isChecked()){
         QString tmp;
         tmp = "{"+QString::number(static_cast<int>(count*10))+":" +
                   QString::number(static_cast<double>(num1),'f') + "," +
                   QString::number(static_cast<double>(num2),'f') + "," +
-                  QString::number(static_cast<double>(num3),'f') + "}" + enter;
+                  QString::number(static_cast<double>(num3),'f') + "," +
+                  QString::number(static_cast<double>(num4),'f') + "," +
+                  QString::number(static_cast<double>(num5),'f') + "," +
+                  QString::number(static_cast<double>(num6),'f') + "}" + enter;
         if(serial.isOpen()){
             serial.write(tmp.toLocal8Bit());
         }
@@ -258,12 +264,14 @@ void MainWindow::debugTimerSlot()
         tmp.append(BYTE0(num1));tmp.append(BYTE1(num1));tmp.append(BYTE2(num1));tmp.append(BYTE3(num1));
         tmp.append(BYTE0(num2));tmp.append(BYTE1(num2));tmp.append(BYTE2(num2));tmp.append(BYTE3(num2));
         tmp.append(BYTE0(num3));tmp.append(BYTE1(num3));tmp.append(BYTE2(num3));tmp.append(BYTE3(num3));
+        tmp.append(BYTE0(num4));tmp.append(BYTE1(num4));tmp.append(BYTE2(num4));tmp.append(BYTE3(num4));
+        tmp.append(BYTE0(num5));tmp.append(BYTE1(num5));tmp.append(BYTE2(num5));tmp.append(BYTE3(num5));
+        tmp.append(BYTE0(num6));tmp.append(BYTE1(num6));tmp.append(BYTE2(num6));tmp.append(BYTE3(num6));
         tmp.append(static_cast<char>(0x00));tmp.append(static_cast<char>(0x00));tmp.append(static_cast<char>(0x80));tmp.append(static_cast<char>(0x7F));
         if(serial.isOpen()){
             serial.write(tmp);
         }
     }
-
 
     if(ui->actionPlotterSwitch->isChecked()||ui->actionValueDisplay->isChecked()){
         count = count + 0.1;
@@ -1416,7 +1424,8 @@ void MainWindow::on_actionFloat_triggered(bool checked)
 void MainWindow::on_actiondebug_triggered(bool checked)
 {
     if(checked){
-        debugTimer.start(50);
+        debugTimer.setTimerType(Qt::PreciseTimer);
+        debugTimer.start(10);
         connect(&debugTimer, SIGNAL(timeout()), this, SLOT(debugTimerSlot()));
     }else{
         debugTimer.stop();

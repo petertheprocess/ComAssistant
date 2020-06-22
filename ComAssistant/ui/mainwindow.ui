@@ -706,8 +706,11 @@ p, li { white-space: pre-wrap; }
    <property name="text">
     <string>绘图测试</string>
    </property>
+   <property name="toolTip">
+    <string>绘图测试</string>
+   </property>
    <property name="statusTip">
-    <string/>
+    <string>该功能会发送数据，你需要短接Tx和Rx</string>
    </property>
    <property name="whatsThis">
     <string/>

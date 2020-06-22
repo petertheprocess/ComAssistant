@@ -199,8 +199,14 @@ inline void DataProtocol::extractPacks(QByteArray &inputArray, QByteArray &restA
         while (tmpArray.indexOf(MAXDATA_AS_END)!=-1) {
             QByteArray before = tmpArray.mid(0,tmpArray.indexOf(MAXDATA_AS_END));
             tmpArray = tmpArray.mid(tmpArray.indexOf(MAXDATA_AS_END)+MAXDATA_AS_END.size());
-            if(before.size()%4==0)
-                packsBuff << before;
+            if(before.size()%4==0){
+                if(toDataPool){
+                    addToDataPool(extractRowData(before));
+                }
+                else{
+                    packsBuff << before;
+                }
+            }
             else
                 qDebug()<<"丢弃数据（长度不是4的倍数）："<<before.toHex().toUpper();
         }
