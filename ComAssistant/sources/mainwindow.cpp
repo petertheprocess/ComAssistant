@@ -1305,12 +1305,18 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
             plotterParasePosInRxBuff = RxBuff.size() - 1;
         }
 
+        if(ui->actionAscii->isChecked())
+            ui->plotter->setTitle("数据可视化：ASCII协议");
+        else if(ui->actionFloat->isChecked())
+            ui->plotter->setTitle("数据可视化：FLOAT协议");
     }else{
         ui->customPlot->hide();
 
         //数值显示器也未勾选时才停止定时器
         if(!ui->actionValueDisplay->isChecked())
             plotterParaseTimer.stop();
+
+        ui->plotter->setTitle("数据可视化");
     }
 }
 
@@ -1410,6 +1416,9 @@ void MainWindow::on_actionAscii_triggered(bool checked)
     protocol->setProtocolType(DataProtocol::Ascii);
     ui->actionAscii->setChecked(true);
     ui->actionFloat->setChecked(false);
+
+    if(ui->actionPlotterSwitch->isChecked())
+        ui->plotter->setTitle("数据可视化：ASCII协议");
 }
 
 void MainWindow::on_actionFloat_triggered(bool checked)
@@ -1419,6 +1428,9 @@ void MainWindow::on_actionFloat_triggered(bool checked)
     protocol->setProtocolType(DataProtocol::Float);
     ui->actionAscii->setChecked(false);
     ui->actionFloat->setChecked(true);
+
+    if(ui->actionPlotterSwitch->isChecked())
+        ui->plotter->setTitle("数据可视化：FLOAT协议");
 }
 
 void MainWindow::on_actiondebug_triggered(bool checked)
@@ -1904,8 +1916,6 @@ void MainWindow::on_textBrowser_customContextMenuRequested(const QPoint &pos)
     saveOriginData = new QAction("保存原始数据", this);
     saveShowedData = new QAction("保存显示数据", this);
     clearTextBrowser = new QAction("清空数据显示区", this);
-    tips = new QAction("提示：Ctrl+A不会全选所有数据！\n"
-                       "     请用保存数据功能。", this);
 
     popMenu->addAction( saveOriginData );
     popMenu->addAction( saveShowedData );
