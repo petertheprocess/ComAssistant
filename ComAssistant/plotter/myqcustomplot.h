@@ -18,6 +18,7 @@
 #include "mytracer.h"
 
 #include <QStatusBar>
+class QCustomPlotControl;
 
 class MyQCustomPlot:public QCustomPlot
 {
@@ -27,8 +28,10 @@ public:
     ~MyQCustomPlot();
 
     MyTracer *m_Tracer; //坐标跟随鼠标
-    void init(QStatusBar* pBar, QCustomPlotControl* control, DataProtocol* proto);
+    void init(QStatusBar* pBar);
     bool saveGraphAsTxt(const QString& filePath, char separate=' ');
+    QCustomPlotControl *plotControl;
+    DataProtocol *protocol;
 
 private slots:
     void axisLabelDoubleClick(QCPAxis* axis, QCPAxis::SelectablePart part);
@@ -47,8 +50,6 @@ private slots:
 
 private:
     QStatusBar* bar;
-    QCustomPlotControl* plotControl;
-    DataProtocol* protocol;
 };
 
 #endif // MYQCUSTOMPLOT_H

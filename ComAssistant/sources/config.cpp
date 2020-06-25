@@ -384,6 +384,22 @@ QString Config::getLastFileDialogPath(){
     return value;
 }
 
+void Config::setGUIFont(QFont font){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_GLOBAL+KEY_GUIFONT, font);
+    delete iniFile;
+}
+QFont Config::getGUIFont(){
+    QFont defaultFont;
+    defaultFont.setFamilies(QStringList()<<"Courier New"<<"Consolas"<<"Microsoft YaHei UI");
+    defaultFont.setPointSize(10);
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    QFont font = qvariant_cast<QFont>(iniFile->value(SECTION_GLOBAL+KEY_GUIFONT, defaultFont));
+    delete iniFile;
+    return font;
+}
+
 //plotter
 void Config::setPlotterState(bool checked){
     createDefaultIfNotExist();

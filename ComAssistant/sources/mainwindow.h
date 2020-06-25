@@ -27,6 +27,7 @@
 //绘图器类
 #include "myqcustomplot.h"
 #include "dataprotocol.h"
+//#include "qcustomplotcontrol.h"
 //自定义类
 #include "myxlsx.h"
 #include "highlighter.h"
@@ -143,6 +144,8 @@ private slots:
 
     void on_actionOpenGL_triggered(bool checked);
 
+    void on_actionFontSetting_triggered();
+
 private:
     bool needSaveConfig = true;
     void readConfig();
@@ -178,8 +181,8 @@ private:
 
     Highlighter *highlighter = nullptr; //高亮器
 
-    DataProtocol* protocol;
-    QCustomPlotControl* plotControl;
+//    DataProtocol* protocol;
+//    QCustomPlotControl* plotControl;
 
     HTTP *http;
 

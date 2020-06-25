@@ -36,6 +36,7 @@ printf("{:%f,%f}\r\n", data1, data2);
   - customplotcontrol定义在mycustomplot里
   - 把UI关系用代码表示出来，不要用Qt Designer了
   - 增加标签页、绘图器、拖出来单独形成窗口，拖进去自动组合。不知道这个功能会不会和上面的互斥？
+  - ui->customPlot->protocol的操作整合到customPlot类中
 
 # 暂时无法实现的功能
   - 图像Y轴只按显示的区域最大值调整：暂时没有合适的方法实现，

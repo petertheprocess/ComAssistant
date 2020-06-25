@@ -33,13 +33,17 @@ MyQCustomPlot::MyQCustomPlot(QWidget* parent)
 MyQCustomPlot::~MyQCustomPlot()
 {
     delete m_Tracer;
+    delete plotControl;
+    delete protocol;
 }
 
-void MyQCustomPlot::init(QStatusBar* pBar, QCustomPlotControl* control, DataProtocol* proto)
+void MyQCustomPlot::init(QStatusBar* pBar)
 {
     bar = pBar;
-    plotControl = control;
-    protocol = proto;
+    plotControl = new QCustomPlotControl;
+    protocol = new DataProtocol;
+
+    plotControl->setupPlotter(this);
 }
 
 /*plotter交互*/

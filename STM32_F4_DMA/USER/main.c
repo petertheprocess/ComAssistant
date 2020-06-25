@@ -123,7 +123,7 @@ int main(void)
 //        printf("%d:%06.2f,%06.2f,%06.2f,%06.2f,%06.2f,%06.2f\n",
 //                (int)(cnt_f*100), sin(cnt_f),cos(cnt_f),1.5*sin(cnt_f),1.5*cos(cnt_f),-1*sin(cnt_f),-1*cos(cnt_f));
         cnt_f += 0.01;
-        delay_ms(100);
+        delay_ms(50);
        i++;
        if(i==20)
        {

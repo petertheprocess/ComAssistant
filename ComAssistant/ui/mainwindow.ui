@@ -465,6 +465,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="actionKeyWordHighlight"/>
     <addaction name="separator"/>
     <addaction name="actionResetDefaultConfig"/>
+    <addaction name="actionFontSetting"/>
    </widget>
    <widget class="QMenu" name="help">
     <property name="title">
@@ -809,6 +810,11 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>GPU加速</string>
+   </property>
+  </action>
+  <action name="actionFontSetting">
+   <property name="text">
+    <string>字体设置</string>
    </property>
   </action>
  </widget>

@@ -9,6 +9,7 @@
 #include <QFile>
 #include <QTextCodec>
 #include <QDateTime>
+#include <QFont>
 
 //保存路径
 #define SAVE_PATH   "ComAssistantConfig.ini"
@@ -34,6 +35,7 @@
 #define KEY_TEXTSENDAREA        QString("TextSendArea")
 #define KEY_LASTFILEDIALOGPATH  QString("LastFileDialogPath")
 #define KEY_TIMESTAMP_TIMEOUT   QString("TimeStampTimeOut")
+#define KEY_GUIFONT             QString("GUIFont")
 
 //serial键
 #define KEY_PORTNAME        QString("PortName")
@@ -150,6 +152,8 @@ public:
     static QString getTextSendArea();
     static void setLastFileDialogPath(QString str);
     static QString getLastFileDialogPath();
+    static void setGUIFont(QFont font);
+    static QFont getGUIFont();
 
     //plotter
     static void setPlotterState(bool checked);

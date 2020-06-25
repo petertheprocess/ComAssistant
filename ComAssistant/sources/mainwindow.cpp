@@ -80,7 +80,7 @@ void MainWindow::readConfig()
     ui->actionValueDisplay->setChecked(Config::getValueDisplayState());
     on_actionValueDisplay_triggered(Config::getValueDisplayState());
     //图像名字集
-    plotControl->setNameSet(ui->customPlot, Config::getPlotterGraphNames(plotControl->getMaxValidGraphNumber()));
+    ui->customPlot->plotControl->setNameSet(ui->customPlot, Config::getPlotterGraphNames(ui->customPlot->plotControl->getMaxValidGraphNumber()));
     //OpenGL
     ui->actionOpenGL->setChecked(Config::getOpengGLState());
 }
@@ -123,13 +123,8 @@ MainWindow::MainWindow(QWidget *parent) :
     //加载高亮规则
     on_actionKeyWordHighlight_triggered(ui->actionKeyWordHighlight->isChecked());
 
-    //初始化协议栈
-    protocol = new DataProtocol;
-
     //初始化绘图控制器
-    plotControl = new QCustomPlotControl;
-    plotControl->setupPlotter(ui->customPlot);
-    ui->customPlot->init(ui->statusBar, plotControl, protocol);
+    ui->customPlot->init(ui->statusBar);
 
     //http
     http = new HTTP(this);
@@ -159,9 +154,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QString style = file.readAll();
     file.close();
     this->setStyleSheet(style);
-    QFont font;
-    font.setFamilies(QStringList()<<"Courier New"<<"Consolas"<<"Microsoft YaHei UI");
-    font.setPointSize(10);
+    QFont font = Config::getGUIFont();
     ui->customPlot->legend->setFont(font);
     ui->customPlot->legend->setSelectedFont(font);
     ui->customPlot->xAxis->setTickLabelFont(font);
@@ -311,6 +304,7 @@ MainWindow::~MainWindow()
         }
         Config::setMultiString(multi);
         Config::setLastFileDialogPath(lastFileDialogPath);
+        Config::setGUIFont(this->font());
 
         //serial 只保存成功打开过的
         Config::setPortName(serial.portName());
@@ -326,7 +320,7 @@ MainWindow::~MainWindow()
             Config::setPlotterType(ProtocolType_e::Ascii);
         else
             Config::setPlotterType(ProtocolType_e::Float);
-        Config::setPlotterGraphNames(plotControl->getNameSetsFromPlot());
+        Config::setPlotterGraphNames(ui->customPlot->plotControl->getNameSetsFromPlot());
         Config::setXAxisName(ui->customPlot->xAxis->label());
         Config::setYAxisName(ui->customPlot->yAxis->label());
         Config::setValueDisplayState(ui->actionValueDisplay->isChecked());
@@ -343,8 +337,8 @@ MainWindow::~MainWindow()
     }else{
         Config::writeDefault();
     }
-    delete plotControl;
-    delete protocol;
+//    delete plotControl;
+//    delete protocol;
     delete highlighter;
     delete ui;
     delete http;
@@ -781,13 +775,13 @@ void MainWindow::on_clearWindows_clicked()
     paraseFileBuffIndex = 0;
 
     //绘图器相关
-    protocol->clearBuff();
-    plotControl->clearPlotter(ui->customPlot, -1);
+    ui->customPlot->protocol->clearBuff();
+    ui->customPlot->plotControl->clearPlotter(ui->customPlot, -1);
     while(ui->customPlot->graphCount()>1){
         ui->customPlot->removeGraph(ui->customPlot->graphCount()-1);
     }
     ui->customPlot->yAxis->setRange(0,5);
-    ui->customPlot->xAxis->setRange(0, plotControl->getXAxisLength(), Qt::AlignRight);
+    ui->customPlot->xAxis->setRange(0, ui->customPlot->plotControl->getXAxisLength(), Qt::AlignRight);
     ui->customPlot->replot();
     plotterParasePosInRxBuff = 0;
 
@@ -1348,17 +1342,17 @@ void MainWindow::plotterParaseTimerSlot()
     //关定时器，防止数据量过大导致咬尾振荡
     plotterParaseTimer.stop();
     //添加解析长度限制，防止数据量过大振荡
-    parasedLength = protocol->parase(RxBuff, plotterParasePosInRxBuff, maxParaseLengthLimit);
+    parasedLength = ui->customPlot->protocol->parase(RxBuff, plotterParasePosInRxBuff, maxParaseLengthLimit);
     plotterParasePosInRxBuff += parasedLength;
 
     //数据填充
-    while(protocol->parasedBuffSize()>0){
+    while(ui->customPlot->protocol->parasedBuffSize()>0){
 
-        oneRowData = protocol->popOneRowData();
+        oneRowData = ui->customPlot->protocol->popOneRowData();
         //绘图显示器
         if(ui->actionPlotterSwitch->isChecked()){
             //关闭刷新，数据全部填充完后统一刷新
-            if(false == plotControl->displayToPlotter(ui->customPlot, oneRowData, false, false))
+            if(false == ui->customPlot->plotControl->displayToPlotter(ui->customPlot, oneRowData, false, false))
                 ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
         }
 
@@ -1383,10 +1377,10 @@ void MainWindow::plotterParaseTimerSlot()
             ui->valueDisplay->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
         }
         //添加数据
-        int min = oneRowData.size() < plotControl->getNameSetsFromPlot().size() ? oneRowData.size() : plotControl->getNameSetsFromPlot().size();
+        int min = oneRowData.size() < ui->customPlot->plotControl->getNameSetsFromPlot().size() ? oneRowData.size() : ui->customPlot->plotControl->getNameSetsFromPlot().size();
         for(int i=0; i < min; i++){
             //这里会重复new对象导致内存溢出吗
-            ui->valueDisplay->setItem(i,0,new QTableWidgetItem(plotControl->getNameSetsFromPlot().at(i)));
+            ui->valueDisplay->setItem(i,0,new QTableWidgetItem(ui->customPlot->plotControl->getNameSetsFromPlot().at(i)));
             ui->valueDisplay->setItem(i,1,new QTableWidgetItem(QString::number(oneRowData.at(i),'f')));
             //不可编辑
             ui->valueDisplay->item(i,0)->setFlags(ui->valueDisplay->item(i,0)->flags() & (~Qt::ItemIsEditable));
@@ -1421,8 +1415,8 @@ void MainWindow::plotterParaseTimerSlot()
 void MainWindow::on_actionAscii_triggered(bool checked)
 {
     checked = !!checked;
-    protocol->clearBuff();
-    protocol->setProtocolType(DataProtocol::Ascii);
+    ui->customPlot->protocol->clearBuff();
+    ui->customPlot->protocol->setProtocolType(DataProtocol::Ascii);
     ui->actionAscii->setChecked(true);
     ui->actionFloat->setChecked(false);
 
@@ -1433,8 +1427,8 @@ void MainWindow::on_actionAscii_triggered(bool checked)
 void MainWindow::on_actionFloat_triggered(bool checked)
 {
     checked = !!checked;
-    protocol->clearBuff();
-    protocol->setProtocolType(DataProtocol::Float);
+    ui->customPlot->protocol->clearBuff();
+    ui->customPlot->protocol->setProtocolType(DataProtocol::Float);
     ui->actionAscii->setChecked(false);
     ui->actionFloat->setChecked(true);
 
@@ -1511,7 +1505,7 @@ void MainWindow::on_actionLinePlot_triggered()
     ui->actionLinePlot->setChecked(true);
     ui->actionScatterLinePlot->setChecked(false);
     ui->actionScatterPlot->setChecked(false);
-    plotControl->setupLineType(ui->customPlot, QCustomPlotControl::Line);
+    ui->customPlot->plotControl->setupLineType(ui->customPlot, QCustomPlotControl::Line);
 }
 
 void MainWindow::on_actionScatterLinePlot_triggered()
@@ -1519,7 +1513,7 @@ void MainWindow::on_actionScatterLinePlot_triggered()
     ui->actionLinePlot->setChecked(false);
     ui->actionScatterLinePlot->setChecked(true);
     ui->actionScatterPlot->setChecked(false);
-    plotControl->setupLineType(ui->customPlot, QCustomPlotControl::ScatterLine);
+    ui->customPlot->plotControl->setupLineType(ui->customPlot, QCustomPlotControl::ScatterLine);
 }
 
 void MainWindow::on_actionScatterPlot_triggered()
@@ -1527,7 +1521,7 @@ void MainWindow::on_actionScatterPlot_triggered()
     ui->actionLinePlot->setChecked(false);
     ui->actionScatterLinePlot->setChecked(false);
     ui->actionScatterPlot->setChecked(true);
-    plotControl->setupLineType(ui->customPlot, QCustomPlotControl::Scatter);
+    ui->customPlot->plotControl->setupLineType(ui->customPlot, QCustomPlotControl::Scatter);
 }
 
 void MainWindow::on_actionResetDefaultConfig_triggered(bool checked)
@@ -2025,4 +2019,27 @@ void MainWindow::on_actionOpenGL_triggered(bool checked)
         ui->customPlot->setOpenGl(false);
     }
     ui->customPlot->replot();
+}
+
+void MainWindow::on_actionFontSetting_triggered()
+{
+    QFont font;
+    font = QFontDialog::getFont(nullptr, this);
+    this->setFont(font);
+    ui->customPlot->legend->setFont(font);
+    ui->customPlot->legend->setSelectedFont(font);
+    ui->customPlot->xAxis->setTickLabelFont(font);
+    ui->customPlot->xAxis->setSelectedTickLabelFont(font);
+    ui->customPlot->xAxis->setSelectedLabelFont(font);
+    ui->customPlot->xAxis->setLabelFont(font);
+    ui->customPlot->yAxis->setTickLabelFont(font);
+    ui->customPlot->yAxis->setSelectedTickLabelFont(font);
+    ui->customPlot->yAxis->setSelectedLabelFont(font);
+    ui->customPlot->yAxis->setLabelFont(font);
+    ui->customPlot->yAxis2->setTickLabelFont(font);
+    ui->customPlot->yAxis2->setSelectedTickLabelFont(font);
+    ui->customPlot->yAxis2->setSelectedLabelFont(font);
+    ui->customPlot->yAxis2->setLabelFont(font);
+    ui->customPlot->m_Tracer->setLabelFont(font);
+    qDebug()<<font.family()<<font.pointSize();
 }
