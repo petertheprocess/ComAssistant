@@ -145,6 +145,8 @@ private slots:
 
     void on_actionFontSetting_triggered();
 
+    void on_actionBackGroundColorSetting_triggered();
+
 private:
     bool needSaveConfig = true;
     void readConfig();

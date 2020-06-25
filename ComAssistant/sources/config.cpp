@@ -400,6 +400,20 @@ QFont Config::getGUIFont(){
     return font;
 }
 
+void Config::setBackGroundColor(QColor color){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_GLOBAL+KEY_BACKGROUNDCOLOR, color);
+    delete iniFile;
+}
+QColor Config::getBackGroundColor(){
+    QColor defaultColor;
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    QColor color = qvariant_cast<QColor>(iniFile->value(SECTION_GLOBAL+KEY_BACKGROUNDCOLOR, defaultColor));
+    delete iniFile;
+    return color;
+}
+
 //plotter
 void Config::setPlotterState(bool checked){
     createDefaultIfNotExist();

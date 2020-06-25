@@ -466,6 +466,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="separator"/>
     <addaction name="actionResetDefaultConfig"/>
     <addaction name="actionFontSetting"/>
+    <addaction name="actionBackGroundColorSetting"/>
    </widget>
    <widget class="QMenu" name="help">
     <property name="title">
@@ -815,6 +816,11 @@ p, li { white-space: pre-wrap; }
   <action name="actionFontSetting">
    <property name="text">
     <string>字体设置</string>
+   </property>
+  </action>
+  <action name="actionBackGroundColorSetting">
+   <property name="text">
+    <string>背景色设置</string>
    </property>
   </action>
  </widget>

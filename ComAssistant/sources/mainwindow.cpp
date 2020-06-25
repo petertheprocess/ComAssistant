@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+static QColor g_background_color;
+static QFont g_font;
 /*
  * Function:读取配置
 */
@@ -62,6 +64,23 @@ void MainWindow::readConfig()
     //文本发送区，不能放在hex发送前面
     ui->textEdit->setText(Config::getTextSendArea());
     ui->textEdit->moveCursor(QTextCursor::End);
+    //背景色
+    int r,g,b;
+    QColor color = Config::getBackGroundColor();
+    if(color.isValid()){
+        g_background_color = color;
+        g_background_color.getRgb(&r,&g,&b);
+    }else{
+        r=g=b=255;
+        g_background_color.setRed(r);
+        g_background_color.setGreen(g);
+        g_background_color.setBlue(b);
+    }
+    QString str = "background-color: rgb(RGBR,RGBG,RGBB);";
+    str.replace("RGBR", QString::number(r));
+    str.replace("RGBG", QString::number(g));
+    str.replace("RGBB", QString::number(b));
+    ui->textBrowser->setStyleSheet(str);
 
     //绘图器开关
     ui->actionPlotterSwitch->setChecked(Config::getPlotterState());
@@ -154,12 +173,11 @@ MainWindow::MainWindow(QWidget *parent) :
     QString style = file.readAll();
     file.close();
     this->setStyleSheet(style);
-    QFont font = Config::getGUIFont();
-    ui->textBrowser->setFont(font);
-    ui->textEdit->setFont(font);
-    ui->multiString->setFont(font);
-    ui->customPlot->plotControl->setupFont(ui->customPlot, font);
-    qDebug()<<font.families()<<font.pointSize();
+    g_font = Config::getGUIFont();
+    ui->textBrowser->setFont(g_font);
+    ui->textEdit->setFont(g_font);
+    ui->multiString->setFont(g_font);
+    ui->customPlot->plotControl->setupFont(ui->customPlot, g_font);
 
     this->setWindowTitle("串口调试助手 V"+Config::getVersion());
 
@@ -294,7 +312,8 @@ MainWindow::~MainWindow()
         }
         Config::setMultiString(multi);
         Config::setLastFileDialogPath(lastFileDialogPath);
-        Config::setGUIFont(ui->textBrowser->font());
+        Config::setGUIFont(g_font);
+        Config::setBackGroundColor(g_background_color);
 
         //serial 只保存成功打开过的
         Config::setPortName(serial.portName());
@@ -1999,7 +2018,6 @@ void MainWindow::on_timeStampTimeOut_textChanged(const QString &arg1)
 
 void MainWindow::on_actionOpenGL_triggered(bool checked)
 {
-    QFont font;
     if(checked){
         ui->customPlot->setOpenGl(true);
     }
@@ -2011,10 +2029,31 @@ void MainWindow::on_actionOpenGL_triggered(bool checked)
 
 void MainWindow::on_actionFontSetting_triggered()
 {
-    QFont font;
-    font = QFontDialog::getFont(nullptr, this);
-    ui->textBrowser->setFont(font);
-    ui->textEdit->setFont(font);
-    ui->multiString->setFont(font);
-    ui->customPlot->plotControl->setupFont(ui->customPlot, font);
+    bool ok;
+    g_font = QFontDialog::getFont(&ok, this);
+    if(ok){
+        ui->textBrowser->setFont(g_font);
+        ui->textEdit->setFont(g_font);
+        ui->multiString->setFont(g_font);
+        ui->customPlot->plotControl->setupFont(ui->customPlot, g_font);
+    }
+}
+
+void MainWindow::on_actionBackGroundColorSetting_triggered()
+{
+    QColor color;
+    color = QColorDialog::getColor(Qt::white, this,
+                                          tr("颜色对话框"),
+                                          QColorDialog::ShowAlphaChannel);
+    if(!color.isValid())
+        return;
+
+    int r,g,b;
+    g_background_color = color;
+    g_background_color.getRgb(&r,&g,&b);
+    QString str = "background-color: rgb(RGBR,RGBG,RGBB);";
+    str.replace("RGBR", QString::number(r));
+    str.replace("RGBG", QString::number(g));
+    str.replace("RGBB", QString::number(b));
+    ui->textBrowser->setStyleSheet(str);
 }

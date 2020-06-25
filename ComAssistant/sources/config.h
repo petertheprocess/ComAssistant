@@ -10,6 +10,7 @@
 #include <QTextCodec>
 #include <QDateTime>
 #include <QFont>
+#include <QColor>
 
 //保存路径
 #define SAVE_PATH   "ComAssistantConfig.ini"
@@ -36,6 +37,7 @@
 #define KEY_LASTFILEDIALOGPATH  QString("LastFileDialogPath")
 #define KEY_TIMESTAMP_TIMEOUT   QString("TimeStampTimeOut")
 #define KEY_GUIFONT             QString("GUIFont")
+#define KEY_BACKGROUNDCOLOR     QString("BackGroudColor")
 
 //serial键
 #define KEY_PORTNAME        QString("PortName")
@@ -154,6 +156,8 @@ public:
     static QString getLastFileDialogPath();
     static void setGUIFont(QFont font);
     static QFont getGUIFont();
+    static void setBackGroundColor(QColor color);
+    static QColor getBackGroundColor();
 
     //plotter
     static void setPlotterState(bool checked);
