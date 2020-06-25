@@ -98,8 +98,8 @@ Highlighter::Highlighter(QTextDocument *parent)
     keywordPatterns.clear();
     keywordPatterns << "\\b[\\+-]?\\d+\\.?\\d*\\b"
                     << "\\b[0-9a-fA-F]{2}\\b"
-                    << "\\b0x[0-9a-fA-F]{2}\\b"
-                    << "\\b0X[0-9a-fA-F]{2}\\b";
+                    << "\\b0x[0-9a-fA-F]{1,}\\b"
+                    << "\\b0X[0-9a-fA-F]{1,}\\b";
     keywordFormat.setFontWeight(QFont::Normal);
     keywordFormat.setForeground(Qt::darkMagenta);
     foreach (const QString &pattern, keywordPatterns) {

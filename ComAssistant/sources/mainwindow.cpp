@@ -1455,18 +1455,22 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
         //翻到顶部了，加载更多内容
         if(value == 0 && res){
 
-            if(BrowserBuffIndex+PAGING_SIZE < BrowserBuff.size()){
-                BrowserBuffIndex = BrowserBuffIndex +PAGING_SIZE;
-            }
-            else{
-                BrowserBuffIndex = BrowserBuff.size();
-            }
-            if(hexBrowserBuffIndex+PAGING_SIZE < hexBrowserBuff.size()){
-                hexBrowserBuffIndex = hexBrowserBuffIndex +PAGING_SIZE;
-            }
-            else{
-                hexBrowserBuffIndex = hexBrowserBuff.size();
-            }
+            //直接显示全部
+            BrowserBuffIndex = BrowserBuff.size();
+            hexBrowserBuffIndex = hexBrowserBuff.size();
+            //显示内容指数型增加
+//            if(BrowserBuffIndex*2 < BrowserBuff.size()){
+//                BrowserBuffIndex = BrowserBuffIndex*2;
+//            }
+//            else{
+//                BrowserBuffIndex = BrowserBuff.size();
+//            }
+//            if(hexBrowserBuffIndex*2 < hexBrowserBuff.size()){
+//                hexBrowserBuffIndex = hexBrowserBuffIndex*2;
+//            }
+//            else{
+//                hexBrowserBuffIndex = hexBrowserBuff.size();
+//            }
 
             if(ui->hexDisplay->isChecked()){
                 ui->textBrowser->setText(hexBrowserBuff.mid(hexBrowserBuff.size() - hexBrowserBuffIndex));
