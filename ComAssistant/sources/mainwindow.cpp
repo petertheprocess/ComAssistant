@@ -490,10 +490,10 @@ void MainWindow::readSerialPort()
 //    }
 
     //收到数据且时间戳超时则可以添加新的时间戳和换行
-    if(ui->timeStampCheckBox->isChecked() && timeStampTimer.isActive()==false){
-        timeStampTimer.setSingleShot(true);
-        timeStampTimer.start(ui->timeStampTimeOut->text().toInt());
-    }
+//    if(ui->timeStampCheckBox->isChecked() && timeStampTimer.isActive()==false){
+//        timeStampTimer.setSingleShot(true);
+//        timeStampTimer.start(ui->timeStampTimeOut->text().toInt());
+//    }
 
     //速度统计，不能和下面的互换，否则不准确
     statisticRxByteCnt += tmpReadBuff.size();
@@ -532,14 +532,19 @@ void MainWindow::readSerialPort()
     }
 
     //时间戳选项
-    if(ui->timeStampCheckBox->isChecked()){
+    if(ui->timeStampCheckBox->isChecked() && timeStampTimer.isActive()==false){
         //hex解析
         hexBrowserBuff.append(timeString + toHexDisplay(tmpReadBuff).toLatin1());//换行符在前面判断没有数据时自动追加一次
-        //asic解析，显示的数据一律不要\r
+        //asic解析，显示的数据一律不要\r。且进行\0显示的检查
         while(tmpReadBuff.indexOf("\r\n")!=-1){
             tmpReadBuff.replace("\r\n","\n");
         }
+        while(tmpReadBuff.indexOf('\0')!=-1){
+            tmpReadBuff.replace('\0',"\\0");
+        }
         BrowserBuff.append(timeString + QString::fromLocal8Bit(tmpReadBuff));//换行符在前面判断没有数据时自动追加一次
+        timeStampTimer.setSingleShot(true);
+        timeStampTimer.start(ui->timeStampTimeOut->text().toInt());
     }else{
         //hex解析
         hexBrowserBuff.append(toHexDisplay(tmpReadBuff).toLatin1());
