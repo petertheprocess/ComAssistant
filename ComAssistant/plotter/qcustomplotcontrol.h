@@ -11,6 +11,7 @@
 #include "axistag.h"
 
 using namespace std;
+class MyQCustomPlot;
 
 class QCustomPlotControl
 {
@@ -34,7 +35,7 @@ public:
     //把数据显示到绘图器上
     bool displayToPlotter(QCustomPlot* customPlot, const QVector<double>& rowData, bool refresh, bool rescaleY);
 //    设置字体
-//    void setupFont(MyQCustomPlot* customPlot, QFont &font);
+    void setupFont(MyQCustomPlot* customPlot, QFont font);
     //设置openGL
     void setupOpenGL(QCustomPlot* customPlot, bool enabled);
     //设置笔宽度

@@ -68,7 +68,7 @@ QLabel{
 }
 
 /* 显示区 */
-QListWidget{
+/*QListWidget{
   font-family: Courier New, Consolas, Microsoft YaHei UI;
   font-size: 10pt;
 }
@@ -83,4 +83,4 @@ QTextBrowser{
 QTableWidget{
   font-family: Courier New, Consolas, Microsoft YaHei UI;
   font-size: 10pt;
-}
+}*/

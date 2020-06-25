@@ -27,7 +27,6 @@
 //绘图器类
 #include "myqcustomplot.h"
 #include "dataprotocol.h"
-//#include "qcustomplotcontrol.h"
 //自定义类
 #include "myxlsx.h"
 #include "highlighter.h"
@@ -180,9 +179,6 @@ private:
     QString lastFileDialogPath; //上次文件对话框路径
 
     Highlighter *highlighter = nullptr; //高亮器
-
-//    DataProtocol* protocol;
-//    QCustomPlotControl* plotControl;
 
     HTTP *http;
 

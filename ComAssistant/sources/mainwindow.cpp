@@ -155,21 +155,11 @@ MainWindow::MainWindow(QWidget *parent) :
     file.close();
     this->setStyleSheet(style);
     QFont font = Config::getGUIFont();
-    ui->customPlot->legend->setFont(font);
-    ui->customPlot->legend->setSelectedFont(font);
-    ui->customPlot->xAxis->setTickLabelFont(font);
-    ui->customPlot->xAxis->setSelectedTickLabelFont(font);
-    ui->customPlot->xAxis->setSelectedLabelFont(font);
-    ui->customPlot->xAxis->setLabelFont(font);
-    ui->customPlot->yAxis->setTickLabelFont(font);
-    ui->customPlot->yAxis->setSelectedTickLabelFont(font);
-    ui->customPlot->yAxis->setSelectedLabelFont(font);
-    ui->customPlot->yAxis->setLabelFont(font);
-    ui->customPlot->yAxis2->setTickLabelFont(font);
-    ui->customPlot->yAxis2->setSelectedTickLabelFont(font);
-    ui->customPlot->yAxis2->setSelectedLabelFont(font);
-    ui->customPlot->yAxis2->setLabelFont(font);
-    ui->customPlot->m_Tracer->setLabelFont(font);
+    ui->textBrowser->setFont(font);
+    ui->textEdit->setFont(font);
+    ui->multiString->setFont(font);
+    ui->customPlot->plotControl->setupFont(ui->customPlot, font);
+    qDebug()<<font.families()<<font.pointSize();
 
     this->setWindowTitle("串口调试助手 V"+Config::getVersion());
 
@@ -304,7 +294,7 @@ MainWindow::~MainWindow()
         }
         Config::setMultiString(multi);
         Config::setLastFileDialogPath(lastFileDialogPath);
-        Config::setGUIFont(this->font());
+        Config::setGUIFont(ui->textBrowser->font());
 
         //serial 只保存成功打开过的
         Config::setPortName(serial.portName());
@@ -337,8 +327,6 @@ MainWindow::~MainWindow()
     }else{
         Config::writeDefault();
     }
-//    delete plotControl;
-//    delete protocol;
     delete highlighter;
     delete ui;
     delete http;
@@ -2025,21 +2013,8 @@ void MainWindow::on_actionFontSetting_triggered()
 {
     QFont font;
     font = QFontDialog::getFont(nullptr, this);
-    this->setFont(font);
-    ui->customPlot->legend->setFont(font);
-    ui->customPlot->legend->setSelectedFont(font);
-    ui->customPlot->xAxis->setTickLabelFont(font);
-    ui->customPlot->xAxis->setSelectedTickLabelFont(font);
-    ui->customPlot->xAxis->setSelectedLabelFont(font);
-    ui->customPlot->xAxis->setLabelFont(font);
-    ui->customPlot->yAxis->setTickLabelFont(font);
-    ui->customPlot->yAxis->setSelectedTickLabelFont(font);
-    ui->customPlot->yAxis->setSelectedLabelFont(font);
-    ui->customPlot->yAxis->setLabelFont(font);
-    ui->customPlot->yAxis2->setTickLabelFont(font);
-    ui->customPlot->yAxis2->setSelectedTickLabelFont(font);
-    ui->customPlot->yAxis2->setSelectedLabelFont(font);
-    ui->customPlot->yAxis2->setLabelFont(font);
-    ui->customPlot->m_Tracer->setLabelFont(font);
-    qDebug()<<font.family()<<font.pointSize();
+    ui->textBrowser->setFont(font);
+    ui->textEdit->setFont(font);
+    ui->multiString->setFont(font);
+    ui->customPlot->plotControl->setupFont(ui->customPlot, font);
 }

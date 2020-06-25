@@ -210,24 +210,24 @@ void QCustomPlotControl::clearPlotter(QCustomPlot* customPlot, int index)
     customPlot->replot();
 }
 
-//void QCustomPlotControl::setupFont(MyQCustomPlot* customPlot, QFont &font)
-//{
-//    customPlot->legend->setFont(font);
-//    customPlot->legend->setSelectedFont(font);
-//    customPlot->xAxis->setTickLabelFont(font);
-//    customPlot->xAxis->setSelectedTickLabelFont(font);
-//    customPlot->xAxis->setSelectedLabelFont(font);
-//    customPlot->xAxis->setLabelFont(font);
-//    customPlot->yAxis->setTickLabelFont(font);
-//    customPlot->yAxis->setSelectedTickLabelFont(font);
-//    customPlot->yAxis->setSelectedLabelFont(font);
-//    customPlot->yAxis->setLabelFont(font);
-//    customPlot->yAxis2->setTickLabelFont(font);
-//    customPlot->yAxis2->setSelectedTickLabelFont(font);
-//    customPlot->yAxis2->setSelectedLabelFont(font);
-//    customPlot->yAxis2->setLabelFont(font);
-//    customPlot->m_Tracer->setLabelFont(font);
-//}
+void QCustomPlotControl::setupFont(MyQCustomPlot* customPlot, QFont font)
+{
+    customPlot->legend->setFont(font);
+    customPlot->legend->setSelectedFont(font);
+    customPlot->xAxis->setTickLabelFont(font);
+    customPlot->xAxis->setSelectedTickLabelFont(font);
+    customPlot->xAxis->setSelectedLabelFont(font);
+    customPlot->xAxis->setLabelFont(font);
+    customPlot->yAxis->setTickLabelFont(font);
+    customPlot->yAxis->setSelectedTickLabelFont(font);
+    customPlot->yAxis->setSelectedLabelFont(font);
+    customPlot->yAxis->setLabelFont(font);
+    customPlot->yAxis2->setTickLabelFont(font);
+    customPlot->yAxis2->setSelectedTickLabelFont(font);
+    customPlot->yAxis2->setSelectedLabelFont(font);
+    customPlot->yAxis2->setLabelFont(font);
+    customPlot->m_Tracer->setLabelFont(font);
+}
 
 void QCustomPlotControl::setupOpenGL(QCustomPlot* customPlot, bool enabled)
 {
