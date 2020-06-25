@@ -561,7 +561,7 @@ void MainWindow::readSerialPort()
     //更新收发统计
     statusStatisticLabel->setText(serial.getTxRxString());
 
-    //主动触发数据刷新
+    //允许数据刷新
     RefreshTextBrowser = true;
 }
 
