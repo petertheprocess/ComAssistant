@@ -10,6 +10,11 @@ QT       += serialport
 QT       += network
 # 支持xlsx操作
 QT       += gui-private
+# 支持OpenGL
+DEFINES += QCUSTOMPLOT_USE_OPENGL
+LIBS += -lOpengl32 \
+        -lglu32
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = ComAssistant

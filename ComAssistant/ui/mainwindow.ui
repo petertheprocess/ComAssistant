@@ -14,9 +14,9 @@
    <string>串口调试助手</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QGridLayout" name="gridLayout" rowstretch="0,15,1">
+   <layout class="QGridLayout" name="gridLayout" rowstretch="1,18,1" columnstretch="0" rowminimumheight="0,0,0">
     <item row="0" column="0">
-     <layout class="QHBoxLayout" name="horizontalLayout_0" stretch="1,0,0,0">
+     <layout class="QHBoxLayout" name="horizontalLayout_info" stretch="1,0,0,0">
       <item>
        <widget class="QComboBox" name="comList">
         <property name="sizePolicy">
@@ -171,7 +171,7 @@
      </layout>
     </item>
     <item row="2" column="0">
-     <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="75,10,25">
+     <layout class="QHBoxLayout" name="horizontalLayout_input" stretch="75,15,25">
       <item>
        <widget class="QTextEdit" name="textEdit">
         <property name="font">
@@ -307,7 +307,7 @@ p, li { white-space: pre-wrap; }
        </layout>
       </item>
       <item>
-       <layout class="QGridLayout" name="gridLayout_2" rowstretch="2,1">
+       <layout class="QGridLayout" name="gridLayout_2" rowstretch="5,2">
         <item row="1" column="0">
          <widget class="QPushButton" name="clearWindows">
           <property name="sizePolicy">
@@ -507,23 +507,30 @@ p, li { white-space: pre-wrap; }
      <addaction name="actionAscii"/>
      <addaction name="actionFloat"/>
     </widget>
-    <widget class="QMenu" name="lineStyle">
+    <widget class="QMenu" name="setting">
      <property name="title">
-      <string>线型</string>
+      <string>设置</string>
      </property>
-     <addaction name="actionLinePlot"/>
-     <addaction name="actionScatterLinePlot"/>
-     <addaction name="actionScatterPlot"/>
+     <widget class="QMenu" name="lineStyle_2">
+      <property name="title">
+       <string>线型</string>
+      </property>
+      <addaction name="actionLinePlot"/>
+      <addaction name="actionScatterLinePlot"/>
+      <addaction name="actionScatterPlot"/>
+     </widget>
+     <addaction name="lineStyle_2"/>
+     <addaction name="actionAutoRefreshYAxis"/>
+     <addaction name="actionOpenGL"/>
+     <addaction name="separator"/>
     </widget>
     <addaction name="actionPlotterSwitch"/>
-    <addaction name="lineStyle"/>
-    <addaction name="actionAutoRefreshYAxis"/>
+    <addaction name="setting"/>
     <addaction name="separator"/>
     <addaction name="actionValueDisplay"/>
     <addaction name="separator"/>
     <addaction name="protocol"/>
     <addaction name="separator"/>
-    <addaction name="actiondebug"/>
    </widget>
    <addaction name="file"/>
    <addaction name="function"/>
@@ -794,6 +801,14 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>自动刷新Y轴</string>
+   </property>
+  </action>
+  <action name="actionOpenGL">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>GPU加速</string>
    </property>
   </action>
  </widget>

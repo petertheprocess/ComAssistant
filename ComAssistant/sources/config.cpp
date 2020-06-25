@@ -486,6 +486,19 @@ bool Config::getValueDisplayState(){
     return value;
 }
 
+void Config::setOpengGLState(bool isOn){
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_PLOTTER+KEY_OPENGLSTATE, isOn);
+    delete iniFile;
+}
+bool Config::getOpengGLState(){
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    bool value = iniFile->value(SECTION_PLOTTER+KEY_OPENGLSTATE, false).toBool();
+    delete iniFile;
+    return value;
+}
+
 //static
 void Config::setStartTime(QString time){
     createDefaultIfNotExist();

@@ -81,6 +81,8 @@ void MainWindow::readConfig()
     on_actionValueDisplay_triggered(Config::getValueDisplayState());
     //图像名字集
     plotControl->setNameSet(ui->customPlot, Config::getPlotterGraphNames(plotControl->getMaxValidGraphNumber()));
+    //OpenGL
+    ui->actionOpenGL->setChecked(Config::getOpengGLState());
 }
 
 
@@ -328,6 +330,7 @@ MainWindow::~MainWindow()
         Config::setXAxisName(ui->customPlot->xAxis->label());
         Config::setYAxisName(ui->customPlot->yAxis->label());
         Config::setValueDisplayState(ui->actionValueDisplay->isChecked());
+        Config::setOpengGLState(ui->actionOpenGL->isChecked());
 
         //static
         Config::setLastRunTime(currentRunTime);
@@ -577,6 +580,7 @@ void MainWindow::paraseFileSlot()
     }
 }
 
+static int PAGING_SIZE = 4068 * 2; //TextBrowser分页显示大小，这个值正好满屏显示
 void MainWindow::printToTextBrowser()
 {
     //估计当前窗口可显示多少字符
@@ -2004,4 +2008,16 @@ void MainWindow::on_timeStampTimeOut_textChanged(const QString &arg1)
 {
     timeStampTimer.setSingleShot(true);
     timeStampTimer.start(arg1.toInt());
+}
+
+void MainWindow::on_actionOpenGL_triggered(bool checked)
+{
+    QFont font;
+    if(checked){
+        ui->customPlot->setOpenGl(true);
+    }
+    else{
+        ui->customPlot->setOpenGl(false);
+    }
+    ui->customPlot->replot();
 }

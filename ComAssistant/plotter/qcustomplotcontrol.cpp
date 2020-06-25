@@ -210,6 +210,11 @@ void QCustomPlotControl::clearPlotter(QCustomPlot* customPlot, int index)
     customPlot->replot();
 }
 
+void QCustomPlotControl::setupOpenGL(QCustomPlot* customPlot, bool enabled)
+{
+    customPlot->setOpenGl(enabled);
+}
+
 void QCustomPlotControl::setupPenWidth(QCustomPlot* customPlot, double width)
 {
     for(int i = 0; i < customPlot->graphCount(); i++){
@@ -428,7 +433,8 @@ void QCustomPlotControl::setupPlotter(QCustomPlot* customPlot)
     for(int i = 0; i < customPlot->graphCount(); i++){
         customPlot->graph(0)->setAdaptiveSampling(true);
     }
-
+    //设置OpenGL
+    setupOpenGL(customPlot,false);
     //设置画笔
     setupPenWidth(customPlot);
     //设置轴间隔

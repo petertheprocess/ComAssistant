@@ -54,6 +54,7 @@
 #define KEY_XAXISNAME           QString("XAxisName")
 #define KEY_YAXISNAME           QString("YAxisName")
 #define KEY_VALUEDISPLAYSTATE   QString("ValueDisplayState")
+#define KEY_OPENGLSTATE         QString("OpenGLState")
 //#define KEY_LINETYPE            QString("LineType")
 //#define KEY_XRANGELENGH         QString("xRangeLength")
 
@@ -163,6 +164,8 @@ public:
     static QString getYAxisName();
     static void setValueDisplayState(bool isOn);
     static bool getValueDisplayState();
+    static void setOpengGLState(bool isOn);
+    static bool getOpengGLState();
 
     //static
     static void setStartTime(QString time);
