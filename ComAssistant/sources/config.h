@@ -92,7 +92,9 @@ enum EnterStyle_e{
 
 enum ProtocolType_e{
     Ascii = 0,
-    Float = 1
+    Ascii_SumCheck,
+    Float,
+    Float_SumCheck,
 };
 
 extern int32_t version_to_number(QString str);

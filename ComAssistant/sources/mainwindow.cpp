@@ -1,8 +1,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-static QColor g_background_color;
-static QFont g_font;
+static QColor   g_background_color;
+static QFont    g_font;
+static bool     g_enableSumCheck;
 /*
  * Function:读取配置
 */
@@ -91,6 +92,8 @@ void MainWindow::readConfig()
         on_actionAscii_triggered(true);
     }else if(Config::getPlotterType()==ProtocolType_e::Float){
         on_actionFloat_triggered(true);
+    }else if(Config::getPlotterType()==ProtocolType_e::Ascii_SumCheck){
+        on_actionSumCheck_triggered(true);
     }
     //轴标签
     ui->customPlot->xAxis->setLabel(Config::getXAxisName());
@@ -102,6 +105,7 @@ void MainWindow::readConfig()
     ui->customPlot->plotControl->setNameSet(ui->customPlot, Config::getPlotterGraphNames(ui->customPlot->plotControl->getMaxValidGraphNumber()));
     //OpenGL
     ui->actionOpenGL->setChecked(Config::getOpengGLState());
+    on_actionOpenGL_triggered(Config::getOpengGLState());
 }
 
 
@@ -325,10 +329,19 @@ MainWindow::~MainWindow()
 
         //plotter
         Config::setPlotterState(ui->actionPlotterSwitch->isChecked());
-        if(ui->actionAscii->isChecked())
-            Config::setPlotterType(ProtocolType_e::Ascii);
-        else
-            Config::setPlotterType(ProtocolType_e::Float);
+        if(ui->actionAscii->isChecked()){
+            if(ui->actionSumCheck->isChecked())
+                Config::setPlotterType(ProtocolType_e::Ascii_SumCheck);
+            else
+                Config::setPlotterType(ProtocolType_e::Ascii);
+        }
+        else if(ui->actionFloat->isChecked()){
+            if(ui->actionSumCheck->isChecked())
+                Config::setPlotterType(ProtocolType_e::Float_SumCheck);
+            else
+                Config::setPlotterType(ProtocolType_e::Float);
+        }
+
         Config::setPlotterGraphNames(ui->customPlot->plotControl->getNameSetsFromPlot());
         Config::setXAxisName(ui->customPlot->xAxis->label());
         Config::setYAxisName(ui->customPlot->yAxis->label());
@@ -1315,10 +1328,18 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
             plotterParsePosInRxBuff = RxBuff.size() - 1;
         }
 
-        if(ui->actionAscii->isChecked())
-            ui->plotter->setTitle("数据可视化：ASCII协议");
-        else if(ui->actionFloat->isChecked())
-            ui->plotter->setTitle("数据可视化：FLOAT协议");
+        if(ui->actionAscii->isChecked()){
+            if(ui->actionSumCheck->isChecked())
+                ui->plotter->setTitle("数据可视化：ASCII协议(和校验)");
+            else
+                ui->plotter->setTitle("数据可视化：ASCII协议");
+        }
+        else if(ui->actionFloat->isChecked()){
+            if(ui->actionSumCheck->isChecked())
+                ui->plotter->setTitle("数据可视化：FLOAT协议(和校验)");
+            else
+                ui->plotter->setTitle("数据可视化：FLOAT协议");
+        }
     }else{
         ui->customPlot->hide();
 
@@ -1349,7 +1370,7 @@ void MainWindow::plotterParseTimerSlot()
     //关定时器，防止数据量过大导致咬尾振荡
     plotterParseTimer.stop();
     //添加解析长度限制，防止数据量过大振荡
-    parsedLength = ui->customPlot->protocol->parse(RxBuff, plotterParsePosInRxBuff, maxParseLengthLimit);
+    parsedLength = ui->customPlot->protocol->parse(RxBuff, plotterParsePosInRxBuff, maxParseLengthLimit, g_enableSumCheck);
     plotterParsePosInRxBuff += parsedLength;
 
     //数据填充
@@ -2058,4 +2079,14 @@ void MainWindow::on_actionBackGroundColorSetting_triggered()
     str.replace("RGBG", QString::number(g));
     str.replace("RGBB", QString::number(b));
     ui->textBrowser->setStyleSheet(str);
+}
+
+void MainWindow::on_actionSumCheck_triggered(bool checked)
+{
+    ui->actionSumCheck->setChecked(checked);
+    g_enableSumCheck = checked;
+    if(checked){
+        if(ui->actionPlotterSwitch->isChecked())
+            ui->plotter->setTitle("数据可视化：ASCII协议(和校验)");
+    }
 }

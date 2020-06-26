@@ -508,6 +508,7 @@ p, li { white-space: pre-wrap; }
      </property>
      <addaction name="actionAscii"/>
      <addaction name="actionFloat"/>
+     <addaction name="actionSumCheck"/>
     </widget>
     <widget class="QMenu" name="setting">
      <property name="title">
@@ -821,6 +822,17 @@ p, li { white-space: pre-wrap; }
   <action name="actionBackGroundColorSetting">
    <property name="text">
     <string>背景色设置</string>
+   </property>
+  </action>
+  <action name="actionSumCheck">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>和校验</string>
+   </property>
+   <property name="toolTip">
+    <string>和校验</string>
    </property>
   </action>
  </widget>

@@ -116,14 +116,15 @@ int main(void)
         // SendCurve(sin(cnt_f),cos(cnt_f));
         // printf("{%d:%.2f,%.2f}\r\n", 
         //        (int)(cnt_f*100), sin(cnt_f),cos(cnt_f));
-					printf("{%05d:%06d,%06d,%06d,%06d,%06d,%06d}\r\n", 
-									(int)(cnt_f*100), 1,2,3,4,5,6);
-//        printf("{%05d:%06.2f,%06.2f,%06.2f,%06.2f,%06.2f,%06.2f}\r\n", 
-//               (int)(cnt_f*100), sin(cnt_f),cos(cnt_f),1.5*sin(cnt_f),1.5*cos(cnt_f),-1*sin(cnt_f),-1*cos(cnt_f));
+//					printf("{%05d:%06d,%06d,%06d,%06d,%06d,%06d}\r\n", 
+//									(int)(cnt_f*100), 1,2,3,4,5,15);
+        printf("{%d:%.3f,%.3f,%.3f,%.3f,%.3f,%.3f}\r\n", 
+               (int)(cnt_f*100), (int)(sin(cnt_f)*1000)/1000.0,(int)(cos(cnt_f)*1000)/1000.0,(int)(1.5*sin(cnt_f)*1000)/1000.0,(int)(1.5*cos(cnt_f)*1000)/1000.0,(int)(-1*sin(cnt_f)*1000)/1000.0,
+								 (int)(sin(cnt_f)*1000)/1000.0+(int)(cos(cnt_f)*1000)/1000.0+(int)(1.5*sin(cnt_f)*1000)/1000.0+(int)(1.5*cos(cnt_f)*1000)/1000.0+(int)(-1*sin(cnt_f)*1000)/1000.0);
 //        printf("%d:%06.2f,%06.2f,%06.2f,%06.2f,%06.2f,%06.2f\n",
 //                (int)(cnt_f*100), sin(cnt_f),cos(cnt_f),1.5*sin(cnt_f),1.5*cos(cnt_f),-1*sin(cnt_f),-1*cos(cnt_f));
         cnt_f += 0.01;
-        delay_ms(50);
+        delay_ms(20);
        i++;
        if(i==20)
        {

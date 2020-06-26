@@ -70,8 +70,8 @@ QVector<double> DataProtocol::popOneRowData()
  * para1: 被解析的数据
  * return: 已经扫描过的数据长度
 */
-int32_t DataProtocol::parse(const QByteArray& inputArray, int32_t &startPos, int32_t maxParseLengthLimit=-1)
-{
+int32_t DataProtocol::parse(const QByteArray& inputArray, int32_t &startPos, int32_t maxParseLengthLimit=-1, bool enableSumCheck=false)
+{   
     RowData_t rowData;
     Pack_t pack;
     QByteArray restArray;
@@ -88,45 +88,10 @@ int32_t DataProtocol::parse(const QByteArray& inputArray, int32_t &startPos, int
     scannedLength = unparsedBuff.size() - oldsize;
 
     //数据流分包
-    extractPacks(unparsedBuff, restArray, true);
+    extractPacks(unparsedBuff, restArray, true, enableSumCheck);
     unparsedBuff = restArray;
 
     return scannedLength;
-}
-
-//与下面extractPacks函数类似，不过该函数提取包后不做处理并将结果直接返回
-QVector<QByteArray> DataProtocol::getExtrackedPacks(QByteArray &inputArray)
-{
-    QVector<QByteArray> result;
-    if(protocolType == Ascii){
-        //先剔除\0,\r,\n等特殊数据
-        inputArray = inputArray.trimmed();
-
-        QRegularExpression reg;
-        QRegularExpressionMatch match;
-        int index = 0;
-        //匹配{}间的数据。
-        //{:之间不允许再出现{:
-        //:后，数据与逗号作为一个组，这个组至少出现一次。
-        //其中，组中的逗号出现0次或1次，组开头允许有空白字符\\s
-        //组中的数据：符号出现或者不出现，整数部分出现至少1次，小数点与小数作为整体，可不出现或者1次
-        //换行符最多出现2次
-        reg.setPattern("\\{[^{:]*:(\\s*([+-]?\\d+(\\.\\d+)?)?,?)+\\}[\r\n]{0,2}");
-        reg.setPatternOptions(QRegularExpression::InvertedGreedinessOption);//设置为非贪婪模式匹配
-        do {
-                QByteArray tmp;
-                match = reg.match(inputArray, index);
-                if(match.hasMatch()) {
-                    index = match.capturedEnd();
-                    result<<match.captured(0).toLocal8Bit();
-//                    qDebug()<<"match"<<match.captured(0);
-                }
-                else{
-//                    qDebug()<<"no match";
-                    break;
-                }
-        } while(index < inputArray.length());
-    }
 }
 
 /*
@@ -135,7 +100,7 @@ QVector<QByteArray> DataProtocol::getExtrackedPacks(QByteArray &inputArray)
  * param1[in] 剩余未转换数据
  * param2[in] 直接转换到数据池中，减少数据拷贝过程
 */
-inline void DataProtocol::extractPacks(QByteArray &inputArray, QByteArray &restArray, bool toDataPool=false)
+inline void DataProtocol::extractPacks(QByteArray &inputArray, QByteArray &restArray, bool toDataPool=false, bool enableSumCheck=false)
 {
     if(protocolType == Ascii){
         //先剔除\0,\r,\n等特殊数据
@@ -173,7 +138,8 @@ inline void DataProtocol::extractPacks(QByteArray &inputArray, QByteArray &restA
                         while(tmp.indexOf('\n')!=-1)
                             tmp = tmp.replace("\n","");
                         if(toDataPool){
-                            addToDataPool(extractRowData(tmp));
+                            RowData_t data = extractRowData(tmp);
+                            addToDataPool(data, enableSumCheck);
                         }
                         else{
                             packsBuff << tmp;
@@ -201,7 +167,8 @@ inline void DataProtocol::extractPacks(QByteArray &inputArray, QByteArray &restA
             tmpArray = tmpArray.mid(tmpArray.indexOf(MAXDATA_AS_END)+MAXDATA_AS_END.size());
             if(before.size()%4==0){
                 if(toDataPool){
-                    addToDataPool(extractRowData(before));
+                    RowData_t data = extractRowData(before);
+                    addToDataPool(data, enableSumCheck);
                 }
                 else{
                     packsBuff << before;
@@ -272,8 +239,26 @@ inline DataProtocol::RowData_t DataProtocol::extractRowData(const Pack_t &pack)
     return rowData;
 }
 
-inline void DataProtocol::addToDataPool(const RowData_t& rowData)
+inline void DataProtocol::addToDataPool(RowData_t &rowData, bool enableSumCheck=false)
 {
+    #define SUPER_MIN_VALUE 0.000000001
+    if(rowData.size()<=0)
+        return;
+
+    if(enableSumCheck){
+        //和校验模式 必须 要有至少两个数据
+        if(rowData.size()<=1)
+            return;
+        double lastValue = rowData.at(rowData.size()-1);
+        double sum = 0;
+        for(int i = 0; i < rowData.size()-1; i++)
+            sum += rowData.at(i);
+        if(abs(sum-lastValue)>SUPER_MIN_VALUE){
+            qDebug()<<rowData;
+            return;
+        }
+        rowData.pop_back();
+    }
     dataPool << rowData;
 }
 
