@@ -12,7 +12,7 @@ HTTP::HTTP(QWidget *parentWidget)
     httpTaskVector.push_back(PostStatic);
     httpTaskVector.push_back(DownloadMSGs);
     httpTaskVector.push_back(BackStageGetVersion);
-//    httpTaskVector.push_back(GetVersion_MY_SERVER);
+//    httpTaskVector.push_back(BackStageGetVersion_MyServer);
 
     connect(&secTimer, SIGNAL(timeout()), this, SLOT(httpTimeoutHandle()));
     secTimer.start(1000);
@@ -85,7 +85,6 @@ bool HTTP::postUsageStatistic(void)
 
     //request请求
     QNetworkRequest request;
-//    request.setSslConfiguration(QSslConfiguration::defaultConfiguration()); //开启ssl，需要在exe下放openssl的lib包
     request.setUrl(url);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded;charset=utf-8"); //以表单键值对的形式提交
     request.setHeader(QNetworkRequest::ContentLengthHeader, sendData.size());
@@ -103,7 +102,7 @@ bool HTTP::getRemoteVersion(void)
 //    ui->statusBar->showMessage("正在检查更新，请稍候……", 1000);
 
     //发起http请求远端的发布版本号
-    QUrl url("https://api.github.com/repos/inhowe/ComAssistant/releases");
+    QUrl url("https://api.github.com/repos/inhowe/ComAssistant/releases/latest");
     QNetworkRequest request;
     request.setSslConfiguration(QSslConfiguration::defaultConfiguration());
     request.setUrl(url);
@@ -118,7 +117,7 @@ bool HTTP::getRemoteVersion_my_server(void)
         return false;
 
     //发起http请求远端的发布版本号
-    QUrl url("http://www.inhowe.com/ComAssistant/Request/releases.txt");
+    QUrl url("http://www.inhowe.com/ComAssistant/Request/latest");
     QNetworkRequest request;
     request.setUrl(url);
     m_Reply = m_NetManger->get(request);
@@ -165,7 +164,7 @@ void HTTP::httpTimeoutHandle()
             postUsageStatistic();break;
         case DownloadMSGs:
             downloadMessages();break;
-        case GetVersion_MY_SERVER:
+        case BackStageGetVersion_MyServer:
             getRemoteVersion_my_server();break;
         default:
             httpTaskVector.pop_front();break;
@@ -189,8 +188,47 @@ void HTTP::httpTimeoutHandle()
 
 }
 
+//解析发布信息
+void HTTP::parseReleaseInfo(QString &inputStr, QString &remoteVersion, QString &remoteNote, QString &publishedTime)
+{
+    QJsonParseError jsonError;
+    QJsonDocument document = QJsonDocument::fromJson(inputStr.toUtf8(), &jsonError); //转化为JSON文档
+    if(document.isNull() || jsonError.error != QJsonParseError::NoError || !document.isObject()){
+        QMessageBox::information(nullptr, "提示", "版本数据解析异常");
+        qDebug()<<"解析异常";
+        return;
+    }
+    QJsonObject object = document.object();
+    if(object.contains("tag_name"))
+    {
+        QJsonValue value = object.value("tag_name");
+        if(value.isString())
+        {
+            remoteVersion = value.toString();
+        }
+    }
+    if(object.contains("body"))
+    {
+        QJsonValue value = object.value("body");
+        if(value.isString())
+        {
+            remoteNote = value.toString();
+        }
+    }
+    if(object.contains("published_at"))
+    {
+        QJsonValue value = object.value("published_at");
+        if(value.isString())
+        {
+            publishedTime = value.toString();
+        }
+    }
+}
+
 void HTTP::httpFinishedSlot(QNetworkReply *)
 {
+    static uint32_t GetVersion_failed = 0;  //GetVersion失败次数
+
     //超时定时器清0
     httpTimeout = 0;
     HttpFunction_e state;
@@ -210,31 +248,17 @@ void HTTP::httpFinishedSlot(QNetworkReply *)
         QByteArray bytes = m_Reply->readAll();
         QString string = QString::fromUtf8(bytes);
 
-        if(state == GetVersion || state == BackStageGetVersion || state == GetVersion_MY_SERVER ){
+        if(state == GetVersion || state == BackStageGetVersion || state == BackStageGetVersion_MyServer ){
+            GetVersion_failed = 0;
+
             QString remoteVersion;
             QString remoteNote;
+            QString publishedTime;
+            //提取版本号
+            parseReleaseInfo(string, remoteVersion, remoteNote, publishedTime);
 
-            if(state != GetVersion_MY_SERVER){
-                //提取版本号
-                remoteVersion = string.mid(string.indexOf("tag_name"));
-                remoteVersion = remoteVersion.mid(remoteVersion.indexOf(":")+2, remoteVersion.indexOf(",") - remoteVersion.indexOf(":")-3);
-                remoteNote = string.mid(string.indexOf("body"));
-                remoteNote = remoteNote.mid(remoteNote.indexOf(":\"")+2, remoteNote.indexOf("}") - remoteNote.indexOf(":\"")-3);
-                while(remoteNote.indexOf("\\r\\n")!=-1){
-                    remoteNote = remoteNote.replace("\\r\\n","\n");
-                }
-            }else{
-                remoteVersion = string.mid(string.indexOf("tag_name"));
-                remoteVersion = remoteVersion.mid(remoteVersion.indexOf(":")+2, remoteVersion.indexOf(",") - remoteVersion.indexOf(":")-3);
-                remoteNote = string.mid(string.indexOf("body"));
-                remoteNote = remoteNote.mid(remoteNote.indexOf(":\"")+2, remoteNote.indexOf("\",") - remoteNote.indexOf(":\"")-3);
-                while(remoteNote.indexOf("\\r\\n")!=-1){
-                    remoteNote = remoteNote.replace("\\r\\n","\n");
-                }
-            }
             QString localVersion;
             localVersion = Config::getVersion();
-//            qDebug()<<remoteVersion<<remoteNote;
 
             //版本号比较
             if(version_to_number(remoteVersion) > version_to_number(localVersion)){
@@ -242,8 +266,9 @@ void HTTP::httpFinishedSlot(QNetworkReply *)
                 if(state == GetVersion){
                     button = QMessageBox::information(nullptr,"提示","当前版本号："+ localVersion +
                                                         "\n远端版本号："+remoteVersion+
-                                                        "\n更新内容："+
-                                                        "\n"+remoteNote, QMessageBox::Ok|QMessageBox::No);
+                                                        "\n发布时间："+publishedTime+
+                                                        "\n更新内容：\n"+remoteNote
+                                                      , QMessageBox::Ok|QMessageBox::No);
                     if(button == QMessageBox::Ok)
                         QDesktopServices::openUrl(QUrl("https://github.com/inhowe/ComAssistant/releases"));
                 }else{
@@ -270,16 +295,22 @@ void HTTP::httpFinishedSlot(QNetworkReply *)
     {
         //只有GetVersion是主动更新，因此获取不到版本号时才弹失败提示
         if(state == BackStageGetVersion){
-            httpTaskVector.push_back(GetVersion_MY_SERVER);
+            httpTaskVector.push_back(BackStageGetVersion_MyServer);
         }else if(state == GetVersion){
-            QMessageBox::Button button;
-            button = QMessageBox::information(nullptr,"提示","当前版本号："+Config::getVersion()+
-                                          "\n检查更新失败。"+
-                                          "\n请访问：https://github.com/inhowe/ComAssistant/releases",  QMessageBox::Ok|QMessageBox::No);
-            if(button == QMessageBox::Ok)
-                QDesktopServices::openUrl(QUrl("https://github.com/inhowe/ComAssistant/releases"));
-        }else if(state == GetVersion_MY_SERVER){
-
+            GetVersion_failed++;
+            httpTaskVector.push_back(BackStageGetVersion_MyServer);
+        }else if(state == BackStageGetVersion_MyServer){
+            //两个服务器都失败才弹提示
+            if(GetVersion_failed){
+                QMessageBox::Button button;
+                button = QMessageBox::information(nullptr,"提示","当前版本号："+Config::getVersion()+
+                                              "\n检查更新失败。"+
+                                              "\n请访问：https://github.com/inhowe/ComAssistant/releases"+
+                                              "\n点击确认后将打开网页"
+                                                  ,  QMessageBox::Ok|QMessageBox::No);
+                if(button == QMessageBox::Ok)
+                    QDesktopServices::openUrl(QUrl("https://github.com/inhowe/ComAssistant/releases"));
+            }
         }else if(state == PostStatic){
 
         }

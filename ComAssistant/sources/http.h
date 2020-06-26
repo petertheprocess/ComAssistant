@@ -6,12 +6,18 @@
 #include <QtNetwork/QNetworkRequest>
 #include <QtNetwork/QNetworkReply>
 #include <QNetworkInterface>
+//Json类
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonParseError>
+#include <QJsonValue>
 
 #include <QMainWindow>
 #include <QtDebug>
 #include <QTimer>
 #include <QDesktopServices>
 #include <QMessageBox>
+
 #include "config.h"
 
 #include <QObject>
@@ -29,10 +35,10 @@ public:
         Idle,
         GetVersion, //获取版本号
         BackStageGetVersion,//后台检查更新
+        BackStageGetVersion_MyServer, //从私人服务器获取版本号
         DownloadFile, //下载文件，暂未使用
         PostStatic, //上传统计
         DownloadMSGs, //信息发布系统
-        GetVersion_MY_SERVER, //从我的服务器获取版本号
     }HttpFunction_e;
     HTTP(QWidget *parentWidget);
 
@@ -45,6 +51,8 @@ public:
     QStringList getMsgList();
 
 private:
+    void parseReleaseInfo(QString &inputStr, QString &remoteVersion, QString &remoteNote, QString &publishedTime);
+
     QWidget *parent;
     QTimer secTimer;
     //http访问
