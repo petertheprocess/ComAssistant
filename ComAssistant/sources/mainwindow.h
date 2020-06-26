@@ -54,9 +54,9 @@ public:
     ~MainWindow();
 
 signals:
-    void paraseFileSignal();
+    void parseFileSignal();
 private slots:
-    void paraseFileSlot();
+    void parseFileSlot();
 
     void on_refreshCom_clicked();
     void tryOpenSerial();
@@ -122,7 +122,7 @@ private slots:
     void debugTimerSlot();
     void cycleSendTimerSlot();
     void printToTextBrowserTimerSlot();
-    void plotterParaseTimerSlot();
+    void plotterParseTimerSlot();
 
     //contextMenuRequested
     void on_textBrowser_customContextMenuRequested(const QPoint &pos);
@@ -155,9 +155,9 @@ private:
 
     QLabel *statusSpeedLabel, *statusStatisticLabel, *statusRemoteMsgLabel; //状态栏标签
 
-    bool paraseFile = false;
-    QByteArrayList paraseFileBuff;    //解析文件分包缓冲
-    int paraseFileBuffIndex = 0;
+    bool parseFile = false;
+    QByteArrayList parseFileBuff;    //解析文件分包缓冲
+    int parseFileBuffIndex = 0;
     QByteArrayList SendFileBuff;    //发送文件分包缓冲
     int SendFileBuffIndex = 0; //
 
@@ -168,14 +168,14 @@ private:
     int BrowserBuffIndex = 0; //显示指示
     QByteArray unshowedRxBuff;    //未上屏的接收缓冲
 
-    const int32_t PLOTTER_PARASE_PERIOD = 20;  //绘图器默认解析周期
+    const int32_t PLOTTER_PARSE_PERIOD = 20;  //绘图器默认解析周期
 
     QTimer cycleSendTimer;  //循环发送定时器
     QTimer debugTimer;      //调试定时器
     QTimer secTimer;        //秒定时器
     QTimer timeStampTimer;  //时间戳定时器
     QTimer printToTextBrowserTimer; //刷新文本显示区的定时器
-    QTimer plotterParaseTimer;      //协议解析定时器
+    QTimer plotterParseTimer;      //协议解析定时器
 
     QString enter;
     QString lastFileDialogPath; //上次文件对话框路径
@@ -185,7 +185,7 @@ private:
     HTTP *http;
 
     bool RefreshTextBrowser = true; //数据显示区刷新标记
-    int plotterParasePosInRxBuff = 0;      //绘图器已解析的位置
+    int plotterParsePosInRxBuff = 0;      //绘图器已解析的位置
 
     //统计
     int currentRunTime = 0; //运行时间

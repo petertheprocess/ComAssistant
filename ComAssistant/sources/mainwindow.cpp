@@ -112,13 +112,13 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect(this, SIGNAL(paraseFileSignal()),this,SLOT(paraseFileSlot()));
+    connect(this, SIGNAL(parseFileSignal()),this,SLOT(parseFileSlot()));
 
     //槽
     connect(&cycleSendTimer, SIGNAL(timeout()), this, SLOT(cycleSendTimerSlot()));
     connect(&secTimer, SIGNAL(timeout()), this, SLOT(secTimerSlot()));
     connect(&printToTextBrowserTimer, SIGNAL(timeout()), this, SLOT(printToTextBrowserTimerSlot()));
-    connect(&plotterParaseTimer, SIGNAL(timeout()), this, SLOT(plotterParaseTimerSlot()));
+    connect(&plotterParseTimer, SIGNAL(timeout()), this, SLOT(plotterParseTimerSlot()));
     connect(&serial, SIGNAL(readyRead()), this, SLOT(readSerialPort()));
     connect(&serial, SIGNAL(bytesWritten(qint64)), this, SLOT(serialBytesWritten(qint64)));
     connect(&serial, SIGNAL(error(QSerialPort::SerialPortError)),  this, SLOT(handleSerialError(QSerialPort::SerialPortError)));
@@ -185,7 +185,7 @@ MainWindow::MainWindow(QWidget *parent) :
     secTimer.setTimerType(Qt::PreciseTimer);
     secTimer.start(1000);
     printToTextBrowserTimer.start(20);
-    plotterParaseTimer.setTimerType(Qt::PreciseTimer);
+    plotterParseTimer.setTimerType(Qt::PreciseTimer);
 
     //显示界面
     this->show();
@@ -460,7 +460,7 @@ void MainWindow::on_comSwitch_clicked(bool checked)
 void MainWindow::readSerialPort()
 {
     QByteArray tmpReadBuff;
-    QByteArray floatParaseBuff;//用于绘图协议解析的缓冲。其中float协议不处理中文
+    QByteArray floatParseBuff;//用于绘图协议解析的缓冲。其中float协议不处理中文
 
     //先获取时间，避免解析数据导致时间消耗的影响
     QString timeString;
@@ -468,8 +468,8 @@ void MainWindow::readSerialPort()
     timeString = "\n["+timeString+"]Rx<- ";
 
     //解析文件模式
-    if(paraseFile){
-        tmpReadBuff = paraseFileBuff.at(paraseFileBuffIndex++);
+    if(parseFile){
+        tmpReadBuff = parseFileBuff.at(parseFileBuffIndex++);
         RxBuff.append(tmpReadBuff);
     }
     else{
@@ -566,19 +566,19 @@ void MainWindow::readSerialPort()
     RefreshTextBrowser = true;
 }
 
-void MainWindow::paraseFileSlot()
+void MainWindow::parseFileSlot()
 {
     readSerialPort();
     qApp->processEvents();
     ui->customPlot->replot();
-//    qDebug()<<tt<<tt1<<paraseFileBuffIndex/paraseFileBuff.size();
-    if(paraseFileBuffIndex!=paraseFileBuff.size()){
-        ui->statusBar->showMessage("解析进度："+QString::number(static_cast<int>(100.0*(paraseFileBuffIndex+1.0)/paraseFileBuff.size()))+"% ",1000);
-        emit paraseFileSignal();
+//    qDebug()<<tt<<tt1<<parseFileBuffIndex/parseFileBuff.size();
+    if(parseFileBuffIndex!=parseFileBuff.size()){
+        ui->statusBar->showMessage("解析进度："+QString::number(static_cast<int>(100.0*(parseFileBuffIndex+1.0)/parseFileBuff.size()))+"% ",1000);
+        emit parseFileSignal();
     }else{
-        paraseFile = false;
-        paraseFileBuffIndex = 0;
-        paraseFileBuff.clear();
+        parseFile = false;
+        parseFileBuffIndex = 0;
+        parseFileBuff.clear();
         ui->sendButton->setEnabled(true);
         ui->multiString->setEnabled(true);
         ui->cycleSendCheck->setEnabled(true);
@@ -778,8 +778,8 @@ void MainWindow::on_clearWindows_clicked()
     //清空文件缓冲
     SendFileBuff.clear();
     SendFileBuffIndex = 0;
-    paraseFileBuff.clear();
-    paraseFileBuffIndex = 0;
+    parseFileBuff.clear();
+    parseFileBuffIndex = 0;
 
     //绘图器相关
     ui->customPlot->protocol->clearBuff();
@@ -790,7 +790,7 @@ void MainWindow::on_clearWindows_clicked()
     ui->customPlot->yAxis->setRange(0,5);
     ui->customPlot->xAxis->setRange(0, ui->customPlot->plotControl->getXAxisLength(), Qt::AlignRight);
     ui->customPlot->replot();
-    plotterParasePosInRxBuff = 0;
+    plotterParsePosInRxBuff = 0;
 
     //数值显示器
     deleteValueDisplaySlot();
@@ -1006,21 +1006,21 @@ void MainWindow::on_actionOpenOriginData_triggered()
 
         //文件分包
         #define PACKSIZE 4096
-        paraseFileBuffIndex = 0;
-        paraseFileBuff.clear();
+        parseFileBuffIndex = 0;
+        parseFileBuff.clear();
         while(RxBuff.size()>PACKSIZE){
-            paraseFileBuff.append(RxBuff.mid(0,PACKSIZE));
+            parseFileBuff.append(RxBuff.mid(0,PACKSIZE));
             RxBuff.remove(0,PACKSIZE);
         }
-        paraseFileBuff.append(RxBuff); //一定会有一个元素
+        parseFileBuff.append(RxBuff); //一定会有一个元素
         RxBuff.clear();
-        if(paraseFileBuff.size()<1){
+        if(parseFileBuff.size()<1){
             return;
         }
 
         //重置绘图器解析点，以触发解析
         if(ui->actionPlotterSwitch->isChecked())
-            plotterParasePosInRxBuff = 0;
+            plotterParsePosInRxBuff = 0;
 
         ui->textBrowser->clear();
         ui->textBrowser->append("File size: "+QString::number(file.size())+" Byte");
@@ -1037,9 +1037,9 @@ void MainWindow::on_actionOpenOriginData_triggered()
         ui->clearWindows->setText("中  止");
 
         // 解析读取的数据
-        paraseFile = true;
+        parseFile = true;
         unshowedRxBuff.clear();
-        emit paraseFileSignal();
+        emit parseFileSignal();
     }else{
         QMessageBox::information(this,"提示","文件打开失败。");
         lastFileName.clear();
@@ -1310,9 +1310,9 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
         ui->splitter_3->setSizes(heightList);
 
         //没激活就打开（数值显示器也可能激活）
-        if(!plotterParaseTimer.isActive()){
-            plotterParaseTimer.start(PLOTTER_PARASE_PERIOD);
-            plotterParasePosInRxBuff = RxBuff.size() - 1;
+        if(!plotterParseTimer.isActive()){
+            plotterParseTimer.start(PLOTTER_PARSE_PERIOD);
+            plotterParsePosInRxBuff = RxBuff.size() - 1;
         }
 
         if(ui->actionAscii->isChecked())
@@ -1324,21 +1324,21 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 
         //数值显示器也未勾选时才停止定时器
         if(!ui->actionValueDisplay->isChecked())
-            plotterParaseTimer.stop();
+            plotterParseTimer.stop();
 
         ui->plotter->setTitle("数据可视化");
     }
 }
 
-void MainWindow::plotterParaseTimerSlot()
+void MainWindow::plotterParseTimerSlot()
 {
     QElapsedTimer elapsedTimer;
-    int32_t maxParaseLengthLimit = 4096;
-    int32_t parasedLength;
+    int32_t maxParseLengthLimit = 4096;
+    int32_t parsedLength;
     QVector<double> oneRowData;
     elapsedTimer.start();
 
-    if(plotterParasePosInRxBuff >= RxBuff.size() - 1){
+    if(plotterParsePosInRxBuff >= RxBuff.size() - 1){
         return;
     }
 
@@ -1347,13 +1347,13 @@ void MainWindow::plotterParaseTimerSlot()
         return;
     }
     //关定时器，防止数据量过大导致咬尾振荡
-    plotterParaseTimer.stop();
+    plotterParseTimer.stop();
     //添加解析长度限制，防止数据量过大振荡
-    parasedLength = ui->customPlot->protocol->parase(RxBuff, plotterParasePosInRxBuff, maxParaseLengthLimit);
-    plotterParasePosInRxBuff += parasedLength;
+    parsedLength = ui->customPlot->protocol->parse(RxBuff, plotterParsePosInRxBuff, maxParseLengthLimit);
+    plotterParsePosInRxBuff += parsedLength;
 
     //数据填充
-    while(ui->customPlot->protocol->parasedBuffSize()>0){
+    while(ui->customPlot->protocol->parsedBuffSize()>0){
 
         oneRowData = ui->customPlot->protocol->popOneRowData();
         //绘图显示器
@@ -1395,28 +1395,28 @@ void MainWindow::plotterParaseTimerSlot()
         }
     }
 
-    if(parasedLength == maxParaseLengthLimit){
+    if(parsedLength == maxParseLengthLimit){
         QString temp;
-        temp = temp + "警告：绘图器繁忙，待解析数据长度：" + QString::number(RxBuff.size() - plotterParasePosInRxBuff - 1) + "Byte";
+        temp = temp + "警告：绘图器繁忙，待解析数据长度：" + QString::number(RxBuff.size() - plotterParsePosInRxBuff - 1) + "Byte";
         ui->statusBar->showMessage(temp, 2000);
     }
 
     int32_t elapsed_time = elapsedTimer.elapsed();
-    double paraseSpeed = parasedLength/(elapsed_time/1000.0)/1024.0;
-    paraseSpeed = (double)((int)(paraseSpeed*100))/100.0;   //保留两位小数
-    static int32_t dynamic_period = PLOTTER_PARASE_PERIOD;
-    if(paraseSpeed < rxSpeedKB){
+    double parseSpeed = parsedLength/(elapsed_time/1000.0)/1024.0;
+    parseSpeed = (double)((int)(parseSpeed*100))/100.0;   //保留两位小数
+    static int32_t dynamic_period = PLOTTER_PARSE_PERIOD;
+    if(parseSpeed < rxSpeedKB){
         dynamic_period = dynamic_period - 5;
         if(dynamic_period <= 5)
             dynamic_period = 5;
     }else{
         dynamic_period = dynamic_period + 5;
-        if(dynamic_period >= PLOTTER_PARASE_PERIOD)
-            dynamic_period = PLOTTER_PARASE_PERIOD;
+        if(dynamic_period >= PLOTTER_PARSE_PERIOD)
+            dynamic_period = PLOTTER_PARSE_PERIOD;
     }
-    plotterParaseTimer.start(dynamic_period);
-//    qDebug()<<"parasedLength"<<parasedLength<<"dynamic_period"<<dynamic_period;
-//    qDebug()<<"plotterParaseTimerSlot elapsed_time:"<<elapsed_time;
+    plotterParseTimer.start(dynamic_period);
+//    qDebug()<<"parsedLength"<<parsedLength<<"dynamic_period"<<dynamic_period;
+//    qDebug()<<"plotterParseTimerSlot elapsed_time:"<<elapsed_time;
 }
 
 void MainWindow::on_actionAscii_triggered(bool checked)
@@ -1899,16 +1899,16 @@ void MainWindow::on_actionValueDisplay_triggered(bool checked)
         ui->splitter_2->setSizes(widthList);
 
         //没激活就打开（绘图器也可能激活）
-        if(!plotterParaseTimer.isActive()){
-            plotterParaseTimer.start(PLOTTER_PARASE_PERIOD);
-            plotterParasePosInRxBuff = RxBuff.size() - 1;
+        if(!plotterParseTimer.isActive()){
+            plotterParseTimer.start(PLOTTER_PARSE_PERIOD);
+            plotterParsePosInRxBuff = RxBuff.size() - 1;
         }
     }else{
         ui->valueDisplay->hide();
 
         //绘图器也未勾选时才停止定时器
         if(!ui->actionPlotterSwitch->isChecked())
-            plotterParaseTimer.stop();
+            plotterParseTimer.stop();
     }
 }
 

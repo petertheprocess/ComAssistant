@@ -33,7 +33,7 @@ void DataProtocol::clearBuff()
 {
     packsBuff.clear();
     dataPool.clear();
-    unparasedBuff.clear();
+    unparsedBuff.clear();
 }
 
 void DataProtocol::printBuff()
@@ -49,7 +49,7 @@ void DataProtocol::printBuff()
     }
 }
 
-int DataProtocol::parasedBuffSize()
+int DataProtocol::parsedBuffSize()
 {
     return dataPool.size();
 }
@@ -70,7 +70,7 @@ QVector<double> DataProtocol::popOneRowData()
  * para1: 被解析的数据
  * return: 已经扫描过的数据长度
 */
-int32_t DataProtocol::parase(const QByteArray& inputArray, int32_t &startPos, int32_t maxParaseLengthLimit=-1)
+int32_t DataProtocol::parse(const QByteArray& inputArray, int32_t &startPos, int32_t maxParseLengthLimit=-1)
 {
     RowData_t rowData;
     Pack_t pack;
@@ -78,18 +78,18 @@ int32_t DataProtocol::parase(const QByteArray& inputArray, int32_t &startPos, in
     int32_t oldsize, newsize, scannedLength;
 
     //未解析数据，防止数据量过大，限制了最大解析长度
-    oldsize = unparasedBuff.size();
+    oldsize = unparsedBuff.size();
     newsize = inputArray.size() - oldsize;
-    if(newsize - oldsize < maxParaseLengthLimit){
-        unparasedBuff += inputArray.mid(startPos);
+    if(newsize - oldsize < maxParseLengthLimit){
+        unparsedBuff += inputArray.mid(startPos);
     }else{
-        unparasedBuff += inputArray.mid(startPos, maxParaseLengthLimit);
+        unparsedBuff += inputArray.mid(startPos, maxParseLengthLimit);
     }
-    scannedLength = unparasedBuff.size() - oldsize;
+    scannedLength = unparsedBuff.size() - oldsize;
 
     //数据流分包
-    extractPacks(unparasedBuff, restArray, true);
-    unparasedBuff = restArray;
+    extractPacks(unparsedBuff, restArray, true);
+    unparsedBuff = restArray;
 
     return scannedLength;
 }
