@@ -249,7 +249,6 @@ void HTTP::httpFinishedSlot(QNetworkReply *)
         QString string = QString::fromUtf8(bytes);
 
         if(state == GetVersion || state == BackStageGetVersion || state == BackStageGetVersion_MyServer ){
-            GetVersion_failed = 0;
 
             QString remoteVersion;
             QString remoteNote;
@@ -263,7 +262,8 @@ void HTTP::httpFinishedSlot(QNetworkReply *)
             //版本号比较
             if(version_to_number(remoteVersion) > version_to_number(localVersion)){
                 QMessageBox::Button button;
-                if(state == GetVersion){
+                if(state == GetVersion || GetVersion_failed>0){
+                    GetVersion_failed = 0;
                     button = QMessageBox::information(nullptr,"提示","当前版本号："+ localVersion +
                                                         "\n远端版本号："+remoteVersion+
                                                         "\n发布时间："+publishedTime+
@@ -271,11 +271,11 @@ void HTTP::httpFinishedSlot(QNetworkReply *)
                                                       , QMessageBox::Ok|QMessageBox::No);
                     if(button == QMessageBox::Ok)
                         QDesktopServices::openUrl(QUrl("https://github.com/inhowe/ComAssistant/releases"));
-                }else{
-                     parent->setWindowTitle("串口调试助手 发现新版本：V"+remoteVersion);
                 }
+                parent->setWindowTitle("串口调试助手 发现新版本：V"+remoteVersion);
             }else{
-                if(state == GetVersion){
+                if(state == GetVersion || GetVersion_failed>0){
+                    GetVersion_failed = 0;
                     QMessageBox::information(nullptr,"提示","当前版本号："+ localVersion +
                                                                         "\n远端版本号："+remoteVersion+
                                                                         "\n已经是最新版本。");
