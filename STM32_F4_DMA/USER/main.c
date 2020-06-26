@@ -38,6 +38,38 @@ void SendCurve(float data1, float data2)
     }
 }
 
+void SendCurve_sum(float data1, float data2)
+{
+		int i;
+    u8 dataBuff[4+4+4+4];
+    u8 cnt = 0;
+    u8 size = 0;
+//		u32 sumCheck = BYTE0(data1) + BYTE1(data1) + BYTE2(data1) + BYTE3(data1)+
+//									 BYTE0(data2) + BYTE1(data2) + BYTE2(data2) + BYTE3(data2);
+//		double sumCheck = (double)data1 + (double)data2;
+		float sumCheck_f = data1 + data2;
+		dataBuff[cnt++]=BYTE0(data1); //第一个变量
+    dataBuff[cnt++]=BYTE1(data1);
+    dataBuff[cnt++]=BYTE2(data1);
+    dataBuff[cnt++]=BYTE3(data1);
+    dataBuff[cnt++]=BYTE0(data2); //第二个变量
+    dataBuff[cnt++]=BYTE1(data2);
+    dataBuff[cnt++]=BYTE2(data2);
+    dataBuff[cnt++]=BYTE3(data2);
+		dataBuff[cnt++]=BYTE0(sumCheck_f); //checksum
+    dataBuff[cnt++]=BYTE1(sumCheck_f);
+    dataBuff[cnt++]=BYTE2(sumCheck_f);
+    dataBuff[cnt++]=BYTE3(sumCheck_f);
+    dataBuff[cnt++]=0x00; //结束标志
+    dataBuff[cnt++]=0x00;
+    dataBuff[cnt++]=0x80;
+    dataBuff[cnt++]=0x7F;
+
+    size = cnt;
+    for(i = 0; i < cnt; i++){
+        printf("%c",dataBuff[i]);
+    }
+}
 
 #define SEND_BUF_SIZE 50    //发送数据长度,最好等于sizeof(TEXT_TO_SEND)+2的整数倍.
 
@@ -114,17 +146,19 @@ int main(void)
 //        pro=1 - pro/SEND_BUF_SIZE;                    //得到百分比
 //        pro*=100;                                   //扩大100倍
         // SendCurve(sin(cnt_f),cos(cnt_f));
+//			cnt_f = 1.5;
+			SendCurve_sum(sin(cnt_f),cos(cnt_f));
         // printf("{%d:%.2f,%.2f}\r\n", 
         //        (int)(cnt_f*100), sin(cnt_f),cos(cnt_f));
 //					printf("{%05d:%06d,%06d,%06d,%06d,%06d,%06d}\r\n", 
 //									(int)(cnt_f*100), 1,2,3,4,5,15);
-        printf("{%d:%.3f,%.3f,%.3f,%.3f,%.3f,%.3f}\r\n", 
-               (int)(cnt_f*100), (int)(sin(cnt_f)*1000)/1000.0,(int)(cos(cnt_f)*1000)/1000.0,(int)(1.5*sin(cnt_f)*1000)/1000.0,(int)(1.5*cos(cnt_f)*1000)/1000.0,(int)(-1*sin(cnt_f)*1000)/1000.0,
-								 (int)(sin(cnt_f)*1000)/1000.0+(int)(cos(cnt_f)*1000)/1000.0+(int)(1.5*sin(cnt_f)*1000)/1000.0+(int)(1.5*cos(cnt_f)*1000)/1000.0+(int)(-1*sin(cnt_f)*1000)/1000.0);
+//        printf("{%d:%.3f,%.3f,%.3f,%.3f,%.3f,%.3f}\r\n", 
+//               (int)(cnt_f*100), (int)(sin(cnt_f)*1000)/1000.0,(int)(cos(cnt_f)*1000)/1000.0,(int)(1.5*sin(cnt_f)*1000)/1000.0,(int)(1.5*cos(cnt_f)*1000)/1000.0,(int)(-1*sin(cnt_f)*1000)/1000.0,
+//								 (int)(sin(cnt_f)*1000)/1000.0+(int)(cos(cnt_f)*1000)/1000.0+(int)(1.5*sin(cnt_f)*1000)/1000.0+(int)(1.5*cos(cnt_f)*1000)/1000.0+(int)(-1*sin(cnt_f)*1000)/1000.0);
 //        printf("%d:%06.2f,%06.2f,%06.2f,%06.2f,%06.2f,%06.2f\n",
 //                (int)(cnt_f*100), sin(cnt_f),cos(cnt_f),1.5*sin(cnt_f),1.5*cos(cnt_f),-1*sin(cnt_f),-1*cos(cnt_f));
         cnt_f += 0.01;
-        delay_ms(20);
+        delay_ms(1);
        i++;
        if(i==20)
        {

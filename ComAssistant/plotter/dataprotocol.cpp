@@ -241,7 +241,7 @@ inline DataProtocol::RowData_t DataProtocol::extractRowData(const Pack_t &pack)
 
 inline void DataProtocol::addToDataPool(RowData_t &rowData, bool enableSumCheck=false)
 {
-    #define SUPER_MIN_VALUE 0.000000001
+    #define SUPER_MIN_VALUE 0.00000001  //感觉这个值还是偏小了float好像达不到这个精度，大概精度在Keil调试模式下看到的float类型的精度
     if(rowData.size()<=0)
         return;
 
@@ -249,12 +249,12 @@ inline void DataProtocol::addToDataPool(RowData_t &rowData, bool enableSumCheck=
         //和校验模式 必须 要有至少两个数据
         if(rowData.size()<=1)
             return;
-        double lastValue = rowData.at(rowData.size()-1);
-        double sum = 0;
+        float lastValue = rowData.at(rowData.size()-1); //要用float型的，double太过精确导致数据不一致
+        float sum = 0;
         for(int i = 0; i < rowData.size()-1; i++)
             sum += rowData.at(i);
         if(abs(sum-lastValue)>SUPER_MIN_VALUE){
-            qDebug()<<rowData;
+            qDebug()<<"addToDataPool sum check error"<<rowData;
             return;
         }
         rowData.pop_back();

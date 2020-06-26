@@ -126,7 +126,42 @@
         </pre>
       </li><br>
       <li>
-        <b>带校验的Float协议规则为</b>：暂未支持 <br>
+        <b>带校验的Float协议规则为</b>：同样是最后一个数据作为和校验 <br>
+        <pre style="background-color: rgb(235, 235, 235);">
+        //float转byte宏
+        #define BYTE0(dwTemp)       (*(char *)(&dwTemp))
+        #define BYTE1(dwTemp)       (*((char *)(&dwTemp) + 1))
+        #define BYTE2(dwTemp)       (*((char *)(&dwTemp) + 2))
+        #define BYTE3(dwTemp)       (*((char *)(&dwTemp) + 3))
+        //发送函数
+        void SendCurve(float data1, float data2)
+        {
+          u8 dataBuff[4+4+4+4];
+          u8 cnt = 0;
+          float sumCheck = data1 + data2;
+          dataBuff[cnt++]=BYTE0(data1); //第一个变量
+          dataBuff[cnt++]=BYTE1(data1);
+          dataBuff[cnt++]=BYTE2(data1);
+          dataBuff[cnt++]=BYTE3(data1);
+          dataBuff[cnt++]=BYTE0(data2); //第二个变量
+          dataBuff[cnt++]=BYTE1(data2);
+          dataBuff[cnt++]=BYTE2(data2);
+          dataBuff[cnt++]=BYTE3(data2);
+          dataBuff[cnt++]=BYTE0(sumCheck); //和校验
+          dataBuff[cnt++]=BYTE1(sumCheck);
+          dataBuff[cnt++]=BYTE2(sumCheck);
+          dataBuff[cnt++]=BYTE3(sumCheck);
+          dataBuff[cnt++]=0x00; //结束标志
+          dataBuff[cnt++]=0x00;
+          dataBuff[cnt++]=0x80;
+          dataBuff[cnt++]=0x7F;
+
+          u8 size = cnt;
+          for(int i = 0; i &lt; cnt; i++){
+            printf("%c",dataBuff[i]);
+          }
+        }
+        </pre>
       </li>
     </ul>
   </li>

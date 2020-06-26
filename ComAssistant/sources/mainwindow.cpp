@@ -88,13 +88,21 @@ void MainWindow::readConfig()
     on_actionPlotterSwitch_triggered(Config::getPlotterState());
 
     //协议类型
-    if(Config::getPlotterType()==ProtocolType_e::Ascii){
+    if(Config::getPlotterType()==ProtocolType_e::Ascii||
+       Config::getPlotterType()==ProtocolType_e::Ascii_SumCheck){
         on_actionAscii_triggered(true);
-    }else if(Config::getPlotterType()==ProtocolType_e::Float){
-        on_actionFloat_triggered(true);
-    }else if(Config::getPlotterType()==ProtocolType_e::Ascii_SumCheck){
-        on_actionSumCheck_triggered(true);
+        if(Config::getPlotterType()==ProtocolType_e::Ascii_SumCheck){
+            on_actionSumCheck_triggered(true);
+        }
     }
+    else if(Config::getPlotterType()==ProtocolType_e::Float||
+            Config::getPlotterType()==ProtocolType_e::Float_SumCheck){
+        on_actionFloat_triggered(true);
+        if(Config::getPlotterType()==ProtocolType_e::Float_SumCheck){
+            on_actionSumCheck_triggered(true);
+        }
+    }
+
     //轴标签
     ui->customPlot->xAxis->setLabel(Config::getXAxisName());
     ui->customPlot->yAxis->setLabel(Config::getYAxisName());
@@ -1448,8 +1456,12 @@ void MainWindow::on_actionAscii_triggered(bool checked)
     ui->actionAscii->setChecked(true);
     ui->actionFloat->setChecked(false);
 
-    if(ui->actionPlotterSwitch->isChecked())
-        ui->plotter->setTitle("数据可视化：ASCII协议");
+    if(ui->actionPlotterSwitch->isChecked()){
+        if(ui->actionSumCheck->isChecked())
+            ui->plotter->setTitle("数据可视化：ASCII协议(和校验)");
+        else
+            ui->plotter->setTitle("数据可视化：ASCII协议");
+    }
 }
 
 void MainWindow::on_actionFloat_triggered(bool checked)
@@ -1460,8 +1472,12 @@ void MainWindow::on_actionFloat_triggered(bool checked)
     ui->actionAscii->setChecked(false);
     ui->actionFloat->setChecked(true);
 
-    if(ui->actionPlotterSwitch->isChecked())
-        ui->plotter->setTitle("数据可视化：FLOAT协议");
+    if(ui->actionPlotterSwitch->isChecked()){
+        if(ui->actionSumCheck->isChecked())
+            ui->plotter->setTitle("数据可视化：FLOAT协议(和校验)");
+        else
+            ui->plotter->setTitle("数据可视化：FLOAT协议");
+    }
 }
 
 void MainWindow::on_actiondebug_triggered(bool checked)
@@ -2086,7 +2102,18 @@ void MainWindow::on_actionSumCheck_triggered(bool checked)
     ui->actionSumCheck->setChecked(checked);
     g_enableSumCheck = checked;
     if(checked){
-        if(ui->actionPlotterSwitch->isChecked())
-            ui->plotter->setTitle("数据可视化：ASCII协议(和校验)");
+        if(ui->actionPlotterSwitch->isChecked()){
+            if(ui->actionAscii->isChecked())
+                ui->plotter->setTitle("数据可视化：ASCII协议(和校验)");
+            else if(ui->actionFloat->isChecked())
+                ui->plotter->setTitle("数据可视化：FLOAT协议(和校验)");
+        }
+    }else{
+        if(ui->actionPlotterSwitch->isChecked()){
+            if(ui->actionAscii->isChecked())
+                ui->plotter->setTitle("数据可视化：ASCII协议");
+            else if(ui->actionFloat->isChecked())
+                ui->plotter->setTitle("数据可视化：FLOAT协议");
+        }
     }
 }
