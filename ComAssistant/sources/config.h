@@ -102,7 +102,7 @@ class Config
 public:
     #define defualtGraphName  "Graph 1;Graph 2;Graph 3;Graph 4;Graph 5;Graph 6;Graph 7;Graph 8;Graph 9;Graph 10;Graph 11;Graph 12;Graph 13;Graph 14;Graph 15;"
     //版本
-    #define VERSION_STRING  "0.2.7"
+    #define VERSION_STRING  "0.2.8"
 
     Config();
     static void writeDefault();
