@@ -147,6 +147,8 @@ private slots:
 
     void on_actionBackGroundColorSetting_triggered();
 
+    void on_actionSumCheck_triggered(bool checked);
+
 private:
     bool needSaveConfig = true;
     void readConfig();
