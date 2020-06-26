@@ -2030,8 +2030,10 @@ void MainWindow::on_actionOpenGL_triggered(bool checked)
 void MainWindow::on_actionFontSetting_triggered()
 {
     bool ok;
-    g_font = QFontDialog::getFont(&ok, this);
+    QFont font;
+    font = QFontDialog::getFont(&ok, font, this, "选择字体");
     if(ok){
+        g_font = font;
         ui->textBrowser->setFont(g_font);
         ui->textEdit->setFont(g_font);
         ui->multiString->setFont(g_font);
@@ -2043,7 +2045,7 @@ void MainWindow::on_actionBackGroundColorSetting_triggered()
 {
     QColor color;
     color = QColorDialog::getColor(Qt::white, this,
-                                          tr("颜色对话框"),
+                                          "选择背景色",
                                           QColorDialog::ShowAlphaChannel);
     if(!color.isValid())
         return;
