@@ -37,9 +37,9 @@ public:
     ~DataProtocol();
     void printBuff();
     void clearBuff();
-    int parasedBuffSize();//判断数据池剩余大小
+    int parsedBuffSize();//判断数据池剩余大小
     QVector<double> popOneRowData();//弹出一行数据，没有数据则为空
-    int32_t parase(const QByteArray& inputArray, int32_t &startPos, int32_t maxParaseLengthLimit);
+    int32_t parse(const QByteArray& inputArray, int32_t &startPos, int32_t maxParseLengthLimit);
     void setProtocolType(ProtocolType_e type, bool clearbuff=true);
     ProtocolType_e getProtocolType();
     QVector<QByteArray> getExtrackedPacks(QByteArray &inputArray);
@@ -56,7 +56,7 @@ private:
     //pack缓存、数据池
     PackStream_t packsBuff;
     DataPool_t dataPool;
-    QByteArray unparasedBuff;
+    QByteArray unparsedBuff;
     //协议类型
     ProtocolType_e protocolType = Ascii;
     //最大常数
