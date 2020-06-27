@@ -1,9 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-static QColor   g_background_color;
-static QFont    g_font;
-static bool     g_enableSumCheck;
+static QColor      g_background_color;
+static QFont       g_font;
+static bool        g_enableSumCheck;
+static qint64      g_lastSecsSinceEpoch;
 /*
  * Function:读取配置
 */
@@ -141,8 +142,11 @@ MainWindow::MainWindow(QWidget *parent) :
     statusRemoteMsgLabel = new QLabel(this);
     statusSpeedLabel = new QLabel(this);
     statusStatisticLabel = new QLabel(this);
+    statusTimer = new QLabel(this);
+    statusTimer->setText("计时器:"+formatTime(0));
     statusRemoteMsgLabel->setOpenExternalLinks(true);//可打开外链
     ui->statusBar->addPermanentWidget(statusRemoteMsgLabel);
+    ui->statusBar->addPermanentWidget(statusTimer);
     ui->statusBar->addPermanentWidget(statusStatisticLabel);//显示永久信息
     ui->statusBar->addPermanentWidget(statusSpeedLabel);
 
@@ -199,6 +203,9 @@ MainWindow::MainWindow(QWidget *parent) :
     printToTextBrowserTimer.start(20);
     plotterParseTimer.setTimerType(Qt::PreciseTimer);
 
+    //计时器
+    g_lastSecsSinceEpoch = QDateTime::currentSecsSinceEpoch();
+
     //显示界面
     this->show();
     //是否首次运行
@@ -223,6 +230,30 @@ void MainWindow::printToTextBrowserTimerSlot()
         RefreshTextBrowser = false;
 }
 
+
+QString MainWindow::formatTime(int ms)
+{
+    int ss = 1000;
+    int mi = ss * 60;
+    int hh = mi * 60;
+    int dd = hh * 24;
+
+    long day = ms / dd;
+    long hour = (ms - day * dd) / hh;
+    long minute = (ms - day * dd - hour * hh) / mi;
+    long second = (ms - day * dd - hour * hh - minute * mi) / ss;
+    long milliSecond = ms - day * dd - hour * hh - minute * mi - second * ss;
+
+    QString hou = QString::number(hour,10);
+    QString min = QString::number(minute,10);
+    QString sec = QString::number(second,10);
+    QString msec = QString::number(milliSecond,10);
+
+    //qDebug() << "minute:" << min << "second" << sec << "ms" << msec <<endl;
+
+    return hou + ":" + min + ":" + sec ;
+}
+
 void MainWindow::secTimerSlot()
 {
     static int64_t secCnt = 0;
@@ -240,6 +271,13 @@ void MainWindow::secTimerSlot()
         statusRemoteMsgLabel->setText(http->getMsgList().at(adIndex++));
         if(adIndex == http->getMsgList().size())
             adIndex = 0;
+    }
+
+    if(ui->comSwitch->isChecked()){
+        qint64 consumedTime = QDateTime::currentSecsSinceEpoch() - g_lastSecsSinceEpoch;
+        statusTimer->setText("计时器:"+formatTime(consumedTime*1000));
+    }else{
+        g_lastSecsSinceEpoch = QDateTime::currentSecsSinceEpoch();
     }
 
     secCnt++;
@@ -444,6 +482,9 @@ void MainWindow::on_comSwitch_clicked(bool checked)
         if(serial.open(com,baud)){
             ui->comSwitch->setText("关闭串口");
             ui->comSwitch->setChecked(true);
+            g_lastSecsSinceEpoch = QDateTime::currentSecsSinceEpoch();
+            qint64 consumedTime = QDateTime::currentSecsSinceEpoch() - g_lastSecsSinceEpoch;
+            statusTimer->setText("计时器:"+formatTime(consumedTime*1000));
         }
         else {
             ui->comSwitch->setText("打开串口");
@@ -782,6 +823,11 @@ void MainWindow::on_clearWindows_clicked()
 {
     ui->clearWindows->setText("清  空");
 
+    //定时器
+    g_lastSecsSinceEpoch = QDateTime::currentSecsSinceEpoch();
+    qint64 consumedTime = QDateTime::currentSecsSinceEpoch() - g_lastSecsSinceEpoch;
+    statusTimer->setText("计时器:"+formatTime(consumedTime*1000));
+
     //串口
     serial.resetCnt();
     if(serial.isOpen())
@@ -818,6 +864,8 @@ void MainWindow::on_clearWindows_clicked()
 
     //更新收发统计
     statusStatisticLabel->setText(serial.getTxRxString());
+
+
 }
 
 void MainWindow::on_cycleSendCheck_clicked(bool checked)
