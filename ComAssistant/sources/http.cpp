@@ -269,8 +269,9 @@ void HTTP::httpFinishedSlot(QNetworkReply *)
                                                         "\n发布时间："+publishedTime+
                                                         "\n更新内容：\n"+remoteNote
                                                       , QMessageBox::Ok|QMessageBox::No);
-                    if(button == QMessageBox::Ok)
-                        QDesktopServices::openUrl(QUrl("https://github.com/inhowe/ComAssistant/releases"));
+                    if(button == QMessageBox::Ok){
+//                        QDesktopServices::openUrl(QUrl("https://github.com/inhowe/ComAssistant/releases"));
+                    }
                 }
                 parent->setWindowTitle("串口调试助手 发现新版本：V"+remoteVersion);
             }else{
@@ -302,14 +303,16 @@ void HTTP::httpFinishedSlot(QNetworkReply *)
         }else if(state == BackStageGetVersion_MyServer){
             //两个服务器都失败才弹提示
             if(GetVersion_failed){
-                QMessageBox::Button button;
-                button = QMessageBox::information(nullptr,"提示","当前版本号："+Config::getVersion()+
-                                              "\n检查更新失败。"+
-                                              "\n请访问：https://github.com/inhowe/ComAssistant/releases"+
-                                              "\n点击确认后将打开网页"
-                                                  ,  QMessageBox::Ok|QMessageBox::No);
-                if(button == QMessageBox::Ok)
-                    QDesktopServices::openUrl(QUrl("https://github.com/inhowe/ComAssistant/releases"));
+                QMessageBox::information(nullptr,"提示","当前版本号："+Config::getVersion()+
+                                                      "\n检查更新失败。");
+//                QMessageBox::Button button;
+//                button = QMessageBox::information(nullptr,"提示","当前版本号："+Config::getVersion()+
+//                                              "\n检查更新失败。"+
+//                                              "\n请访问：https://github.com/inhowe/ComAssistant/releases"+
+//                                              "\n点击确认后将打开网页"
+//                                                  ,  QMessageBox::Ok|QMessageBox::No);
+//                if(button == QMessageBox::Ok)
+//                    QDesktopServices::openUrl(QUrl("https://github.com/inhowe/ComAssistant/releases"));
             }
         }else if(state == PostStatic){
 

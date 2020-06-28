@@ -150,12 +150,13 @@ private slots:
     void on_actionSumCheck_triggered(bool checked);
 
 private:
+    QString formatTime(int ms);
     bool needSaveConfig = true;
     void readConfig();
     Ui::MainWindow *ui;
     mySerialPort serial;
 
-    QLabel *statusSpeedLabel, *statusStatisticLabel, *statusRemoteMsgLabel; //状态栏标签
+    QLabel *statusSpeedLabel, *statusStatisticLabel, *statusRemoteMsgLabel, *statusTimer; //状态栏标签
 
     bool parseFile = false;
     QByteArrayList parseFileBuff;    //解析文件分包缓冲
