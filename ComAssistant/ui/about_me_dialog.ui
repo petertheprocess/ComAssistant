@@ -31,6 +31,20 @@
      </item>
      <item>
       <layout class="QFormLayout" name="formLayout">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_version">
+         <property name="text">
+          <string>软件版本：</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="version">
+         <property name="text">
+          <string>UNKNOWN</string>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="0">
         <widget class="QLabel" name="label_author">
          <property name="text">
@@ -46,44 +60,33 @@
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="label_github">
-         <property name="text">
-          <string>源代码：</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QLabel" name="githubUrl">
-         <property name="text">
-          <string>&lt;a href=&quot;www.github.com/inhowe/ComAssistant&quot;&gt;www.github.com/inhowe/ComAssistant&lt;/a&gt;</string>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="0">
         <widget class="QLabel" name="label_email">
          <property name="text">
           <string>反馈邮箱：</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
+       <item row="2" column="1">
         <widget class="QLabel" name="email">
          <property name="text">
           <string>&lt;a href=&quot;mailto:inhowe@qq.com?subject=ComAssistant的改进建议或BUG反馈&quot;&gt;inhowe@qq.com&lt;/a&gt;</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_version">
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_github">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
          <property name="text">
-          <string>软件版本：</string>
+          <string>源代码：</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="version">
+       <item row="3" column="1">
+        <widget class="QLabel" name="githubUrl">
          <property name="text">
-          <string>UNKNOWN</string>
+          <string>&lt;a href=&quot;www.github.com/inhowe/ComAssistant&quot;&gt;www.github.com/inhowe/ComAssistant&lt;/a&gt;</string>
          </property>
         </widget>
        </item>
@@ -117,7 +120,7 @@ p, li { white-space: pre-wrap; }
 &lt;p align=&quot;center&quot; style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'SimSun'; font-size:18pt; font-weight:600;&quot;&gt;声明&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'SimSun'; font-size:10pt;&quot;&gt;    1. 本软件可被任何人自由的使用、分享。&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'SimSun'; font-size:10pt;&quot;&gt;    2. 软件作者不对因使用本软件造成的任何问题进行解答或释疑、不对因使用本软件造成的任何后果承担任何责任。&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'SimSun'; font-size:10pt;&quot;&gt;    3. 如您在使用过程中发现软件相关的BUG、或者改进意见，可以在GitHub提起相关ISSUE或者发送电子邮件联系作者。&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'SimSun'; font-size:10pt;&quot;&gt;    3. 如您在使用过程中发现软件相关的BUG、或者改进意见，可以发送电子邮件进行反馈。&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'SimSun'; font-size:10pt;&quot;&gt;    4. 本软件可能会收集自身的使用统计信息并上传，包括但不限于用于区分设备的网卡MAC地址、运行时间、收发计数等，其余的任何信息均不会被上传，比如收发内容等。&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'SimSun'; font-size:10pt;&quot;&gt;    5. 如果您不同意本声明，您应该立即停止使用本软件。&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>

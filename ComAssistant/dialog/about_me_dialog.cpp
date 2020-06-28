@@ -6,6 +6,9 @@ About_Me_Dialog::About_Me_Dialog(QWidget *parent) :
     ui(new Ui::About_Me_Dialog)
 {
     ui->setupUi(this);
+    //可见性设置
+    ui->label_github->setVisible(false);
+    ui->githubUrl->setVisible(false);
 }
 
 About_Me_Dialog::~About_Me_Dialog()

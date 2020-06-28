@@ -55,6 +55,8 @@ void MainWindow::readConfig()
     //时间戳
     ui->timeStampCheckBox->setChecked(Config::getTimeStampState());
     ui->timeStampTimeOut->setText(QString::number(Config::getTimeStampTimeOut()));
+    if(!ui->timeStampCheckBox->isChecked())
+        ui->timeStampTimeOut->setEnabled(false);
     //发送间隔
     ui->sendInterval->setText(QString::number(Config::getSendInterval()));
     //hex发送
