@@ -53,12 +53,12 @@ QList<QString> mySerialPort::refreshSerialPort()
         if(TmpSerial.open(QSerialPort::ReadWrite))
         {
             TmpSerial.close();
-            tmp.append(TmpSerial.portName()+"("+tr("空闲:")+info.description()+")");
+            tmp.append(TmpSerial.portName()+"("+QObject::tr("空闲:")+info.description()+")");
         }
         else
         {
             TmpSerial.close();
-            tmp.append(TmpSerial.portName()+"("+tr("占用:")+info.description()+")");
+            tmp.append(TmpSerial.portName()+"("+QObject::tr("占用:")+info.description()+")");
         }
     }
 
