@@ -26,7 +26,7 @@ void MainWindow::readConfig()
     }else {
         ui->action_winLikeEnter->setChecked(true);
         ui->action_unixLikeEnter->setChecked(false);
-        QMessageBox::warning(this, "警告", "读取到未知的回车风格");
+        QMessageBox::warning(this, tr("警告"), tr("读取到未知的回车风格"));
     }
 
     //编码规则
@@ -127,9 +127,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    connect(this, SIGNAL(parseFileSignal()),this,SLOT(parseFileSlot()));
-
     //槽
+    connect(this, SIGNAL(parseFileSignal()),this,SLOT(parseFileSlot()));
     connect(&cycleSendTimer, SIGNAL(timeout()), this, SLOT(cycleSendTimerSlot()));
     connect(&secTimer, SIGNAL(timeout()), this, SLOT(secTimerSlot()));
     connect(&printToTextBrowserTimer, SIGNAL(timeout()), this, SLOT(printToTextBrowserTimerSlot()));
@@ -145,7 +144,7 @@ MainWindow::MainWindow(QWidget *parent) :
     statusSpeedLabel = new QLabel(this);
     statusStatisticLabel = new QLabel(this);
     statusTimer = new QLabel(this);
-    statusTimer->setText("计时器:"+formatTime(0));
+    statusTimer->setText(tr("计时器:") + formatTime(0));
     statusRemoteMsgLabel->setOpenExternalLinks(true);//可打开外链
     ui->statusBar->addPermanentWidget(statusRemoteMsgLabel);
     ui->statusBar->addPermanentWidget(statusTimer);
@@ -179,8 +178,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //数值显示器初始化
     ui->valueDisplay->setColumnCount(2);
-    ui->valueDisplay->setHorizontalHeaderItem(0,new QTableWidgetItem("名称"));
-    ui->valueDisplay->setHorizontalHeaderItem(1,new QTableWidgetItem("值"));
+    ui->valueDisplay->setHorizontalHeaderItem(0,new QTableWidgetItem(tr("名称")));
+    ui->valueDisplay->setHorizontalHeaderItem(1,new QTableWidgetItem(tr("值")));
     ui->valueDisplay->horizontalHeader()->setSectionResizeMode(0,QHeaderView::Stretch);
     ui->valueDisplay->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
     ui->valueDisplay->horizontalHeader()->setStretchLastSection(true);
@@ -197,7 +196,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->multiString->setFont(g_font);
     ui->customPlot->plotControl->setupFont(ui->customPlot, g_font);
 
-    this->setWindowTitle("串口调试助手 V"+Config::getVersion());
+    this->setWindowTitle(tr("串口调试助手") + " V"+Config::getVersion());
 
     //启动定时器
     secTimer.setTimerType(Qt::PreciseTimer);
@@ -216,7 +215,7 @@ MainWindow::MainWindow(QWidget *parent) :
         on_actionManual_triggered();
         //弹出声明
         on_actionAbout_triggered();
-        QMessageBox::information(this, "提示", "欢迎使用本串口调试助手。\n\n请认真阅读帮助文件与相关声明。\n若您继续使用本软件则代表您接受并同意相关声明。\n若您不同意相关声明请自行关闭软件。");
+        QMessageBox::information(this, tr("提示"), tr("欢迎使用本串口调试助手。\n\n请认真阅读帮助文件与相关声明。\n若您继续使用本软件则代表您接受并同意相关声明。\n若您不同意相关声明请自行关闭软件。"));
     }
 }
 
@@ -277,7 +276,7 @@ void MainWindow::secTimerSlot()
 
     if(ui->comSwitch->isChecked()){
         qint64 consumedTime = QDateTime::currentSecsSinceEpoch() - g_lastSecsSinceEpoch;
-        statusTimer->setText("计时器:"+formatTime(consumedTime*1000));
+        statusTimer->setText(tr("计时器:")+formatTime(consumedTime*1000));
     }else{
         g_lastSecsSinceEpoch = QDateTime::currentSecsSinceEpoch();
     }
@@ -418,7 +417,7 @@ MainWindow::~MainWindow()
 void MainWindow::on_refreshCom_clicked()
 {   
     if(ui->refreshCom->isEnabled()==false){
-        ui->statusBar->showMessage("刷新功能被禁用",1000);
+        ui->statusBar->showMessage(tr("刷新功能被禁用"),1000);
         return;
     }
 
@@ -435,7 +434,7 @@ void MainWindow::on_refreshCom_clicked()
         ui->comList->addItem(info);
     }
     if(ui->comList->count() == 0)
-        ui->comList->addItem("未找到可用串口!");
+        ui->comList->addItem(tr("未找到可用串口!"));
 
     //恢复刷新前的选择
     ui->comList->setCurrentIndex(0);
@@ -455,7 +454,7 @@ void MainWindow::on_refreshCom_clicked()
 void MainWindow::tryOpenSerial()
 {
     //只存在一个串口时且串口未被占用时自动打开
-    if(ui->comList->count()==1 && ui->comList->currentText().indexOf("占用")==-1 && ui->comList->currentText()!="未找到可用串口!"){
+    if(ui->comList->count()==1 && ui->comList->currentText().indexOf(tr("占用"))==-1 && ui->comList->currentText()!=tr("未找到可用串口!")){
         ui->refreshCom->setChecked(false);
         ui->comSwitch->setChecked(true);
         on_comSwitch_clicked(true);
@@ -482,21 +481,21 @@ void MainWindow::on_comSwitch_clicked(bool checked)
     if(checked)
     {
         if(serial.open(com,baud)){
-            ui->comSwitch->setText("关闭串口");
+            ui->comSwitch->setText(tr("关闭串口"));
             ui->comSwitch->setChecked(true);
             g_lastSecsSinceEpoch = QDateTime::currentSecsSinceEpoch();
             qint64 consumedTime = QDateTime::currentSecsSinceEpoch() - g_lastSecsSinceEpoch;
-            statusTimer->setText("计时器:"+formatTime(consumedTime*1000));
+            statusTimer->setText(tr("计时器:")+formatTime(consumedTime*1000));
         }
         else {
-            ui->comSwitch->setText("打开串口");
+            ui->comSwitch->setText(tr("打开串口"));
             ui->comSwitch->setChecked(false);
-            QString msg = "请检查下列情况后重新打开串口：\n\n"
-                          "# USB线缆是否松动？\n"
-                          "# 是否选择了正确的串口设备？\n"
-                          "# 该串口是否被其他程序占用？\n"
-                          "# 是否设置了过高的波特率？\n";
-            QMessageBox::critical(this, "串口打开失败!", msg, QMessageBox::Ok);
+            QString msg = tr("请检查下列情况后重新打开串口：\n\n")+
+                          tr("# 线缆是否松动？\n")+
+                          tr("# 是否选择了正确的串口设备？\n")+
+                          tr("# 该串口是否被其他程序占用？\n")+
+                          tr("# 是否设置了过高的波特率？\n");
+            QMessageBox::critical(this, tr("串口打开失败!"), msg, QMessageBox::Ok);
         }
     }
     else
@@ -511,7 +510,7 @@ void MainWindow::on_comSwitch_clicked(bool checked)
         }
 
         serial.close();
-        ui->comSwitch->setText("打开串口");
+        ui->comSwitch->setText(tr("打开串口"));
         ui->comSwitch->setChecked(false);
     }
 
@@ -637,7 +636,7 @@ void MainWindow::parseFileSlot()
     ui->customPlot->replot();
 //    qDebug()<<tt<<tt1<<parseFileBuffIndex/parseFileBuff.size();
     if(parseFileBuffIndex!=parseFileBuff.size()){
-        ui->statusBar->showMessage("解析进度："+QString::number(static_cast<int>(100.0*(parseFileBuffIndex+1.0)/parseFileBuff.size()))+"% ",1000);
+        ui->statusBar->showMessage(tr("解析进度：")+QString::number(static_cast<int>(100.0*(parseFileBuffIndex+1.0)/parseFileBuff.size()))+"% ",1000);
         emit parseFileSignal();
     }else{
         parseFile = false;
@@ -646,7 +645,7 @@ void MainWindow::parseFileSlot()
         ui->sendButton->setEnabled(true);
         ui->multiString->setEnabled(true);
         ui->cycleSendCheck->setEnabled(true);
-        ui->clearWindows->setText("清  空");
+        ui->clearWindows->setText(tr("清  空"));
     }
 }
 
@@ -699,7 +698,7 @@ void MainWindow::serialBytesWritten(qint64 bytes)
     statisticTxByteCnt += bytes;
 
     if(SendFileBuff.size()>0 && SendFileBuffIndex!=SendFileBuff.size()){
-        ui->statusBar->showMessage("发送进度："+QString::number(static_cast<int>(100.0*(SendFileBuffIndex+1.0)/SendFileBuff.size()))+"%",1000);
+        ui->statusBar->showMessage(tr("发送进度：")+QString::number(static_cast<int>(100.0*(SendFileBuffIndex+1.0)/SendFileBuff.size()))+"%",1000);
         serial.write(SendFileBuff.at(SendFileBuffIndex++));
         if(SendFileBuffIndex == SendFileBuff.size()){
             SendFileBuffIndex = 0;
@@ -720,7 +719,7 @@ void MainWindow::handleSerialError(QSerialPort::SerialPortError errCode)
         //关闭串口
         on_comSwitch_clicked(false);
         //强提醒也争取了时间，如果是短时间松动，则点击确定后可以恢复所选的端口
-        QMessageBox::warning(this,"警告","检测到串口故障，已关闭串口。\n串口是否发生了松动？");
+        QMessageBox::warning(this,tr("警告"),tr("检测到串口故障，已关闭串口。\n串口是否发生了松动？"));
         //【还要】再刷新一次
         on_refreshCom_clicked();
         //尝试恢复所选端口号
@@ -749,7 +748,7 @@ void MainWindow::on_sendButton_clicked()
     static QByteArray tmp;//用static是担心write是传递指针，发送大量数据可能会由于未发送完成而被销毁？
 
     if(!serial.isOpen()){
-        QMessageBox::information(this,"提示","串口未打开");
+        QMessageBox::information(this,tr("提示"),tr("串口未打开"));
         return;
     }
 
@@ -781,7 +780,7 @@ void MainWindow::on_sendButton_clicked()
         if(ok){
             serial.write(sendArr);
         }else{
-            ui->statusBar->showMessage("文本输入区数据转换失败，放弃此次发送！", 2000);
+            ui->statusBar->showMessage(tr("文本输入区数据转换失败，放弃此次发送！"), 2000);
         }
     }else {
         sendArr = tmp;
@@ -823,12 +822,12 @@ void MainWindow::on_sendButton_clicked()
 
 void MainWindow::on_clearWindows_clicked()
 {
-    ui->clearWindows->setText("清  空");
+    ui->clearWindows->setText(tr("清  空"));
 
     //定时器
     g_lastSecsSinceEpoch = QDateTime::currentSecsSinceEpoch();
     qint64 consumedTime = QDateTime::currentSecsSinceEpoch() - g_lastSecsSinceEpoch;
-    statusTimer->setText("计时器:"+formatTime(consumedTime*1000));
+    statusTimer->setText(tr("计时器：")+formatTime(consumedTime*1000));
 
     //串口
     serial.resetCnt();
@@ -873,11 +872,11 @@ void MainWindow::on_clearWindows_clicked()
 void MainWindow::on_cycleSendCheck_clicked(bool checked)
 {
     if(ui->sendInterval->text().toInt() < 15 && checked){
-        QMessageBox::warning(this,"警告","发送间隔较小可能不够准确");
+        QMessageBox::warning(this,tr("警告"),tr("发送间隔较小可能不够准确"));
     }
 
     if(!serial.isOpen()){
-        QMessageBox::information(this,"提示","串口未打开");
+        QMessageBox::information(this,tr("提示"),tr("串口未打开"));
         ui->cycleSendCheck->setChecked(false);
         return;
     }
@@ -904,7 +903,7 @@ void MainWindow::on_textEdit_textChanged()
     static QString lastText;
     if(ui->hexSend->isChecked()){
         if(!hexFormatCheck(ui->textEdit->toPlainText())){
-            QMessageBox::warning(this, "警告", "存在非法的十六进制格式。");
+            QMessageBox::warning(this, tr("警告"), tr("存在非法的十六进制格式。"));
             ui->textEdit->clear();
             ui->textEdit->insertPlainText(lastText);
             return;
@@ -1007,17 +1006,17 @@ void MainWindow::on_actionSaveOriginData_triggered()
 {
     //如果追加时间戳则提示时间戳不会被保存
     if(ui->timeStampCheckBox->isChecked())
-        QMessageBox::information(this,"提示","时间戳数据不会被保存！只保存接收到的原始数据。");
+        QMessageBox::information(this,tr("提示"),tr("时间戳数据不会被保存！只保存接收到的原始数据。"));
 
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
-                                                    "保存原始数据-选择文件路径",
+                                                    tr("保存原始数据-选择文件路径"),
                                                     lastFileDialogPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".dat",
                                                     "Dat File(*.dat);;All File(*.*)");
     //检查路径格式
     if(!savePath.endsWith(".dat")){
         if(!savePath.isEmpty())
-            QMessageBox::information(this,"尚未支持的文件格式","请选择dat文件。");
+            QMessageBox::information(this,tr("提示"),"尚未支持的文件格式，请选择dat文件。");
         return;
     }
 
@@ -1049,13 +1048,13 @@ void MainWindow::on_actionOpenOriginData_triggered()
     static QString lastFileName;
     //打开文件对话框
     QString readPath = QFileDialog::getOpenFileName(this,
-                                                    "读取原始数据-选择文件路径",
+                                                    tr("读取原始数据-选择文件路径"),
                                                     lastFileDialogPath + lastFileName,
                                                     "Dat File(*.dat);;All File(*.*)");
     //检查文件路径结尾
     if(!readPath.endsWith(".dat")){
         if(!readPath.isEmpty())
-            QMessageBox::information(this,"尚未支持的文件格式","请选择dat文件。");
+            QMessageBox::information(this,tr("尚未支持的文件格式"),tr("请选择dat文件。"));
         return;
     }
     //记录上次路径
@@ -1105,14 +1104,14 @@ void MainWindow::on_actionOpenOriginData_triggered()
         cycleSendTimer.stop();
         ui->cycleSendCheck->setEnabled(false);
         ui->cycleSendCheck->setChecked(false);
-        ui->clearWindows->setText("中  止");
+        ui->clearWindows->setText(tr("中  止"));
 
         // 解析读取的数据
         parseFile = true;
         unshowedRxBuff.clear();
         emit parseFileSignal();
     }else{
-        QMessageBox::information(this,"提示","文件打开失败。");
+        QMessageBox::information(this,tr("提示"),tr("文件打开失败。"));
         lastFileName.clear();
     }
 }
@@ -1145,7 +1144,7 @@ void MainWindow::on_actionCOM_Config_triggered()
     //对话框返回新配置并设置
     if(p->clickedOK()){
         if(!serial.moreSetting(p->getStopBits(),p->getParity(),p->getFlowControl(),p->getDataBits()))
-            QMessageBox::information(this,"提示","串口设置失败，请关闭串口重试");
+            QMessageBox::information(this,tr("提示"),tr("串口设置失败，请关闭串口重试"));
     }
 
     delete p;
@@ -1162,7 +1161,7 @@ void MainWindow::on_baudrateList_currentTextChanged(const QString &arg1)
         serial.setBaudRate(baud);
     }
     else {
-        QMessageBox::information(this,"提示","请输入合法波特率");
+        QMessageBox::information(this,tr("提示"),tr("请输入合法波特率"));
     }
 }
 
@@ -1186,9 +1185,9 @@ void MainWindow::on_comList_textActivated(const QString &arg1)
         on_comSwitch_clicked(false);
         on_comSwitch_clicked(true);
         if(serial.isOpen())
-            ui->statusBar->showMessage("已重新启动串口",1000);
+            ui->statusBar->showMessage(tr("已重新启动串口"),1000);
         else
-            ui->statusBar->showMessage("串口重启失败",1000);
+            ui->statusBar->showMessage(tr("串口重启失败"),1000);
     }
 }
 
@@ -1196,13 +1195,13 @@ void MainWindow::on_actionSaveShowedData_triggered()
 {
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
-                                                    "保存显示数据-选择文件路径",
+                                                    tr("保存显示数据-选择文件路径"),
                                                     lastFileDialogPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".txt",
                                                     "Text File(*.txt);;All File(*.*)");
     //检查路径
     if(!savePath.endsWith("txt")){
         if(!savePath.isEmpty())
-            QMessageBox::information(this,"尚未支持的文件格式","请选择txt文本文件。");
+            QMessageBox::information(this,tr("尚未支持的文件格式"),tr("请选择txt文本文件。"));
         return;
     }
 
@@ -1303,19 +1302,19 @@ void MainWindow::on_multiString_customContextMenuRequested(const QPoint &pos)
     QMenu *popMenu = new QMenu( this );
     //添加右键菜单
     if( curItem != nullptr ){
-        editSeed = new QAction("编辑当前条目", this);
+        editSeed = new QAction(tr("编辑当前条目"), this);
         popMenu->addAction( editSeed );
         connect( editSeed, SIGNAL(triggered() ), this, SLOT( editSeedSlot()) );
 
         popMenu->addSeparator();
 
-        deleteSeed = new QAction("删除当前条目", this);
+        deleteSeed = new QAction(tr("删除当前条目"), this);
         popMenu->addAction( deleteSeed );
         connect( deleteSeed, SIGNAL(triggered() ), this, SLOT( deleteSeedSlot()) );
 
         popMenu->addSeparator();
     }
-    clearSeeds = new QAction("清空所有条目", this);
+    clearSeeds = new QAction(tr("清空所有条目"), this);
     popMenu->addAction( clearSeeds );
     connect( clearSeeds, SIGNAL(triggered() ), this, SLOT( clearSeedsSlot()) );
     popMenu->exec( QCursor::pos() );
@@ -1335,7 +1334,7 @@ void MainWindow::editSeedSlot()
 
     int curIndex = ui->multiString->row(item);
     bool ok = false;
-    QString newStr = QInputDialog::getText(this,"编辑条目","新的文本：", QLineEdit::Normal,
+    QString newStr = QInputDialog::getText(this,tr("编辑条目"),tr("新的文本："), QLineEdit::Normal,
                                            ui->multiString->item(curIndex)->text(), &ok,Qt::WindowCloseButtonHint);
     if(ok == true)
         ui->multiString->item(curIndex)->setText(newStr);
@@ -1388,15 +1387,15 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 
         if(ui->actionAscii->isChecked()){
             if(ui->actionSumCheck->isChecked())
-                ui->plotter->setTitle("数据可视化：ASCII协议(和校验)");
+                ui->plotter->setTitle(tr("数据可视化：ASCII协议(和校验)"));
             else
-                ui->plotter->setTitle("数据可视化：ASCII协议");
+                ui->plotter->setTitle(tr("数据可视化：ASCII协议"));
         }
         else if(ui->actionFloat->isChecked()){
             if(ui->actionSumCheck->isChecked())
-                ui->plotter->setTitle("数据可视化：FLOAT协议(和校验)");
+                ui->plotter->setTitle(tr("数据可视化：FLOAT协议(和校验)"));
             else
-                ui->plotter->setTitle("数据可视化：FLOAT协议");
+                ui->plotter->setTitle(tr("数据可视化：FLOAT协议"));
         }
     }else{
         ui->customPlot->hide();
@@ -1405,7 +1404,7 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
         if(!ui->actionValueDisplay->isChecked())
             plotterParseTimer.stop();
 
-        ui->plotter->setTitle("数据可视化");
+        ui->plotter->setTitle(tr("数据可视化"));
     }
 }
 
@@ -1439,7 +1438,7 @@ void MainWindow::plotterParseTimerSlot()
         if(ui->actionPlotterSwitch->isChecked()){
             //关闭刷新，数据全部填充完后统一刷新
             if(false == ui->customPlot->plotControl->displayToPlotter(ui->customPlot, oneRowData, false, false))
-                ui->statusBar->showMessage("出现一组异常绘图数据，已丢弃。", 1000);
+                ui->statusBar->showMessage(tr("出现一组异常绘图数据，已丢弃。"), 1000);
         }
 
     }
@@ -1456,8 +1455,8 @@ void MainWindow::plotterParseTimerSlot()
             ui->valueDisplay->setRowCount(oneRowData.size());
             //设置列，固定的
             ui->valueDisplay->setColumnCount(2);
-            ui->valueDisplay->setHorizontalHeaderItem(0,new QTableWidgetItem("名称"));
-            ui->valueDisplay->setHorizontalHeaderItem(1,new QTableWidgetItem("值"));
+            ui->valueDisplay->setHorizontalHeaderItem(0,new QTableWidgetItem(tr("名称")));
+            ui->valueDisplay->setHorizontalHeaderItem(1,new QTableWidgetItem(tr("值")));
             ui->valueDisplay->horizontalHeader()->setStretchLastSection(true);
             ui->valueDisplay->horizontalHeader()->setSectionResizeMode(0,QHeaderView::Stretch);
             ui->valueDisplay->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
@@ -1476,7 +1475,7 @@ void MainWindow::plotterParseTimerSlot()
 
     if(parsedLength == maxParseLengthLimit){
         QString temp;
-        temp = temp + "警告：绘图器繁忙，待解析数据长度：" + QString::number(RxBuff.size() - plotterParsePosInRxBuff - 1) + "Byte";
+        temp = temp + tr("警告：绘图器繁忙，待解析数据长度：") + QString::number(RxBuff.size() - plotterParsePosInRxBuff - 1) + "Byte";
         ui->statusBar->showMessage(temp, 2000);
     }
 
@@ -1508,9 +1507,9 @@ void MainWindow::on_actionAscii_triggered(bool checked)
 
     if(ui->actionPlotterSwitch->isChecked()){
         if(ui->actionSumCheck->isChecked())
-            ui->plotter->setTitle("数据可视化：ASCII协议(和校验)");
+            ui->plotter->setTitle(tr("数据可视化：ASCII协议(和校验)"));
         else
-            ui->plotter->setTitle("数据可视化：ASCII协议");
+            ui->plotter->setTitle(tr("数据可视化：ASCII协议"));
     }
 }
 
@@ -1524,9 +1523,9 @@ void MainWindow::on_actionFloat_triggered(bool checked)
 
     if(ui->actionPlotterSwitch->isChecked()){
         if(ui->actionSumCheck->isChecked())
-            ui->plotter->setTitle("数据可视化：FLOAT协议(和校验)");
+            ui->plotter->setTitle(tr("数据可视化：FLOAT协议(和校验)"));
         else
-            ui->plotter->setTitle("数据可视化：FLOAT协议");
+            ui->plotter->setTitle(tr("数据可视化：FLOAT协议"));
     }
 }
 
@@ -1622,11 +1621,11 @@ void MainWindow::on_actionResetDefaultConfig_triggered(bool checked)
 {
     if(checked)
     {
-        QMessageBox::Button button = QMessageBox::warning(this,"警告：确认恢复默认设置吗？","该操作会重置软件初始状态！",QMessageBox::Ok|QMessageBox::No);
+        QMessageBox::Button button = QMessageBox::warning(this,tr("警告：确认恢复默认设置吗？"),tr("该操作会重置软件初始状态！"),QMessageBox::Ok|QMessageBox::No);
         if(button == QMessageBox::No)
             return;
         needSaveConfig = false;
-        QMessageBox::information(this, "提示", "重置成功。请重启程序。");
+        QMessageBox::information(this, tr("提示"), tr("重置成功。请重启程序。"));
     }else{
         needSaveConfig = true;
     }
@@ -1649,7 +1648,7 @@ void MainWindow::on_actionSavePlotData_triggered()
 {
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
-                                                    "保存绘图数据-选择文件路径",
+                                                    tr("保存绘图数据-选择文件路径"),
                                                     lastFileDialogPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss")+".xlsx",
                                                     "XLSX File(*.xlsx);;CSV File(*.csv);;TXT File(*.txt);;All File(*.*)");
     //检查路径格式
@@ -1657,7 +1656,7 @@ void MainWindow::on_actionSavePlotData_triggered()
        !savePath.endsWith(".csv") &&
        !savePath.endsWith(".txt")){
         if(!savePath.isEmpty())
-            QMessageBox::information(this,"提示","尚未支持的文件格式。请选择xlsx或者csv或者txt格式文件。");
+            QMessageBox::information(this,tr("提示"),tr("尚未支持的文件格式。请选择xlsx或者csv或者txt格式文件。"));
         return;
     }
 
@@ -1683,7 +1682,7 @@ void MainWindow::on_actionSavePlotData_triggered()
         hexBrowserBuff.append(toHexDisplay(str.toLocal8Bit()));
         printToTextBrowser();
     }else{
-        QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
+        QMessageBox::warning(this, tr("警告"), tr("保存失败。文件是否被其他软件占用？"));
     }
 
 }
@@ -1692,7 +1691,7 @@ void MainWindow::on_actionSavePlotAsPicture_triggered()
 {
     //打开保存文件对话框
     QString savePath = QFileDialog::getSaveFileName(this,
-                                                    "曲线保存图片-选择文件路径",
+                                                    tr("曲线保存图片-选择文件路径"),
                                                     lastFileDialogPath + QDateTime::currentDateTime().toString("yyyyMMdd-hhmmss"),
                                                     "Bmp File(*.bmp);;Pdf File(*.pdf);;Jpeg File(*.jpg);;Png File(*.png);;All File(*.*)");
     //检查路径格式
@@ -1701,7 +1700,7 @@ void MainWindow::on_actionSavePlotAsPicture_triggered()
        !savePath.endsWith(".png") &&
        !savePath.endsWith(".pdf")){
         if(!savePath.isEmpty())
-            QMessageBox::information(this,"提示","尚未支持的文件格式。请选择jpg/bmp/png/pdf文件。");
+            QMessageBox::information(this,tr("提示"),tr("尚未支持的文件格式。请选择jpg/bmp/png/pdf文件。"));
         return;
     }
     //记录上次路径
@@ -1733,7 +1732,7 @@ void MainWindow::on_actionSavePlotAsPicture_triggered()
         hexBrowserBuff.append(toHexDisplay(str.toLocal8Bit()));
         printToTextBrowser();
     }else{
-        QMessageBox::warning(this, "警告", "保存失败。文件是否被其他软件占用？");
+        QMessageBox::warning(this, tr("警告"), tr("保存失败。文件是否被其他软件占用？"));
     }
 }
 
@@ -1842,7 +1841,7 @@ void MainWindow::on_actionUsageStatistic_triggered()
     hou = QString::number(hour,10);
     min = QString::number(minute,10);
     sec = QString::number(second,10);
-    currentRunTimeStr = days + " 天 " + hou + " 小时 " + min + " 分钟 " + sec + " 秒";
+    currentRunTimeStr = days + tr(" 天 ") + hou + tr(" 小时 ") + min + tr(" 分钟 ") + sec + tr(" 秒");
     //时间换算
     day = static_cast<long>(totalRunTime / dd);
     hour = static_cast<long>((totalRunTime - day * dd) / hh);
@@ -1853,54 +1852,54 @@ void MainWindow::on_actionUsageStatistic_triggered()
     hou = QString::number(hour,10);
     min = QString::number(minute,10);
     sec = QString::number(second,10);
-    totalRunTimeStr = days + " 天 " + hou + " 小时 " + min + " 分钟 " + sec + " 秒";
+    totalRunTimeStr = days + tr(" 天 ") + hou + tr(" 小时 ") + min + tr(" 分钟 ") + sec + tr(" 秒");
 
     QString rankStr;
     if(totalTxRx_MB<100){
-        rankStr = "恭喜您，获得了【青铜码农】的称号！请再接再厉！";
+        rankStr = tr("恭喜您，获得了【青铜码农】的称号！请再接再厉！");
     }else if(totalTxRx_MB<200){
-        rankStr = "恭喜您，获得了【白银码农】的称号！请再接再厉！";
+        rankStr = tr("恭喜您，获得了【白银码农】的称号！请再接再厉！");
     }else if(totalTxRx_MB<400){
-        rankStr = "恭喜您，获得了【黄金码农】的称号！请再接再厉！";
+        rankStr = tr("恭喜您，获得了【黄金码农】的称号！请再接再厉！");
     }else if(totalTxRx_MB<800){
-        rankStr = "恭喜您，获得了【铂金码农】的称号！请再接再厉！";
+        rankStr = tr("恭喜您，获得了【铂金码农】的称号！请再接再厉！");
     }else if(totalTxRx_MB<1600){
-        rankStr = "恭喜您，获得了【星钻码农】的称号！请再接再厉！";
+        rankStr = tr("恭喜您，获得了【星钻码农】的称号！请再接再厉！");
     }else if(totalTxRx_MB<3200){
-        rankStr = "恭喜您，获得了【皇冠码农】的称号！请再接再厉！";
+        rankStr = tr("恭喜您，获得了【皇冠码农】的称号！请再接再厉！");
     }else if(totalTxRx_MB<6400){
-        rankStr = "恭喜您，获得了【王牌码农】的称号！请再接再厉！";
+        rankStr = tr("恭喜您，获得了【王牌码农】的称号！请再接再厉！");
     }else{
-        rankStr = "荣誉只是浮云~";
+        rankStr = tr("荣誉只是浮云~");
     }
 
     //上屏显示
     //ui->textBrowser->clear(); //如果清屏的话要做提示，可能用户数据还未保存
-    ui->textBrowser->append("软件版本："+Config::getVersion());
-    ui->textBrowser->append("");
-    ui->textBrowser->append("【设备信息】");
-    ui->textBrowser->append("   MAC地址："+HTTP::getHostMacAddress());
-    ui->textBrowser->append("");
-    ui->textBrowser->append("【软件使用统计】");
-    ui->textBrowser->append("   自本次启动软件以来，您：");
-    ui->textBrowser->append("   - 共发送数据："+QString::number(currentTx,'f',2)+currentTxUnit);
-    ui->textBrowser->append("   - 共接收数据："+QString::number(currentRx,'f',2)+currentRxUnit);
-    ui->textBrowser->append("   - 共运行本软件："+currentRunTimeStr);
-    ui->textBrowser->append("   自首次启动软件以来，您：");
-    ui->textBrowser->append("   - 共发送数据："+QString::number(totalTx,'f',2)+totalTxUnit);
-    ui->textBrowser->append("   - 共接收数据："+QString::number(totalRx,'f',2)+totalRxUnit);
-    ui->textBrowser->append("   - 共运行本软件："+totalRunTimeStr);
-    ui->textBrowser->append("   - 共启动本软件："+QString::number(Config::getTotalRunCnt().toInt()+1)+" 次");
-    ui->textBrowser->append("");
-    ui->textBrowser->append("   "+rankStr);
-    ui->textBrowser->append("");
-    ui->textBrowser->append("【隐私声明】");
-    ui->textBrowser->append("  - 以上统计信息可能会被上传至服务器用于统计。");
-    ui->textBrowser->append("  - 其他任何信息均不会被上传。");
-    ui->textBrowser->append("  - 如您不同意本声明，可阻断本软件的网络请求或者您应该停止使用本软件。");
-    ui->textBrowser->append("");
-    ui->textBrowser->append("感谢您的使用");
-    ui->textBrowser->append("");
+    ui->textBrowser->append(tr("软件版本：")+Config::getVersion());
+    ui->textBrowser->append(tr(""));
+    ui->textBrowser->append(tr("【设备信息】"));
+    ui->textBrowser->append(tr("   MAC地址：")+HTTP::getHostMacAddress());
+    ui->textBrowser->append(tr(""));
+    ui->textBrowser->append(tr("【软件使用统计】"));
+    ui->textBrowser->append(tr("   自本次启动软件以来，您："));
+    ui->textBrowser->append(tr("   - 共发送数据：")+QString::number(currentTx,'f',2)+currentTxUnit);
+    ui->textBrowser->append(tr("   - 共接收数据：")+QString::number(currentRx,'f',2)+currentRxUnit);
+    ui->textBrowser->append(tr("   - 共运行本软件：")+currentRunTimeStr);
+    ui->textBrowser->append(tr("   自首次启动软件以来，您："));
+    ui->textBrowser->append(tr("   - 共发送数据：")+QString::number(totalTx,'f',2)+totalTxUnit);
+    ui->textBrowser->append(tr("   - 共接收数据：")+QString::number(totalRx,'f',2)+totalRxUnit);
+    ui->textBrowser->append(tr("   - 共运行本软件：")+totalRunTimeStr);
+    ui->textBrowser->append(tr("   - 共启动本软件：")+QString::number(Config::getTotalRunCnt().toInt()+1)+tr(" 次"));
+    ui->textBrowser->append(tr(""));
+    ui->textBrowser->append(tr("   ")+rankStr);
+    ui->textBrowser->append(tr(""));
+    ui->textBrowser->append(tr("【隐私声明】"));
+    ui->textBrowser->append(tr("  - 以上统计信息可能会被上传至服务器用于统计。"));
+    ui->textBrowser->append(tr("  - 其他任何信息均不会被上传。"));
+    ui->textBrowser->append(tr("  - 如您不同意本声明，可阻断本软件的网络请求或者您应该停止使用本软件。"));
+    ui->textBrowser->append(tr(""));
+    ui->textBrowser->append(tr("感谢您的使用"));
+    ui->textBrowser->append(tr(""));
 
     QString str = ui->textBrowser->document()->toPlainText();
     BrowserBuff.clear();
@@ -1914,7 +1913,7 @@ void MainWindow::on_actionSendFile_triggered()
     static QString lastFileName;
     //打开文件对话框
     QString readPath = QFileDialog::getOpenFileName(this,
-                                                    "打开文件",
+                                                    tr("打开文件"),
                                                     lastFileDialogPath + lastFileName,
                                                     "All File(*.*)");
     //检查文件路径结尾
@@ -1968,9 +1967,9 @@ void MainWindow::on_actionSendFile_triggered()
             serial.write(SendFileBuff.at(SendFileBuffIndex++));//后续缓冲的发送在串口发送完成的槽里
         }
         else
-            QMessageBox::information(this,"提示","请先打开串口。");
+            QMessageBox::information(this,tr("提示"),tr("请先打开串口。"));
     }else{
-        QMessageBox::information(this,"提示","文件打开失败。");
+        QMessageBox::information(this,tr("提示"),tr("文件打开失败。"));
         lastFileName.clear();
     }
 }
@@ -2010,9 +2009,9 @@ void MainWindow::on_textBrowser_customContextMenuRequested(const QPoint &pos)
     QAction *tips = nullptr;
     QMenu *popMenu = new QMenu( this );
     //添加右键菜单
-    saveOriginData = new QAction("保存原始数据", this);
-    saveShowedData = new QAction("保存显示数据", this);
-    clearTextBrowser = new QAction("清空数据显示区", this);
+    saveOriginData = new QAction(tr("保存原始数据"), this);
+    saveShowedData = new QAction(tr("保存显示数据"), this);
+    clearTextBrowser = new QAction(tr("清空数据显示区"), this);
 
     popMenu->addAction( saveOriginData );
     popMenu->addAction( saveShowedData );
@@ -2051,13 +2050,13 @@ void MainWindow::on_valueDisplay_customContextMenuRequested(const QPoint &pos)
     QMenu *popMenu = new QMenu( this );
     //添加右键菜单
     if( selectedItems.size() ){
-        deleteValueDisplayRow = new QAction("删除元素所在行", this);
+        deleteValueDisplayRow = new QAction(tr("删除元素所在行"), this);
         popMenu->addAction( deleteValueDisplayRow );
         connect( deleteValueDisplayRow, SIGNAL(triggered() ), this, SLOT( deleteValueDisplayRowSlot()) );
 
         popMenu->addSeparator();
     }
-    deleteValueDisplay = new QAction("删除所有行", this);
+    deleteValueDisplay = new QAction(tr("删除所有行"), this);
     popMenu->addAction( deleteValueDisplay );
     connect( deleteValueDisplay, SIGNAL(triggered() ), this, SLOT( deleteValueDisplaySlot()) );
     popMenu->exec( QCursor::pos() );
@@ -2118,7 +2117,7 @@ void MainWindow::on_actionFontSetting_triggered()
 {
     bool ok;
     QFont font;
-    font = QFontDialog::getFont(&ok, font, this, "选择字体");
+    font = QFontDialog::getFont(&ok, font, this, tr("选择字体"));
     if(ok){
         g_font = font;
         ui->textBrowser->setFont(g_font);
@@ -2132,7 +2131,7 @@ void MainWindow::on_actionBackGroundColorSetting_triggered()
 {
     QColor color;
     color = QColorDialog::getColor(Qt::white, this,
-                                          "选择背景色",
+                                          tr("选择背景色"),
                                           QColorDialog::ShowAlphaChannel);
     if(!color.isValid())
         return;
@@ -2154,16 +2153,16 @@ void MainWindow::on_actionSumCheck_triggered(bool checked)
     if(checked){
         if(ui->actionPlotterSwitch->isChecked()){
             if(ui->actionAscii->isChecked())
-                ui->plotter->setTitle("数据可视化：ASCII协议(和校验)");
+                ui->plotter->setTitle(tr("数据可视化：ASCII协议(和校验)"));
             else if(ui->actionFloat->isChecked())
-                ui->plotter->setTitle("数据可视化：FLOAT协议(和校验)");
+                ui->plotter->setTitle(tr("数据可视化：FLOAT协议(和校验)"));
         }
     }else{
         if(ui->actionPlotterSwitch->isChecked()){
             if(ui->actionAscii->isChecked())
-                ui->plotter->setTitle("数据可视化：ASCII协议");
+                ui->plotter->setTitle(tr("数据可视化：ASCII协议"));
             else if(ui->actionFloat->isChecked())
-                ui->plotter->setTitle("数据可视化：FLOAT协议");
+                ui->plotter->setTitle(tr("数据可视化：FLOAT协议"));
         }
     }
 }

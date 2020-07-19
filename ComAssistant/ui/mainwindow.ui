@@ -243,7 +243,7 @@ p, li { white-space: pre-wrap; }
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1,1">
           <item>
-           <widget class="QLabel" name="label">
+           <widget class="QLabel" name="label_TimeOut">
             <property name="text">
              <string>超时时间</string>
             </property>
@@ -263,7 +263,7 @@ p, li { white-space: pre-wrap; }
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_3">
+           <widget class="QLabel" name="label_ms">
             <property name="text">
              <string>ms</string>
             </property>
@@ -300,7 +300,7 @@ p, li { white-space: pre-wrap; }
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_2">
+           <widget class="QLabel" name="label_ms_per_time">
             <property name="text">
              <string>ms/次</string>
             </property>
@@ -807,14 +807,6 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="text">
     <string>GBK</string>
-   </property>
-  </action>
-  <action name="actionHidePlotData">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="text">
-    <string>隐藏绘图数据</string>
    </property>
   </action>
   <action name="actionValueDisplay">

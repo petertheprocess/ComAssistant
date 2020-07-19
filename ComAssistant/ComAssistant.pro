@@ -180,4 +180,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 RESOURCES += \
     resources/resources.qrc
 
+# 翻译文件
+TRANSLATIONS = resources/en_US.ts
+
 DISTFILES +=
