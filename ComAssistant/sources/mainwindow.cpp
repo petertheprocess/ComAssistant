@@ -1,10 +1,52 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include <QHotkey>
 
-static QColor      g_background_color;
-static QFont       g_font;
-static bool        g_enableSumCheck;
-static qint64      g_lastSecsSinceEpoch;
+static QColor   g_background_color;
+static QFont    g_font;
+static bool     g_enableSumCheck;
+static qint64   g_lastSecsSinceEpoch;
+static QString  g_popupHotKeySequence;
+static QHotkey  *g_popupHotkey = new QHotkey(nullptr);
+//注册全局快捷键
+bool MainWindow::registPopupHotKey(QString keySequence)
+{
+    if(keySequence == g_popupHotKeySequence)
+        return true;
+
+    if(keySequence.isEmpty())
+    {
+        if(g_popupHotkey->resetShortcut())
+        {
+            g_popupHotKeySequence.clear();
+            QMessageBox::information(this, tr("提示"), tr("已关闭全局弹出热键"));
+            return true;
+        }
+        QMessageBox::information(this, tr("提示"), tr("全局弹出热键重置失败"));
+        return false;
+    }
+
+    if(g_popupHotkey->setShortcut(keySequence,true))
+    {
+        connect(g_popupHotkey, &QHotkey::activated, [this](){
+            this->show();
+            this->raise();
+            this->activateWindow();
+            this->raise();
+            QApplication::setActiveWindow(this);
+            this->showNormal();
+        });
+        g_popupHotKeySequence = keySequence;
+        return true;
+    }
+    else
+    {
+        g_popupHotKeySequence.clear();
+        QMessageBox::information(this, tr("提示"), tr("全局弹出热键已被占用")+ "[" + keySequence +"]");
+        return false;
+    }
+}
+
 /*
  * Function:读取配置
 */
@@ -13,6 +55,9 @@ void MainWindow::readConfig()
     //先写入版本号和启动时间
     Config::setVersion();
     Config::setStartTime(QDateTime::currentDateTime().toString("yyyyMMddhhmmss"));
+
+    //注册全局呼出快捷键
+    registPopupHotKey(Config::getPopupHotKey());
 
     //回车风格
     if(Config::getEnterStyle() == EnterStyle_e::WinStyle){
@@ -118,7 +163,6 @@ void MainWindow::readConfig()
     ui->actionOpenGL->setChecked(Config::getOpengGLState());
     on_actionOpenGL_triggered(Config::getOpengGLState());
 }
-
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -365,6 +409,7 @@ MainWindow::~MainWindow()
         Config::setLastFileDialogPath(lastFileDialogPath);
         Config::setGUIFont(g_font);
         Config::setBackGroundColor(g_background_color);
+        Config::setPopupHotKey(g_popupHotKeySequence);
 
         //serial 只保存成功打开过的
         Config::setPortName(serial.portName());
@@ -409,6 +454,7 @@ MainWindow::~MainWindow()
     delete highlighter;
     delete ui;
     delete http;
+    delete g_popupHotkey;
 }
 
 /*
@@ -2165,4 +2211,16 @@ void MainWindow::on_actionSumCheck_triggered(bool checked)
                 ui->plotter->setTitle(tr("数据可视化：FLOAT协议"));
         }
     }
+}
+
+void MainWindow::on_actionPopupHotkey_triggered()
+{
+    bool ok;
+    QString newKeySeq = QInputDialog::getText(this, tr("修改全局弹出热键"), tr("新的全局弹出热键："),
+                                             QLineEdit::Normal, g_popupHotKeySequence , &ok, Qt::WindowCloseButtonHint);
+    if(ok==false)
+    {
+        return;
+    }
+    registPopupHotKey(newKeySeq);
 }

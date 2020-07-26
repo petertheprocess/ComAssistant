@@ -38,7 +38,7 @@
 #define KEY_TIMESTAMP_TIMEOUT   QString("TimeStampTimeOut")
 #define KEY_GUIFONT             QString("GUIFont")
 #define KEY_BACKGROUNDCOLOR     QString("BackGroudColor")
-
+#define KEY_POPUPHOTKEY        QString("PopUpHotKey")
 //serial键
 #define KEY_PORTNAME        QString("PortName")
 #define KEY_BAUDRATE        QString("Baudrate")
@@ -160,6 +160,8 @@ public:
     static QFont getGUIFont();
     static void setBackGroundColor(QColor color);
     static QColor getBackGroundColor();
+    static void setPopupHotKey(QString keySequence);
+    static QString getPopupHotKey();
 
     //plotter
     static void setPlotterState(bool checked);

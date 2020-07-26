@@ -33,6 +33,19 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 CONFIG += c++11
 
+# QHotkey支持
+mac: LIBS += -framework Carbon
+else:win32: LIBS += -luser32
+else:unix {
+        QT += x11extras
+        LIBS += -lX11
+}
+
+SOURCES += QHotkey/QHotkey/qhotkey.cpp
+mac: SOURCES += QHotkey/QHotkey/qhotkey_mac.cpp
+else:win32: SOURCES += QHotkey/QHotkey/qhotkey_win.cpp
+else:unix: SOURCES += QHotkey/QHotkey/qhotkey_x11.cpp
+
 SOURCES += \
     QXlsx/myxlsx.cpp \
     QXlsx/source/xlsxabstractooxmlfile.cpp \
@@ -86,6 +99,9 @@ SOURCES += \
     sources/myserialport.cpp
 
 HEADERS += \
+    QHotkey/QHotkey/qhotkey.h \
+    QHotkey/QHotkey/QHotkey \
+    QHotkey/QHotkey/qhotkey_p.h \
     QXlsx/header/xlsxabstractooxmlfile.h \
     QXlsx/header/xlsxabstractooxmlfile_p.h \
     QXlsx/header/xlsxabstractsheet.h \
@@ -169,6 +185,7 @@ INCLUDEPATH += $$PWD/plotter/
 INCLUDEPATH += $$PWD/dialog/
 INCLUDEPATH += $$PWD/QXlsx/
 INCLUDEPATH += $$PWD/QXlsx/header/
+INCLUDEPATH += $$PWD/QHotkey/QHotkey/
 
 # Use Precompiled headers (PCH)
 #CONFIG += cmdline precompile_header
@@ -183,4 +200,4 @@ RESOURCES += \
 # 翻译文件
 TRANSLATIONS = resources/en_US.ts
 
-DISTFILES +=
+

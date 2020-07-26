@@ -19,6 +19,11 @@ Config::Config()
 void Config::writeDefault(){
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
 
+    QFont defaultFont;
+    defaultFont.setFamilies(QStringList()<<"Courier New"<<"Consolas"<<"Microsoft YaHei UI");
+    defaultFont.setPointSize(10);
+    QColor defaultColor(Qt::white);
+
     iniFile->setValue(SECTION_GLOBAL+KEY_FIRSTRUN, true);
     iniFile->setValue(SECTION_GLOBAL+KEY_CODERULE, CodeRule_e::GBK);
     iniFile->setValue(SECTION_GLOBAL+KEY_ENTERSTYLE , EnterStyle_e::WinStyle);
@@ -29,6 +34,9 @@ void Config::writeDefault(){
     iniFile->setValue(SECTION_GLOBAL+KEY_HIGHLIGHTSTATE, true);
     iniFile->setValue(SECTION_GLOBAL+KEY_TEXTSENDAREA, "");
     iniFile->setValue(SECTION_GLOBAL+KEY_LASTFILEDIALOGPATH, "");
+    iniFile->setValue(SECTION_GLOBAL+KEY_GUIFONT, defaultFont);
+    iniFile->setValue(SECTION_GLOBAL+KEY_BACKGROUNDCOLOR, defaultColor);
+    iniFile->setValue(SECTION_GLOBAL+KEY_POPUPHOTKEY, "Shift+Alt+C");
 
     iniFile->setValue(SECTION_SERIAL+KEY_PORTNAME, "");
     iniFile->setValue(SECTION_SERIAL+KEY_BAUDRATE, QSerialPort::Baud115200);
@@ -407,11 +415,27 @@ void Config::setBackGroundColor(QColor color){
     delete iniFile;
 }
 QColor Config::getBackGroundColor(){
-    QColor defaultColor;
+    QColor defaultColor(Qt::white);
     QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
     QColor color = qvariant_cast<QColor>(iniFile->value(SECTION_GLOBAL+KEY_BACKGROUNDCOLOR, defaultColor));
     delete iniFile;
     return color;
+}
+void Config::setPopupHotKey(QString keySequence)
+{
+    if(keySequence.isEmpty())
+        keySequence = "Shift+Alt+C";
+    createDefaultIfNotExist();
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    iniFile->setValue(SECTION_GLOBAL+KEY_POPUPHOTKEY, keySequence);
+    delete iniFile;
+}
+QString Config::getPopupHotKey()
+{
+    QSettings *iniFile = new QSettings(SAVE_PATH, QSettings::IniFormat);
+    QString value = iniFile->value(SECTION_GLOBAL+KEY_POPUPHOTKEY, "Shift+Alt+C").toString();
+    delete iniFile;
+    return value;
 }
 
 //plotter

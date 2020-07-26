@@ -149,10 +149,13 @@ private slots:
 
     void on_actionSumCheck_triggered(bool checked);
 
+    void on_actionPopupHotkey_triggered();
+
 private:
     QString formatTime(int ms);
     bool needSaveConfig = true;
     void readConfig();
+    bool registPopupHotKey(QString keySequence);
     Ui::MainWindow *ui;
     mySerialPort serial;
 

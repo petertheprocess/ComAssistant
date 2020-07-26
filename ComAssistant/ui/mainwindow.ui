@@ -527,6 +527,7 @@ p, li { white-space: pre-wrap; }
     </property>
     <addaction name="actionMultiString"/>
     <addaction name="actionSTM32_ISP"/>
+    <addaction name="actionPopupHotkey"/>
    </widget>
    <widget class="QMenu" name="plotter">
     <property name="title">
@@ -855,6 +856,11 @@ p, li { white-space: pre-wrap; }
    </property>
    <property name="toolTip">
     <string>和校验</string>
+   </property>
+  </action>
+  <action name="actionPopupHotkey">
+   <property name="text">
+    <string>全局弹出热键</string>
    </property>
   </action>
  </widget>
