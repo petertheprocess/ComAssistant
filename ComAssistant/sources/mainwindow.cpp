@@ -265,6 +265,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
 void MainWindow::printToTextBrowserTimerSlot()
 {
+    if(!enableRefreshTextBrowser)
+        return;
+
     if(RefreshTextBrowser==false)
         return;
 
@@ -869,6 +872,8 @@ void MainWindow::on_sendButton_clicked()
 void MainWindow::on_clearWindows_clicked()
 {
     ui->clearWindows->setText(tr("清  空"));
+
+    enableRefreshTextBrowser = true;
 
     //定时器
     g_lastSecsSinceEpoch = QDateTime::currentSecsSinceEpoch();
@@ -1590,6 +1595,17 @@ void MainWindow::on_actiondebug_triggered(bool checked)
 void MainWindow::verticalScrollBarActionTriggered(int action)
 {
     QScrollBar* bar = ui->textBrowser->verticalScrollBar();
+
+    qDebug()<<action<<bar->value()<<bar->maximum()<<bar->sliderPosition();
+    //上滑自动暂停显示
+    if(bar->sliderPosition() == bar->maximum())
+    {
+        enableRefreshTextBrowser = true;
+    }
+    else
+    {
+        enableRefreshTextBrowser = false;
+    }
     if(action == QAbstractSlider::SliderSingleStepAdd ||
        action == QAbstractSlider::SliderSingleStepSub||
        action == QAbstractSlider::SliderPageStepAdd||
@@ -1600,7 +1616,7 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
         int newValue;
         bool res;
 
-        //
+        //是否显示完了
         if(ui->hexDisplay->isChecked()){
             res = hexBrowserBuffIndex != hexBrowserBuff.size();
         }else{
