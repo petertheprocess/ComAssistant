@@ -878,7 +878,7 @@ void MainWindow::on_clearWindows_clicked()
     //定时器
     g_lastSecsSinceEpoch = QDateTime::currentSecsSinceEpoch();
     qint64 consumedTime = QDateTime::currentSecsSinceEpoch() - g_lastSecsSinceEpoch;
-    statusTimer->setText(tr("计时器：")+formatTime(consumedTime*1000));
+    statusTimer->setText(tr("计时器:")+formatTime(consumedTime*1000));
 
     //串口
     serial.resetCnt();
@@ -1596,11 +1596,15 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
 {
     QScrollBar* bar = ui->textBrowser->verticalScrollBar();
 
-    qDebug()<<action<<bar->value()<<bar->maximum()<<bar->sliderPosition();
+    qDebug()<<"verticalScrollBarActionTriggered"<<action<<bar->value()<<bar->maximum()<<bar->sliderPosition()<<100*bar->sliderPosition()/bar->maximum();
     //上滑自动暂停显示
-    if(bar->sliderPosition() == bar->maximum())
+    if(!enableRefreshTextBrowser && 100*bar->sliderPosition()/bar->maximum() > 90)
     {
         enableRefreshTextBrowser = true;
+    }
+    else if(enableRefreshTextBrowser && bar->sliderPosition()!=bar->maximum())
+    {
+        enableRefreshTextBrowser = false;
     }
     else
     {
