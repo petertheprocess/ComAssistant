@@ -164,12 +164,30 @@ void MainWindow::readConfig()
     on_actionOpenGL_triggered(Config::getOpengGLState());
 }
 
+void MainWindow::layoutConfig()
+{
+//    QVBoxLayout *layout_central = new QVBoxLayout(this);
+//    layout_central->addLayout(ui->layout_info);
+//    layout_central->addWidget(ui->splitter_visulize);
+//    layout_central->addWidget(ui->splitter_multiStr);
+//    layout_central->addLayout(ui->layout_input);
+//    layout_central->setStretch(0, 0);
+//    layout_central->setStretch(1, 3);
+//    layout_central->setStretch(2, 1);
+//    layout_central->setStretch(3, 1);
+//    this->centralWidget()->setLayout(layout_central);
+//    this->centralWidget()->a
+}
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 
 {
     ui->setupUi(this);
+
+    //设置窗体布局
+    layoutConfig();
 
     //槽
     connect(this, SIGNAL(parseFileSignal()),this,SLOT(parseFileSlot()));
@@ -1327,10 +1345,10 @@ void MainWindow::on_actionMultiString_triggered(bool checked)
         //设置颜色交错
         ui->multiString->setAlternatingRowColors(true);
         //设置高度
-        QList<int> widthList;
-        int width = ui->splitter->width();
-        widthList << static_cast<int>(width*0.78) << static_cast<int>(width*0.22);
-        ui->splitter->setSizes(widthList);
+//        QList<int> widthList;
+//        int width = ui->splitter->width();
+//        widthList << static_cast<int>(width*0.78) << static_cast<int>(width*0.22);
+//        ui->splitter->setSizes(widthList);
     }else {
         ui->multiString->hide();
     }
@@ -1420,10 +1438,10 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
     if(checked){
         ui->customPlot->show();
         //设置高度
-        QList<int> heightList;
-        int height = ui->splitter_3->height();
-        heightList << static_cast<int>(height*0.8) << static_cast<int>(height*0.2);
-        ui->splitter_3->setSizes(heightList);
+//        QList<int> heightList;
+//        int height = ui->splitter_3->height();
+//        heightList << static_cast<int>(height*0.8) << static_cast<int>(height*0.2);
+//        ui->splitter_3->setSizes(heightList);
 
         //没激活就打开（数值显示器也可能激活）
         if(!plotterParseTimer.isActive()){
@@ -2028,10 +2046,10 @@ void MainWindow::on_actionValueDisplay_triggered(bool checked)
     if(checked){
         ui->valueDisplay->show();
         //设置宽度
-        QList<int> widthList;
-        int width = ui->splitter_2->width();
-        widthList << static_cast<int>(width*0.75) << static_cast<int>(width*0.25);
-        ui->splitter_2->setSizes(widthList);
+//        QList<int> widthList;
+//        int width = ui->splitter_2->width();
+//        widthList << static_cast<int>(width*0.75) << static_cast<int>(width*0.25);
+//        ui->splitter_2->setSizes(widthList);
 
         //没激活就打开（绘图器也可能激活）
         if(!plotterParseTimer.isActive()){

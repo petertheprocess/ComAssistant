@@ -156,6 +156,7 @@ private:
     bool needSaveConfig = true;
     void readConfig();
     bool registPopupHotKey(QString keySequence);
+    void layoutConfig();
     Ui::MainWindow *ui;
     mySerialPort serial;
 
