@@ -129,7 +129,7 @@ void MainWindow::readConfig()
     str.replace("RGBR", QString::number(r));
     str.replace("RGBG", QString::number(g));
     str.replace("RGBB", QString::number(b));
-    ui->textBrowser->document()->setDefaultStyleSheet(str);
+    ui->textBrowser->setStyleSheet(str);
 
     //绘图器开关
     ui->actionPlotterSwitch->setChecked(Config::getPlotterState());
@@ -2245,7 +2245,7 @@ void MainWindow::on_actionBackGroundColorSetting_triggered()
     str.replace("RGBR", QString::number(r));
     str.replace("RGBG", QString::number(g));
     str.replace("RGBB", QString::number(b));
-    ui->textBrowser->document()->setDefaultStyleSheet(str);
+    ui->textBrowser->setStyleSheet(str);
 }
 
 void MainWindow::on_actionSumCheck_triggered(bool checked)
