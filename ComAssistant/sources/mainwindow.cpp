@@ -129,7 +129,7 @@ void MainWindow::readConfig()
     str.replace("RGBR", QString::number(r));
     str.replace("RGBG", QString::number(g));
     str.replace("RGBB", QString::number(b));
-    ui->textBrowser->setStyleSheet(str);
+    ui->textBrowser->document()->setDefaultStyleSheet(str);
 
     //绘图器开关
     ui->actionPlotterSwitch->setChecked(Config::getPlotterState());
@@ -164,19 +164,62 @@ void MainWindow::readConfig()
     on_actionOpenGL_triggered(Config::getOpengGLState());
 }
 
+void MainWindow::adjustLayout()
+{
+    int length;
+    QList<int> lengthList;
+
+    //splitter_io垂直间距调整
+    length = splitter_io->height();
+    lengthList.clear();
+    lengthList << static_cast<int>(length*0.8)
+               << static_cast<int>(length*0.2);
+    splitter_io->setSizes(lengthList);
+    //splitter_output垂直间距调整
+    length = splitter_output->height();
+    lengthList.clear();
+    lengthList << static_cast<int>(length*0.8)
+               << static_cast<int>(length*0.2);
+    splitter_output->setSizes(lengthList);
+
+    #define FACT_COE    0.645
+    if(ui->actionPlotterSwitch->isChecked() || ui->actionValueDisplay->isChecked())
+    {
+        //splitter_visulize水平间距调整
+        length = ui->splitter_visulize->width();
+        lengthList.clear();
+        lengthList << static_cast<int>(length * FACT_COE)
+                   << static_cast<int>(length * (1 - FACT_COE));
+        ui->splitter_visulize->setSizes(lengthList);
+    }
+    if(ui->actionMultiString->isChecked())
+    {
+        //splitter_display水平间距调整
+        length = ui->splitter_display->width();
+        lengthList.clear();
+        lengthList << static_cast<int>(length * FACT_COE)
+                   << static_cast<int>(length * (1 - FACT_COE));
+        ui->splitter_display->setSizes(lengthList);
+    }
+
+    ui->textBrowserScrollBar->hide();
+}
+
 void MainWindow::layoutConfig()
 {
-//    QVBoxLayout *layout_central = new QVBoxLayout(this);
-//    layout_central->addLayout(ui->layout_info);
-//    layout_central->addWidget(ui->splitter_visulize);
-//    layout_central->addWidget(ui->splitter_multiStr);
-//    layout_central->addLayout(ui->layout_input);
-//    layout_central->setStretch(0, 0);
-//    layout_central->setStretch(1, 3);
-//    layout_central->setStretch(2, 1);
-//    layout_central->setStretch(3, 1);
-//    this->centralWidget()->setLayout(layout_central);
-//    this->centralWidget()->a
+    //输入输出分裂器
+    splitter_output = new QSplitter(Qt::Vertical, this);
+    splitter_output->addWidget(ui->splitter_visulize);
+    splitter_output->addWidget(ui->splitter_display);
+    splitter_io = new QSplitter(Qt::Vertical, this);
+    splitter_io->addWidget(splitter_output);
+    splitter_io->addWidget(ui->widget_input);
+
+    //设置顶级布局
+    central = new QVBoxLayout(this);
+    central->addWidget(ui->widget_ctrl);
+    central->addWidget(splitter_io);
+    ui->centralWidget->setLayout(central);
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -185,9 +228,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 {
     ui->setupUi(this);
-
-    //设置窗体布局
-    layoutConfig();
 
     //槽
     connect(this, SIGNAL(parseFileSignal()),this,SLOT(parseFileSlot()));
@@ -227,6 +267,9 @@ MainWindow::MainWindow(QWidget *parent) :
     //http
     http = new HTTP(this);
 
+    //设置窗体布局
+    layoutConfig();
+
     //读取配置（所有资源加->完成后、动作执行前读取）
     readConfig();
 
@@ -253,8 +296,8 @@ MainWindow::MainWindow(QWidget *parent) :
     file.close();
     this->setStyleSheet(style);
     g_font = Config::getGUIFont();
-    ui->textBrowser->setFont(g_font);
-    ui->textEdit->setFont(g_font);
+    ui->textBrowser->document()->setDefaultFont(g_font);
+    ui->textEdit->document()->setDefaultFont(g_font);
     ui->multiString->setFont(g_font);
     ui->customPlot->plotControl->setupFont(ui->customPlot, g_font);
 
@@ -271,6 +314,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //显示界面
     this->show();
+    //调整窗体布局
+    adjustLayout();
     //是否首次运行
     if(Config::getFirstRun()){
         //弹出帮助文件
@@ -1344,14 +1389,10 @@ void MainWindow::on_actionMultiString_triggered(bool checked)
         ui->multiString->show();
         //设置颜色交错
         ui->multiString->setAlternatingRowColors(true);
-        //设置高度
-//        QList<int> widthList;
-//        int width = ui->splitter->width();
-//        widthList << static_cast<int>(width*0.78) << static_cast<int>(width*0.22);
-//        ui->splitter->setSizes(widthList);
     }else {
         ui->multiString->hide();
     }
+    adjustLayout();
 }
 
 /*
@@ -1434,14 +1475,9 @@ void MainWindow::clearSeedsSlot()
  * Function:绘图器开关
 */
 void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
-{
+{   
     if(checked){
         ui->customPlot->show();
-        //设置高度
-//        QList<int> heightList;
-//        int height = ui->splitter_3->height();
-//        heightList << static_cast<int>(height*0.8) << static_cast<int>(height*0.2);
-//        ui->splitter_3->setSizes(heightList);
 
         //没激活就打开（数值显示器也可能激活）
         if(!plotterParseTimer.isActive()){
@@ -1470,6 +1506,8 @@ void MainWindow::on_actionPlotterSwitch_triggered(bool checked)
 
         ui->plotter->setTitle(tr("数据可视化"));
     }
+
+    adjustLayout();
 }
 
 void MainWindow::plotterParseTimerSlot()
@@ -2045,11 +2083,6 @@ void MainWindow::on_actionValueDisplay_triggered(bool checked)
 {
     if(checked){
         ui->valueDisplay->show();
-        //设置宽度
-//        QList<int> widthList;
-//        int width = ui->splitter_2->width();
-//        widthList << static_cast<int>(width*0.75) << static_cast<int>(width*0.25);
-//        ui->splitter_2->setSizes(widthList);
 
         //没激活就打开（绘图器也可能激活）
         if(!plotterParseTimer.isActive()){
@@ -2063,6 +2096,8 @@ void MainWindow::on_actionValueDisplay_triggered(bool checked)
         if(!ui->actionPlotterSwitch->isChecked())
             plotterParseTimer.stop();
     }
+
+    adjustLayout();
 }
 
 void MainWindow::on_textBrowser_customContextMenuRequested(const QPoint &pos)
@@ -2187,8 +2222,8 @@ void MainWindow::on_actionFontSetting_triggered()
     font = QFontDialog::getFont(&ok, font, this, tr("选择字体"));
     if(ok){
         g_font = font;
-        ui->textBrowser->setFont(g_font);
-        ui->textEdit->setFont(g_font);
+        ui->textBrowser->document()->setDefaultFont(g_font);
+        ui->textEdit->document()->setDefaultFont(g_font);
         ui->multiString->setFont(g_font);
         ui->customPlot->plotControl->setupFont(ui->customPlot, g_font);
     }
@@ -2210,7 +2245,7 @@ void MainWindow::on_actionBackGroundColorSetting_triggered()
     str.replace("RGBR", QString::number(r));
     str.replace("RGBG", QString::number(g));
     str.replace("RGBB", QString::number(b));
-    ui->textBrowser->setStyleSheet(str);
+    ui->textBrowser->document()->setDefaultStyleSheet(str);
 }
 
 void MainWindow::on_actionSumCheck_triggered(bool checked)

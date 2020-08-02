@@ -157,6 +157,7 @@ private:
     void readConfig();
     bool registPopupHotKey(QString keySequence);
     void layoutConfig();
+    void adjustLayout();
     Ui::MainWindow *ui;
     mySerialPort serial;
 
@@ -200,6 +201,11 @@ private:
     double txSpeedKB = 0;
     int statisticRxByteCnt = 0;
     int statisticTxByteCnt = 0;
+
+    //布局
+    QSplitter *splitter_output = NULL;
+    QSplitter *splitter_io = NULL;
+    QVBoxLayout *central = NULL;
 };
 
 #endif // MAINWINDOW_H
