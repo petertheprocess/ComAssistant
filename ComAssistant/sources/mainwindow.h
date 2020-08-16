@@ -39,8 +39,6 @@
 #include "about_me_dialog.h"
 #include "settings_dialog.h"
 
-#define PAGEING_SIZE_MAX (4068*2)
-
 namespace Ui {
 class MainWindow;
 }
@@ -78,8 +76,14 @@ private slots:
     void on_comList_textActivated(const QString &arg1);
     void on_sendInterval_textChanged(const QString &arg1);
     void on_multiString_itemDoubleClicked(QListWidgetItem *item);
-    void verticalScrollBarActionTriggered(int action);
-    
+//    void verticalScrollBarActionTriggered(int action);
+    void innerVerticalScrollBarActionTriggered(int action);
+    void outterVerticalScrollBarActionTriggered(int action);
+    void innerVerticalScrollBarRangeChanged(int min, int max);
+    void innerVerticalScrollBarValueChanged(int value);
+    void outterVerticalScrollBarValueChanged(int value);
+    void splitterMovedSlot(int pos, int index);
+
     //file
     void on_actionSaveOriginData_triggered();
     void on_actionOpenOriginData_triggered();
@@ -206,6 +210,12 @@ private:
     QSplitter *splitter_output = NULL;
     QSplitter *splitter_io = NULL;
     QVBoxLayout *central = NULL;
+
+    //窗口显示字符统计
+    int characterCount = 0; //可显示字符数
+protected:
+    void resizeEvent(QResizeEvent* event);
+
 };
 
 #endif // MAINWINDOW_H

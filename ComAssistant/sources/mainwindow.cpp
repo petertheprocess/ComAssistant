@@ -202,7 +202,7 @@ void MainWindow::adjustLayout()
         ui->splitter_display->setSizes(lengthList);
     }
 
-    ui->textBrowserScrollBar->hide();
+//    ui->textBrowserScrollBar->hide();
 }
 
 void MainWindow::layoutConfig()
@@ -239,7 +239,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&serial, SIGNAL(bytesWritten(qint64)), this, SLOT(serialBytesWritten(qint64)));
     connect(&serial, SIGNAL(error(QSerialPort::SerialPortError)),  this, SLOT(handleSerialError(QSerialPort::SerialPortError)));
 
-    connect(ui->textBrowser->verticalScrollBar(),SIGNAL(actionTriggered(int)),this,SLOT(verticalScrollBarActionTriggered(int)));
+//    connect(ui->textBrowser->verticalScrollBar(),SIGNAL(actionTriggered(int)),this,SLOT(verticalScrollBarActionTriggered(int)));
+    //绑定内置和外置滚动条
+    ui->textBrowser->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    connect(ui->textBrowser->verticalScrollBar(),SIGNAL(rangeChanged(int, int)),this,SLOT(innerVerticalScrollBarRangeChanged(int, int)));
+    connect(ui->textBrowser->verticalScrollBar(),SIGNAL(valueChanged(int)),this,SLOT(innerVerticalScrollBarValueChanged(int)));
+    connect(ui->textBrowserScrollBar ,SIGNAL(valueChanged(int)),this,SLOT(outterVerticalScrollBarValueChanged(int)));
+    connect(ui->textBrowser->verticalScrollBar(),SIGNAL(actionTriggered(int)),this,SLOT(innerVerticalScrollBarActionTriggered(int)));
+    connect(ui->textBrowserScrollBar,SIGNAL(actionTriggered(int)),this,SLOT(outterVerticalScrollBarActionTriggered(int)));
+
 
     //状态栏标签
     statusRemoteMsgLabel = new QLabel(this);
@@ -269,6 +277,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     //设置窗体布局
     layoutConfig();
+
+    //绑定分裂器移动槽
+    connect(ui->splitter_display, SIGNAL(splitterMoved(int, int)), this, SLOT(splitterMovedSlot(int, int)));
+    connect(splitter_io, SIGNAL(splitterMoved(int, int)), this, SLOT(splitterMovedSlot(int, int)));
+    connect(splitter_output, SIGNAL(splitterMoved(int, int)), this, SLOT(splitterMovedSlot(int, int)));
+
 
     //读取配置（所有资源加->完成后、动作执行前读取）
     readConfig();
@@ -306,7 +320,8 @@ MainWindow::MainWindow(QWidget *parent) :
     //启动定时器
     secTimer.setTimerType(Qt::PreciseTimer);
     secTimer.start(1000);
-    printToTextBrowserTimer.start(20);
+    printToTextBrowserTimer.setTimerType(Qt::PreciseTimer);
+    printToTextBrowserTimer.start(50);
     plotterParseTimer.setTimerType(Qt::PreciseTimer);
 
     //计时器
@@ -657,17 +672,6 @@ void MainWindow::readSerialPort()
         return;
     }
 
-//    //'\0'检查
-//    while(tmpReadBuff.indexOf('\0')!=-1){
-//        tmpReadBuff.replace('\0',"\\0");
-//    }
-
-    //收到数据且时间戳超时则可以添加新的时间戳和换行
-//    if(ui->timeStampCheckBox->isChecked() && timeStampTimer.isActive()==false){
-//        timeStampTimer.setSingleShot(true);
-//        timeStampTimer.start(ui->timeStampTimeOut->text().toInt());
-//    }
-
     //速度统计，不能和下面的互换，否则不准确
     statisticRxByteCnt += tmpReadBuff.size();
 
@@ -688,7 +692,7 @@ void MainWindow::readSerialPort()
         //只需要保证上屏的最后一个字节的高位不是1即可
         if(tmpReadBuff.back() & 0x80){
             int reversePos = tmpReadBuff.size()-1;
-            while(tmpReadBuff.at(reversePos)&0x80){
+            while(tmpReadBuff.at(reversePos)&0x80){//不超过3次循环
                 reversePos--;
                 if(reversePos<0)
                     break;
@@ -742,8 +746,9 @@ void MainWindow::parseFileSlot()
 {
     readSerialPort();
     qApp->processEvents();
-    ui->customPlot->replot();
-//    qDebug()<<tt<<tt1<<parseFileBuffIndex/parseFileBuff.size();
+    if(ui->actionPlotterSwitch->isChecked()){
+        ui->customPlot->replot();
+    }
     if(parseFileBuffIndex!=parseFileBuff.size()){
         ui->statusBar->showMessage(tr("解析进度：")+QString::number(static_cast<int>(100.0*(parseFileBuffIndex+1.0)/parseFileBuff.size()))+"% ",1000);
         emit parseFileSignal();
@@ -758,47 +763,49 @@ void MainWindow::parseFileSlot()
     }
 }
 
-static int PAGING_SIZE = 4068 * 2; //TextBrowser分页显示大小，这个值正好满屏显示
+static int PAGING_SIZE = 8192; //TextBrowser显示大小
 void MainWindow::printToTextBrowser()
 {
-    //估计当前窗口可显示多少字符
-    int HH = static_cast<int>(ui->textBrowser->height()/19.2);
-    int WW = static_cast<int>(ui->textBrowser->width()/9.38);
-    PAGING_SIZE = static_cast<int>(HH*WW*1.25); //冗余
-    //不超过最大值
-    if(PAGING_SIZE > PAGEING_SIZE_MAX){
-        PAGING_SIZE = PAGEING_SIZE_MAX;
+    //当前窗口显示字符调整
+    if(characterCount==0 && ui->textBrowser->height()!=0){
+        //characterCount=0且控件有高度说明characterCount未初始化，调用resizeEvent初始化，内部有了printToTextBrowser所以可以返回
+        resizeEvent(nullptr);
+        return;
     }
+    //多显示一点
+    if(ui->hexDisplay->isChecked())
+        PAGING_SIZE = characterCount * 1.5; //hex模式性能慢
+    else
+        PAGING_SIZE = characterCount * 2;
+
     //且满足gbk/utf8编码长度的倍数
     if(ui->actionGBK->isChecked()){
-        while(PAGING_SIZE%2!=0)
-            PAGING_SIZE--;
+        PAGING_SIZE = PAGING_SIZE - PAGING_SIZE % 2;
     }else if(ui->actionUTF8->isChecked()){
-        while(PAGING_SIZE%3!=0)
-            PAGING_SIZE--;
+        PAGING_SIZE = PAGING_SIZE - PAGING_SIZE % 3;
     }
-//    qDebug()<<"printToTextBrowser"<<HH<<WW<<HH*WW<<PAGING_SIZE;
 
     //打印数据
+    ui->textBrowser->moveCursor(QTextCursor::End);
     if(ui->hexDisplay->isChecked()){
-        if(hexBrowserBuff.size()<PAGING_SIZE){
-            ui->textBrowser->setText(hexBrowserBuff);
+        if(hexBrowserBuff.size() < PAGING_SIZE){
+            ui->textBrowser->setPlainText(hexBrowserBuff);
             hexBrowserBuffIndex = hexBrowserBuff.size();
         }else{
-            ui->textBrowser->setText(hexBrowserBuff.mid(hexBrowserBuff.size()-PAGING_SIZE));
+            ui->textBrowser->setPlainText(hexBrowserBuff.mid(hexBrowserBuff.size()-PAGING_SIZE));
             hexBrowserBuffIndex = PAGING_SIZE;
         }
     }else{
-        if(BrowserBuff.size()<PAGING_SIZE){
-            ui->textBrowser->setText(BrowserBuff);
+        if(BrowserBuff.size() < PAGING_SIZE){
+            ui->textBrowser->setPlainText(BrowserBuff);
             BrowserBuffIndex = BrowserBuff.size();
         }else{
-            ui->textBrowser->setText(BrowserBuff.mid(BrowserBuff.size()-PAGING_SIZE));
+            ui->textBrowser->setPlainText(BrowserBuff.mid(BrowserBuff.size()-PAGING_SIZE));
             BrowserBuffIndex = PAGING_SIZE;
         }
     }
 
-    ui->textBrowser->moveCursor(QTextCursor::End);
+    ui->textBrowser->verticalScrollBar()->setValue(ui->textBrowser->verticalScrollBar()->maximum());
 }
 
 void MainWindow::serialBytesWritten(qint64 bytes)
@@ -1202,8 +1209,8 @@ void MainWindow::on_actionOpenOriginData_triggered()
             plotterParsePosInRxBuff = 0;
 
         ui->textBrowser->clear();
-        ui->textBrowser->append("File size: "+QString::number(file.size())+" Byte");
-        ui->textBrowser->append("Read containt:"+enter);
+        ui->textBrowser->appendPlainText("File size: "+QString::number(file.size())+" Byte");
+        ui->textBrowser->appendPlainText("Read containt:"+enter);
         BrowserBuff.clear();
         BrowserBuff.append(ui->textBrowser->document()->toPlainText());
 
@@ -1575,12 +1582,14 @@ void MainWindow::plotterParseTimerSlot()
         }
     }
 
-    if(parsedLength == maxParseLengthLimit){
+    //单次最大解析长度限制提示（文件解析模式下不提示）
+    if(parsedLength == maxParseLengthLimit && parseFile==false){
         QString temp;
         temp = temp + tr("警告：绘图器繁忙，待解析数据长度：") + QString::number(RxBuff.size() - plotterParsePosInRxBuff - 1) + "Byte";
         ui->statusBar->showMessage(temp, 2000);
     }
 
+    //解析周期动态调整
     int32_t elapsed_time = elapsedTimer.elapsed();
     double parseSpeed = parsedLength/(elapsed_time/1000.0)/1024.0;
     parseSpeed = (double)((int)(parseSpeed*100))/100.0;   //保留两位小数
@@ -1643,11 +1652,14 @@ void MainWindow::on_actiondebug_triggered(bool checked)
     }
 }
 
-void MainWindow::verticalScrollBarActionTriggered(int action)
+void MainWindow::innerVerticalScrollBarActionTriggered(int action)
 {
     QScrollBar* bar = ui->textBrowser->verticalScrollBar();
 
-//    qDebug()<<"verticalScrollBarActionTriggered"<<action<<bar->value()<<bar->maximum()<<bar->sliderPosition()<<100*bar->sliderPosition()/bar->maximum();
+    if(bar->maximum() == 0)
+        return;
+
+//    qDebug()<<"innerVerticalScrollBarActionTriggered"<<action<<bar->value()<<bar->maximum()<<bar->sliderPosition()<<100*bar->sliderPosition()/bar->maximum();
 
     if(action == QAbstractSlider::SliderSingleStepAdd ||
        action == QAbstractSlider::SliderSingleStepSub||
@@ -1669,26 +1681,26 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
         if(value == 0 && res){
 
             //直接显示全部
-            BrowserBuffIndex = BrowserBuff.size();
-            hexBrowserBuffIndex = hexBrowserBuff.size();
+//            BrowserBuffIndex = BrowserBuff.size();
+//            hexBrowserBuffIndex = hexBrowserBuff.size();
             //显示内容指数型增加
-//            if(BrowserBuffIndex*2 < BrowserBuff.size()){
-//                BrowserBuffIndex = BrowserBuffIndex*2;
-//            }
-//            else{
-//                BrowserBuffIndex = BrowserBuff.size();
-//            }
-//            if(hexBrowserBuffIndex*2 < hexBrowserBuff.size()){
-//                hexBrowserBuffIndex = hexBrowserBuffIndex*2;
-//            }
-//            else{
-//                hexBrowserBuffIndex = hexBrowserBuff.size();
-//            }
+            if(BrowserBuffIndex*2 < BrowserBuff.size()){
+                BrowserBuffIndex = BrowserBuffIndex*2;
+            }
+            else{
+                BrowserBuffIndex = BrowserBuff.size();
+            }
+            if(hexBrowserBuffIndex*2 < hexBrowserBuff.size()){
+                hexBrowserBuffIndex = hexBrowserBuffIndex*2;
+            }
+            else{
+                hexBrowserBuffIndex = hexBrowserBuff.size();
+            }
 
             if(ui->hexDisplay->isChecked()){
-                ui->textBrowser->setText(hexBrowserBuff.mid(hexBrowserBuff.size() - hexBrowserBuffIndex));
+                ui->textBrowser->setPlainText(hexBrowserBuff.mid(hexBrowserBuff.size() - hexBrowserBuffIndex));
             }else{
-                ui->textBrowser->setText(BrowserBuff.mid(BrowserBuff.size() - BrowserBuffIndex));
+                ui->textBrowser->setPlainText(BrowserBuff.mid(BrowserBuff.size() - BrowserBuffIndex));
             }
 
             //保持bar位置不动
@@ -1696,6 +1708,26 @@ void MainWindow::verticalScrollBarActionTriggered(int action)
             bar->setValue(newValue);
         }
     }
+
+    ui->textBrowserScrollBar->setValue(bar->value());
+}
+void MainWindow::innerVerticalScrollBarRangeChanged(int min, int max)
+{
+    ui->textBrowserScrollBar->setMinimum(min);
+    ui->textBrowserScrollBar->setMaximum(max);
+//    ui->textBrowserScrollBar->setValue(max);
+}
+void MainWindow::innerVerticalScrollBarValueChanged(int value)
+{
+    ui->textBrowserScrollBar->setValue(value);
+}
+void MainWindow::outterVerticalScrollBarActionTriggered(int action)
+{
+    ui->textBrowser->verticalScrollBar()->setValue(ui->textBrowserScrollBar->value());
+}
+void MainWindow::outterVerticalScrollBarValueChanged(int value)
+{
+    ui->textBrowser->verticalScrollBar()->setValue(ui->textBrowserScrollBar->value());
 }
 
 void MainWindow::on_actionLinePlot_triggered()
@@ -1980,31 +2012,31 @@ void MainWindow::on_actionUsageStatistic_triggered()
 
     //上屏显示
     //ui->textBrowser->clear(); //如果清屏的话要做提示，可能用户数据还未保存
-    ui->textBrowser->append(tr("软件版本：")+Config::getVersion());
-    ui->textBrowser->append(tr(""));
-    ui->textBrowser->append(tr("【设备信息】"));
-    ui->textBrowser->append(tr("   MAC地址：")+HTTP::getHostMacAddress());
-    ui->textBrowser->append(tr(""));
-    ui->textBrowser->append(tr("【软件使用统计】"));
-    ui->textBrowser->append(tr("   自本次启动软件以来，您："));
-    ui->textBrowser->append(tr("   - 共发送数据：")+QString::number(currentTx,'f',2)+currentTxUnit);
-    ui->textBrowser->append(tr("   - 共接收数据：")+QString::number(currentRx,'f',2)+currentRxUnit);
-    ui->textBrowser->append(tr("   - 共运行本软件：")+currentRunTimeStr);
-    ui->textBrowser->append(tr("   自首次启动软件以来，您："));
-    ui->textBrowser->append(tr("   - 共发送数据：")+QString::number(totalTx,'f',2)+totalTxUnit);
-    ui->textBrowser->append(tr("   - 共接收数据：")+QString::number(totalRx,'f',2)+totalRxUnit);
-    ui->textBrowser->append(tr("   - 共运行本软件：")+totalRunTimeStr);
-    ui->textBrowser->append(tr("   - 共启动本软件：")+QString::number(Config::getTotalRunCnt().toInt()+1)+tr(" 次"));
-    ui->textBrowser->append(tr(""));
-    ui->textBrowser->append(tr("   ")+rankStr);
-    ui->textBrowser->append(tr(""));
-    ui->textBrowser->append(tr("【隐私声明】"));
-    ui->textBrowser->append(tr("  - 以上统计信息可能会被上传至服务器用于统计。"));
-    ui->textBrowser->append(tr("  - 其他任何信息均不会被上传。"));
-    ui->textBrowser->append(tr("  - 如您不同意本声明，可阻断本软件的网络请求或者您应该停止使用本软件。"));
-    ui->textBrowser->append(tr(""));
-    ui->textBrowser->append(tr("感谢您的使用"));
-    ui->textBrowser->append(tr(""));
+    ui->textBrowser->appendPlainText(tr("软件版本：")+Config::getVersion());
+    ui->textBrowser->appendPlainText(tr(""));
+    ui->textBrowser->appendPlainText(tr("【设备信息】"));
+    ui->textBrowser->appendPlainText(tr("   MAC地址：")+HTTP::getHostMacAddress());
+    ui->textBrowser->appendPlainText(tr(""));
+    ui->textBrowser->appendPlainText(tr("【软件使用统计】"));
+    ui->textBrowser->appendPlainText(tr("   自本次启动软件以来，您："));
+    ui->textBrowser->appendPlainText(tr("   - 共发送数据：")+QString::number(currentTx,'f',2)+currentTxUnit);
+    ui->textBrowser->appendPlainText(tr("   - 共接收数据：")+QString::number(currentRx,'f',2)+currentRxUnit);
+    ui->textBrowser->appendPlainText(tr("   - 共运行本软件：")+currentRunTimeStr);
+    ui->textBrowser->appendPlainText(tr("   自首次启动软件以来，您："));
+    ui->textBrowser->appendPlainText(tr("   - 共发送数据：")+QString::number(totalTx,'f',2)+totalTxUnit);
+    ui->textBrowser->appendPlainText(tr("   - 共接收数据：")+QString::number(totalRx,'f',2)+totalRxUnit);
+    ui->textBrowser->appendPlainText(tr("   - 共运行本软件：")+totalRunTimeStr);
+    ui->textBrowser->appendPlainText(tr("   - 共启动本软件：")+QString::number(Config::getTotalRunCnt().toInt()+1)+tr(" 次"));
+    ui->textBrowser->appendPlainText(tr(""));
+    ui->textBrowser->appendPlainText(tr("   ")+rankStr);
+    ui->textBrowser->appendPlainText(tr(""));
+    ui->textBrowser->appendPlainText(tr("【隐私声明】"));
+    ui->textBrowser->appendPlainText(tr("  - 以上统计信息可能会被上传至服务器用于统计。"));
+    ui->textBrowser->appendPlainText(tr("  - 其他任何信息均不会被上传。"));
+    ui->textBrowser->appendPlainText(tr("  - 如您不同意本声明，可阻断本软件的网络请求或者您应该停止使用本软件。"));
+    ui->textBrowser->appendPlainText(tr(""));
+    ui->textBrowser->appendPlainText(tr("感谢您的使用"));
+    ui->textBrowser->appendPlainText(tr(""));
 
     QString str = ui->textBrowser->document()->toPlainText();
     BrowserBuff.clear();
@@ -2060,10 +2092,10 @@ void MainWindow::on_actionSendFile_triggered()
 
         if(serial.isOpen()){
             ui->textBrowser->clear();
-            ui->textBrowser->append("File size: "+QString::number(file.size())+" Bytes");
-            ui->textBrowser->append("One pack size: "+QString::number(PACKSIZE_SENDFILE)+" Bytes");
-            ui->textBrowser->append("Total packs: "+QString::number(SendFileBuff.size())+" packs");
-            ui->textBrowser->append("");
+            ui->textBrowser->appendPlainText("File size: "+QString::number(file.size())+" Bytes");
+            ui->textBrowser->appendPlainText("One pack size: "+QString::number(PACKSIZE_SENDFILE)+" Bytes");
+            ui->textBrowser->appendPlainText("Total packs: "+QString::number(SendFileBuff.size())+" packs");
+            ui->textBrowser->appendPlainText("");
             QString str = ui->textBrowser->document()->toPlainText();
             BrowserBuff.clear();
             BrowserBuff.append(str);
@@ -2279,4 +2311,52 @@ void MainWindow::on_actionPopupHotkey_triggered()
         return;
     }
     registPopupHotKey(newKeySeq);
+}
+
+void MainWindow::resizeEvent(QResizeEvent* event)
+{
+    event = nullptr;
+
+    //首次启动不运行，防止卡死
+    static uint8_t first_run = 1;
+    if(first_run){
+        first_run = 0;
+        return;
+    }
+
+    //MainWindow尺寸改变时计算当前窗口能显示多少字符。
+    //若MainWindow尺寸未变，内部控件尺寸变化的情况使用轮询解决
+    ui->textBrowser->setPlainText("");
+    //获取列数
+    while (ui->textBrowser->document()->lineCount()<2) {
+        ui->textBrowser->insertPlainText("0");
+    }
+    //获取行数
+    while(ui->textBrowser->verticalScrollBar()->maximum()==0)
+    {
+        ui->textBrowser->appendPlainText("0");
+    }
+
+    ui->textBrowser->moveCursor(QTextCursor::Start);
+    ui->textBrowser->moveCursor(QTextCursor::Down);
+    ui->textBrowser->moveCursor(QTextCursor::Left);
+//    qDebug()<<"resizeEvent"
+//            <<ui->textBrowser->document()->characterCount()
+//            <<ui->textBrowser->document()->lineCount()
+//            <<ui->textBrowser->textCursor().columnNumber();
+    characterCount = (ui->textBrowser->textCursor().columnNumber() + 1) *
+                     (ui->textBrowser->document()->lineCount() - 1);
+    ui->textBrowser->setPlainText("");
+
+    printToTextBrowser();
+}
+
+void MainWindow::splitterMovedSlot(int pos, int index)
+{
+    pos = !!pos;
+    index = !!index;
+//    qDebug()<<"splitterMovedSlot"<<pos<<index;
+
+    //计算可显示字符并刷新显示
+    resizeEvent(nullptr);
 }

@@ -484,13 +484,13 @@ p, li { white-space: pre-wrap; }
     <property name="orientation">
      <enum>Qt::Horizontal</enum>
     </property>
-    <widget class="QWidget" name="">
+    <widget class="QWidget" name="layoutWidget">
      <layout class="QHBoxLayout" name="layout_textBrowser">
       <property name="spacing">
        <number>0</number>
       </property>
       <item>
-       <widget class="QTextBrowser" name="textBrowser">
+       <widget class="QPlainTextEdit" name="textBrowser">
         <property name="font">
          <font>
           <family>Consolas</family>
@@ -503,14 +503,11 @@ p, li { white-space: pre-wrap; }
         <property name="autoFillBackground">
          <bool>false</bool>
         </property>
-        <property name="textInteractionFlags">
-         <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse|Qt::TextBrowserInteraction|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+        <property name="readOnly">
+         <bool>true</bool>
         </property>
         <property name="placeholderText">
          <string>数据显示区</string>
-        </property>
-        <property name="openExternalLinks">
-         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -690,6 +687,7 @@ p, li { white-space: pre-wrap; }
     <addaction name="separator"/>
     <addaction name="protocol"/>
     <addaction name="separator"/>
+    <addaction name="actiondebug"/>
    </widget>
    <addaction name="file"/>
    <addaction name="function"/>
@@ -876,7 +874,7 @@ p, li { white-space: pre-wrap; }
     <string>绘图测试</string>
    </property>
    <property name="statusTip">
-    <string>该功能会发送数据，你需要短接Tx和Rx</string>
+    <string>请短接Tx和Rx后使用。</string>
    </property>
    <property name="whatsThis">
     <string/>
