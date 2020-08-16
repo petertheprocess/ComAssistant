@@ -1723,10 +1723,12 @@ void MainWindow::innerVerticalScrollBarValueChanged(int value)
 }
 void MainWindow::outterVerticalScrollBarActionTriggered(int action)
 {
+    action = !!action;
     ui->textBrowser->verticalScrollBar()->setValue(ui->textBrowserScrollBar->value());
 }
 void MainWindow::outterVerticalScrollBarValueChanged(int value)
 {
+    value = !!value;
     ui->textBrowser->verticalScrollBar()->setValue(ui->textBrowserScrollBar->value());
 }
 
@@ -2315,7 +2317,8 @@ void MainWindow::on_actionPopupHotkey_triggered()
 
 void MainWindow::resizeEvent(QResizeEvent* event)
 {
-    event = nullptr;
+    //消除警告
+    event->size();
 
     //首次启动不运行，防止卡死
     static uint8_t first_run = 1;
